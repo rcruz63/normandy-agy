@@ -1,0 +1,13 @@
+{
+  "version": "v1",
+  "hooks": [
+    {
+      "name": "Commit y push al completar tarea",
+      "trigger": "PostTaskExec",
+      "action": {
+        "type": "command",
+        "command": "bash scripts/commit-and-push.sh"
+      }
+    }
+  ]
+}

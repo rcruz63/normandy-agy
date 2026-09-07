@@ -1,0 +1,54 @@
+# --- Material fuente protegido (no distribuir) ---
+# El PDF fuente y sus renders/derivados son material protegido de FON-ML-2022.
+# La especificación prohíbe distribuir contenido del PDF: se excluyen del repositorio.
+docs/*.pdf
+.kiro/specs/**/pdf-*.png
+.kiro/specs/**/render_pdf.swift
+
+# --- Dependencias ---
+node_modules/
+.pnp/
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/versions
+
+# --- Builds y artefactos ---
+dist/
+build/
+out/
+coverage/
+*.tsbuildinfo
+.vite/
+.cache/
+
+# --- Pruebas ---
+playwright-report/
+test-results/
+blob-report/
+.nyc_output/
+
+# --- CDK / IaC ---
+cdk.out/
+*.js.map
+.cdk.staging/
+
+# --- Secretos y evidencia sensible (nunca versionar) ---
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+credentials.json
+evidence/*.local.json
+
+# --- Sistema operativo ---
+.DS_Store
+Thumbs.db
+
+# --- Editores ---
+.idea/
+*.swp
+*.swo
