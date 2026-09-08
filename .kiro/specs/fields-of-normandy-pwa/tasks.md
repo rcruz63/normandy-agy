@@ -17,7 +17,7 @@ Las 25 propiedades de corrección del diseño se implementan cada una con exacta
   - Definir las interfaces de puerto (`RulesEngine`, `VersionedRandom`, `GameRepository`, `GameUnitOfWork`, `BackupCodec`, `MigrationRegistry`, `OfflinePackageCoordinator`, `PublicationGate`, `CatalogCompiler`)
   - _Requirements: 1.1, 6.1, 19.2, 21.1, 28.5_
 
-- [ ] 2. Catálogo canónico, esquemas y Publication Gate (fail-closed)
+- [x] 2. Catálogo canónico, esquemas y Publication Gate (fail-closed)
   - [x] 2.1 Definir modelos de catálogo y fuente
     - Implementar `SourceRef`, `PublicationStatus`, `CatalogItem<T>`, `DecisionRecord`, `ConformanceEntry`, `LicenseEntry`, `RulesCatalog`, `MissionDefinition`, `CanonicalRule`, `CanonicalTable<I,O>` como tipos `Readonly` validados por constructores
     - Validar `missionRef` contra `N=01..15` y páginas `16+2(N-1)` / `17+2(N-1)`; conservar título inglés solo en metadatos de mantenimiento
@@ -26,11 +26,11 @@ Las 25 propiedades de corrección del diseño se implementan cada una con exacta
     - Validar identificadores únicos, referencias, cobertura/no solapamiento de tablas, exactamente quince Misiones y relaciones de inventario
     - Emitir catálogo inmutable con `rulesVersion` nuevo; nunca reescribir una versión publicada
     - _Requirements: 1.6, 1.10, 1.11, 2.1, 2.2, 2.7, 2.8, 4.1, 4.7, 4.9, 4.10, 17.7_
-  - [ ] 2.3 Implementar `PublicationGate` y bloqueo por DP/prueba/licencia
+  - [x] 2.3 Implementar `PublicationGate` y bloqueo por DP/prueba/licencia
     - Agregar decisiones (DP-001/DP-002/DP-003), segunda revisión visual, licencias y conformidad en `PublicationReport`; producir `PublicationBlocker` estructurado
     - Exigir `DP-001=resolved` + segunda revisión para cada mapa, DP-002 resuelto por situación, recurso propio o DP-003, y prueba aprobada por elemento; entregar al selector solo Misiones `published`
     - _Requirements: 1.8, 2.3, 2.4, 2.5, 3.6, 4.8, 30.4, 30.6, 30.11, 33.8, 40.6, 40.7, 40.13_
-  - [ ]* 2.4 Escribir prueba de propiedad de autoridad, trazabilidad y publicación cerrada
+  - [x]* 2.4 Escribir prueba de propiedad de autoridad, trazabilidad y publicación cerrada
     - **Property 1: Autoridad, trazabilidad y publicación cerrada**
     - **Validates: Requirements 1.1, 1.2, 1.8, 1.10, 1.11, 2.1, 2.2, 2.3, 2.4, 2.5, 2.7, 2.8, 4.2, 4.3, 4.9, 30.4, 30.5, 30.6, 30.7, 30.11, 33.8, 40.6, 40.7, 40.13**
   - [ ]* 2.5 Escribir pruebas unitarias del compilador y esquema
@@ -56,14 +56,14 @@ Las 25 propiedades de corrección del diseño se implementan cada una con exacta
 - [ ] 4. Checkpoint - Catálogo y publicación
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 5. Geometría hexagonal y modelos de mapa/ficha
+- [x] 5. Geometría hexagonal y modelos de mapa/ficha
   - [x] 5.1 Implementar modelos de mapa y ficha
     - Implementar `HexMapDefinition`, `HexDefinition`, `HexEdge`, `VisualReview`, `PieceState` con aristas canónicas almacenadas una sola vez
     - _Requirements: 4.5, 40.1, 40.2, 40.3, 40.13_
-  - [ ] 5.2 Implementar `HexGeometry` (adyacencia, distancia, ruta, Zona de fuego)
+  - [x] 5.2 Implementar `HexGeometry` (adyacencia, distancia, ruta, Zona de fuego)
     - Proyectar vecinos simétricos, calcular distancia/ruta/Zona de fuego solo sobre el grafo canónico; recalcular derivados al cambiar posición u Orientación; no deducir conexiones fuera del catálogo
     - _Requirements: 10.1, 10.2, 10.5, 10.6, 14.1, 14.6, 37.5, 40.11_
-  - [ ]* 5.3 Escribir prueba de propiedad de integridad geométrica
+  - [x]* 5.3 Escribir prueba de propiedad de integridad geométrica
     - **Property 8: Integridad geométrica, adyacencia y derivados**
     - **Validates: Requirements 4.5, 10.1, 10.2, 10.3, 10.5, 10.6, 14.1, 14.6, 35.1, 35.13, 35.14, 36.7, 36.8, 36.9, 37.5, 40.1, 40.2, 40.3, 40.11**
 
@@ -78,14 +78,14 @@ Las 25 propiedades de corrección del diseño se implementan cada una con exacta
     - **Property 16: Continuidad aleatoria tras reanudación**
     - **Validates: Requirements 7.2, 19.7, 19.9**
 
-- [ ] 7. Estado de partida, transición y validador de invariantes
+- [x] 7. Estado de partida, transición y validador de invariantes
   - [x] 7.1 Implementar modelos de estado y transición
     - Implementar `GameState`, `GameSnapshot`, `TransitionProposal`, `GameCommand`, `TransitionDecision` (`accepted`/`rejected`/`blocked`) con modos `complete` y `stopped-after-consumption`; `GameState` nunca contiene estado de vista
     - _Requirements: 5.6, 7.1, 13.7, 17.6, 21.1_
-  - [ ] 7.2 Implementar `InvariantValidator`
+  - [x] 7.2 Implementar `InvariantValidator`
     - Validar referencias, ocupación, estado de fichas, secuencias, registros, aleatoriedad y demás invariantes de la Versión de reglas
     - _Requirements: 21.1, 21.2, 21.4_
-  - [ ]* 7.3 Escribir pruebas unitarias de invariantes y ramas de error
+  - [x]* 7.3 Escribir pruebas unitarias de invariantes y ramas de error
     - Cubrir `rejected`, `blocked`, `stopped-after-consumption`, `invalid-proposal`
     - _Requirements: 21.2, 21.3, 21.5_
 

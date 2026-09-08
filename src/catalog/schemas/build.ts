@@ -33,6 +33,8 @@ import type {
 import type {
   ConformanceEntry,
   DecisionRecord,
+  LicenseEntry,
+  VisualReviewRecord,
 } from "./publication.js";
 import type { OrderTable, PieceDefinition } from "./placeholders.js";
 
@@ -46,6 +48,12 @@ import type { OrderTable, PieceDefinition } from "./placeholders.js";
  * - `generalRules`: reglas generales canónicas (páginas 5-14).
  * - `decisions` / `conformance`: trazabilidad de decisiones y Matriz de
  *   conformidad.
+ * - `visualReviews`: Segunda revisión visual por Misión (DP-001). El compilador
+ *   no la usa; la consume el {@link PublicationGate} (Tarea 2.3) para exigir la
+ *   revisión aprobada de cada Mapa antes de publicar. El Mapa (`HexMapDefinition`)
+ *   es aún una marca opaca (Tarea 5), por lo que la revisión se aporta aquí de
+ *   forma explícita e indexada por Misión.
+ * - `licenses`: Inventario de licencias (DP-003) de los recursos distribuidos.
  */
 export type MaintenanceCatalog = Readonly<{
   rulesVersionCandidate: RulesVersion;
@@ -55,6 +63,8 @@ export type MaintenanceCatalog = Readonly<{
   generalRules: readonly CatalogItem<CanonicalRule>[];
   decisions?: readonly DecisionRecord[];
   conformance?: readonly ConformanceEntry[];
+  visualReviews?: readonly VisualReviewRecord[];
+  licenses?: readonly LicenseEntry[];
 }>;
 
 /** Código estable de cada clase de fallo de compilación fail-closed. */

@@ -1,5 +1,14 @@
 {
-  "pbtResults": {},
+  "pbtResults": {
+    "5.3 Escribir prueba de propiedad de integridad geométrica": {
+      "status": "passed",
+      "lastRunTimestamp": 1788866482617
+    },
+    "2.4 Escribir prueba de propiedad de autoridad, trazabilidad y publicación cerrada": {
+      "status": "passed",
+      "lastRunTimestamp": 1788867164106
+    }
+  },
   "executionHistory": {
     "1. Estructura del proyecto, puertos y tipos base del dominio": [
       {
@@ -121,6 +130,99 @@
         "executionId": "c9383d81-ead4-4be9-983b-60e42a86b02c",
         "chatSessionId": "sess_422c215b-a12f-4a94-af76-91f3f9a1b8ae",
         "timestamp": 1788865625971
+      }
+    ],
+    "5.2 Implementar `HexGeometry` (adyacencia, distancia, ruta, Zona de fuego)": [
+      {
+        "executionId": "d7f2c74f-870d-4ead-a670-04b3c5c035b2",
+        "chatSessionId": "sess_422c215b-a12f-4a94-af76-91f3f9a1b8ae",
+        "timestamp": 1788866135362
+      },
+      {
+        "executionId": "d7f2c74f-870d-4ead-a670-04b3c5c035b2",
+        "chatSessionId": "sess_422c215b-a12f-4a94-af76-91f3f9a1b8ae",
+        "timestamp": 1788867222968
+      }
+    ],
+    "7.2 Implementar `InvariantValidator`": [
+      {
+        "executionId": "d7f2c74f-870d-4ead-a670-04b3c5c035b2",
+        "chatSessionId": "sess_422c215b-a12f-4a94-af76-91f3f9a1b8ae",
+        "timestamp": 1788866136321
+      },
+      {
+        "executionId": "d7f2c74f-870d-4ead-a670-04b3c5c035b2",
+        "chatSessionId": "sess_422c215b-a12f-4a94-af76-91f3f9a1b8ae",
+        "timestamp": 1788867225311
+      }
+    ],
+    "2.3 Implementar `PublicationGate` y bloqueo por DP/prueba/licencia": [
+      {
+        "executionId": "d7f2c74f-870d-4ead-a670-04b3c5c035b2",
+        "chatSessionId": "sess_422c215b-a12f-4a94-af76-91f3f9a1b8ae",
+        "timestamp": 1788866137425
+      },
+      {
+        "executionId": "d7f2c74f-870d-4ead-a670-04b3c5c035b2",
+        "chatSessionId": "sess_422c215b-a12f-4a94-af76-91f3f9a1b8ae",
+        "timestamp": 1788867220737
+      }
+    ],
+    "2.4 Escribir prueba de propiedad de autoridad, trazabilidad y publicación cerrada": [
+      {
+        "executionId": "d7f2c74f-870d-4ead-a670-04b3c5c035b2",
+        "chatSessionId": "sess_422c215b-a12f-4a94-af76-91f3f9a1b8ae",
+        "timestamp": 1788866142156
+      },
+      {
+        "executionId": "d7f2c74f-870d-4ead-a670-04b3c5c035b2",
+        "chatSessionId": "sess_422c215b-a12f-4a94-af76-91f3f9a1b8ae",
+        "timestamp": 1788867221569
+      }
+    ],
+    "5.3 Escribir prueba de propiedad de integridad geométrica": [
+      {
+        "executionId": "d7f2c74f-870d-4ead-a670-04b3c5c035b2",
+        "chatSessionId": "sess_422c215b-a12f-4a94-af76-91f3f9a1b8ae",
+        "timestamp": 1788866143547
+      },
+      {
+        "executionId": "d7f2c74f-870d-4ead-a670-04b3c5c035b2",
+        "chatSessionId": "sess_422c215b-a12f-4a94-af76-91f3f9a1b8ae",
+        "timestamp": 1788867224413
+      }
+    ],
+    "7.3 Escribir pruebas unitarias de invariantes y ramas de error": [
+      {
+        "executionId": "d7f2c74f-870d-4ead-a670-04b3c5c035b2",
+        "chatSessionId": "sess_422c215b-a12f-4a94-af76-91f3f9a1b8ae",
+        "timestamp": 1788866144475
+      },
+      {
+        "executionId": "d7f2c74f-870d-4ead-a670-04b3c5c035b2",
+        "chatSessionId": "sess_422c215b-a12f-4a94-af76-91f3f9a1b8ae",
+        "timestamp": 1788867226566
+      }
+    ],
+    "2. Catálogo canónico, esquemas y Publication Gate (fail-closed)": [
+      {
+        "executionId": "d7f2c74f-870d-4ead-a670-04b3c5c035b2",
+        "chatSessionId": "sess_422c215b-a12f-4a94-af76-91f3f9a1b8ae",
+        "timestamp": 1788867220787
+      }
+    ],
+    "5. Geometría hexagonal y modelos de mapa/ficha": [
+      {
+        "executionId": "d7f2c74f-870d-4ead-a670-04b3c5c035b2",
+        "chatSessionId": "sess_422c215b-a12f-4a94-af76-91f3f9a1b8ae",
+        "timestamp": 1788867223053
+      }
+    ],
+    "7. Estado de partida, transición y validador de invariantes": [
+      {
+        "executionId": "d7f2c74f-870d-4ead-a670-04b3c5c035b2",
+        "chatSessionId": "sess_422c215b-a12f-4a94-af76-91f3f9a1b8ae",
+        "timestamp": 1788867225354
       }
     ]
   }

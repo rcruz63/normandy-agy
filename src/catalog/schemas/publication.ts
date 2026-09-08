@@ -10,7 +10,11 @@
  * Solo define tipos `Readonly` y sus constructores validadores. La agregación
  * de estados y la emisión de `PublicationReport` corresponden a la Tarea 2.3.
  */
-import type { CatalogId, DecisionRef } from "../../domain/identity/index.js";
+import type {
+  CatalogId,
+  DecisionRef,
+  MissionId,
+} from "../../domain/identity/index.js";
 import type { SourceRef } from "./source-ref.js";
 
 /** Causas por las que un elemento permanece en Estado no publicable. */
@@ -67,6 +71,28 @@ export type ConformanceEntry = Readonly<{
   expected?: unknown;
   actual?: unknown;
   sourceRefs: readonly SourceRef[];
+}>;
+
+/**
+ * Registro de la Segunda revisión visual de una Misión (DP-001).
+ *
+ * Comprueba de forma humana e independiente que la transcripción del Mapa
+ * coincide con la Página de Mapa (coordenadas, aristas, terrenos, entradas,
+ * Incógnitas, fijas y orientaciones). No guarda páginas ni capturas del PDF:
+ * solo el estado de DP-001, el resultado, el revisor, la fecha y la Referencia
+ * de misión (diseño §1, requisitos 1.8, 2.3).
+ *
+ * El {@link PublicationGate} solo considera un Mapa publicable cuando
+ * `dp001Status === "resolved"` y `result === "approved"`; cualquier otro caso
+ * (incluido `undefined`) bloquea la Misión (fail-closed).
+ */
+export type VisualReviewRecord = Readonly<{
+  missionId: MissionId;
+  missionRef: SourceRef;
+  dp001Status: "pending" | "resolved";
+  result?: "approved" | "failed";
+  reviewerId?: string;
+  reviewedAt?: string;
 }>;
 
 /** Propiedad de un recurso: propio o licenciado (DP-003). */
@@ -264,4 +290,46 @@ export function licenseEntry(input: {
   if (input.evidenceRef !== undefined)
     result = { ...result, evidenceRef: input.evidenceRef };
   return Object.freeze(result) as unknown as LicenseEntry;
+}
+
+/**
+ * Construye un {@link VisualReviewRecord}.
+ *
+ * Una revisión con `result === "approved"` exige `dp001Status === "resolved"`,
+ * un `reviewerId` no vacío y un `reviewedAt` no vacío: una aprobación sin
+ * revisor o sin fecha no es trazable (fail-closed). Los campos opcionales se
+ * omiten por completo cuando no se aportan (`exactOptionalPropertyTypes`).
+ */
+export function visualReviewRecord(input: {
+  missionId: MissionId;
+  missionRef: SourceRef;
+  dp001Status: "pending" | "resolved";
+  result?: "approved" | "failed";
+  reviewerId?: string;
+  reviewedAt?: string;
+}): VisualReviewRecord {
+  if (input.result === "approved") {
+    if (input.dp001Status !== "resolved") {
+      throw new InvalidPublicationDataError(
+        "dp001Status",
+        input.dp001Status,
+        "una revisión aprobada exige DP-001 resuelto",
+      );
+    }
+    requireNonEmpty("reviewerId", input.reviewerId);
+    requireNonEmpty("reviewedAt", input.reviewedAt);
+  }
+
+  const base = {
+    missionId: input.missionId,
+    missionRef: input.missionRef,
+    dp001Status: input.dp001Status,
+  };
+  let result: Record<string, unknown> = { ...base };
+  if (input.result !== undefined) result = { ...result, result: input.result };
+  if (input.reviewerId !== undefined)
+    result = { ...result, reviewerId: input.reviewerId };
+  if (input.reviewedAt !== undefined)
+    result = { ...result, reviewedAt: input.reviewedAt };
+  return Object.freeze(result) as unknown as VisualReviewRecord;
 }
