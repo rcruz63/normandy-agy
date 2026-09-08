@@ -39,7 +39,7 @@ fi
 # Verificar que el remoto apunta a la cuenta personal rcruz63.
 origin_url="$(git remote get-url origin 2>/dev/null || true)"
 case "${origin_url}" in
-  https://rcruz63@github.com/\*\) : ;;
+  https://rcruz63@github.com/*) : ;;
   *)
     echo "ERROR: origin es '${origin_url}'; se esperaba https://rcruz63@github.com/..." >&2
     echo "Ejecuta: git remote set-url origin https://rcruz63@github.com/rcruz63/normandy.git" >&2

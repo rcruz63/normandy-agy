@@ -1,0 +1,10 @@
+{
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    "lib": ["ES2022", "DOM", "DOM.Iterable", "WebWorker"],
+    "types": ["node"],
+    "noEmit": true
+  },
+  "include": ["src", "tests", "infrastructure"],
+  "exclude": ["node_modules", "dist", "cdk.out"]
+}

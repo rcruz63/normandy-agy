@@ -1,0 +1,35 @@
+{
+  "name": "fields-of-normandy-pwa",
+  "version": "0.0.0",
+  "private": true,
+  "description": "PWA personal en es-ES para jugar en solitario las quince misiones verificadas de FON-ML-2022.",
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "typecheck:domain": "tsc -p src/domain/tsconfig.json --noEmit",
+    "build": "tsc -p tsconfig.build.json",
+    "test": "vitest run",
+    "test:unit": "vitest run tests/unit",
+    "test:property": "vitest run tests/property",
+    "test:integration": "vitest run tests/integration",
+    "test:e2e": "playwright test",
+    "lint": "eslint .",
+    "lint:boundaries": "eslint src/domain --rule '{\"no-restricted-imports\": \"error\"}'"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.48.0",
+    "@types/node": "^20.16.0",
+    "@typescript-eslint/eslint-plugin": "^8.8.0",
+    "@typescript-eslint/parser": "^8.8.0",
+    "@vitest/coverage-v8": "^2.1.0",
+    "axe-core": "^4.10.0",
+    "eslint": "^8.57.0",
+    "fake-indexeddb": "^6.0.0",
+    "fast-check": "^3.22.0",
+    "typescript": "^5.6.0",
+    "vitest": "^2.1.0"
+  }
+}

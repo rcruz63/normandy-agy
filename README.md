@@ -13,13 +13,13 @@ de 2022 «The Fields of Normandy: A Solitaire Wargame» (`FON-ML-2022`).
 
 ## Estado del proyecto
 
-**Fase actual:** planificación completada; implementación no iniciada.
+**Fase actual:** planificación completada; implementación en curso.
 
 Este README se mantiene vivo: refleja por dónde vamos entre sesiones. El
 desarrollo no se completará en una sola sesión.
 
 - Especificación: **completa** (requisitos, diseño y plan de tareas aprobados).
-- Implementación: **0 de 28 tareas** completadas.
+- Implementación: **1 de 28 tareas** completadas.
 
 Última actualización: 8 de septiembre de 2026.
 
@@ -29,7 +29,7 @@ Leyenda: ⬜ pendiente · 🟦 en curso · ✅ completada
 
 | # | Tarea | Estado |
 |---|-------|--------|
-| 1 | Estructura del proyecto, puertos y tipos base del dominio | ⬜ |
+| 1 | Estructura del proyecto, puertos y tipos base del dominio | ✅ |
 | 2 | Catálogo canónico, esquemas y Publication Gate (fail-closed) | ⬜ |
 | 3 | Fixtures canónicos verificados de las quince misiones | ⬜ |
 | 4 | Checkpoint - Catálogo y publicación | ⬜ |

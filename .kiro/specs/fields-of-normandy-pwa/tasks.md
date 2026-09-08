@@ -10,7 +10,7 @@ Las 25 propiedades de corrección del diseño se implementan cada una con exacta
 
 ## Tasks
 
-- [ ] 1. Estructura del proyecto, puertos y tipos base del dominio
+- [x] 1. Estructura del proyecto, puertos y tipos base del dominio
   - Crear la estructura `src/{domain,application,adapters,catalog,ui,service-worker}` e `infrastructure/`, `tests/{unit,property,integration,e2e,conformance}` según el diseño
   - Configurar TypeScript estricto, Vitest, fast-check, Playwright y axe-core sin importaciones de DOM/AWS en `domain/`
   - Definir tipos opacos `Brand<T,Name>` e identificadores (`CatalogId`, `MissionId`, `GameId`, `SnapshotId`, `RulesVersion`, `DecisionRef`, `SaveVersion`, `PackageVersion`, `RandomAlgorithmVersion`) y tipos `Readonly`
