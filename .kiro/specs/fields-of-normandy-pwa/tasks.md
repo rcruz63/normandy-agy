@@ -18,7 +18,7 @@ Las 25 propiedades de corrección del diseño se implementan cada una con exacta
   - _Requirements: 1.1, 6.1, 19.2, 21.1, 28.5_
 
 - [ ] 2. Catálogo canónico, esquemas y Publication Gate (fail-closed)
-  - [ ] 2.1 Definir modelos de catálogo y fuente
+  - [x] 2.1 Definir modelos de catálogo y fuente
     - Implementar `SourceRef`, `PublicationStatus`, `CatalogItem<T>`, `DecisionRecord`, `ConformanceEntry`, `LicenseEntry`, `RulesCatalog`, `MissionDefinition`, `CanonicalRule`, `CanonicalTable<I,O>` como tipos `Readonly` validados por constructores
     - Validar `missionRef` contra `N=01..15` y páginas `16+2(N-1)` / `17+2(N-1)`; conservar título inglés solo en metadatos de mantenimiento
     - _Requirements: 1.1, 1.2, 1.3, 1.4, 1.5, 3.5, 4.2, 4.3, 32.3_
@@ -37,16 +37,16 @@ Las 25 propiedades de corrección del diseño se implementan cada una con exacta
     - Validadores de esquema, políticas de publicación, ausencia explícita de aplicación y colisión de entradas
     - _Requirements: 2.7, 2.8, 4.8, 4.10_
 
-- [ ] 3. Fixtures canónicos verificados de las quince Misiones
-  - [ ] 3.1 Codificar catálogo de Misiones, nombres, duración y objetivos (req. 32)
+- [x] 3. Fixtures canónicos verificados de las quince Misiones
+  - [x] 3.1 Codificar catálogo de Misiones, nombres, duración y objetivos (req. 32)
     - Crear fixtures estructurados con las quince Misiones, nombre visible `es-ES`, título inglés como metadato, turnos base, objetivo y `FON-ML-2022-Mnn`
     - Modelar exactamente tres opciones de duración: base−1, base, base+1
     - _Requirements: 32.1, 32.2, 32.3, 32.4, 32.5, 32.8, 32.9, 32.10, 32.11, 32.12_
-  - [ ] 3.2 Codificar fuerzas británicas, tablas de revelado y unidades fijas (req. 33)
+  - [x] 3.2 Codificar fuerzas británicas, tablas de revelado y unidades fijas (req. 33)
     - Crear fixtures de fuerzas por Misión, filas de Tabla de revelado d6 y unidades fijas adicionales con sus `SourceRef`; registrar ausencia explícita cuando no haya unidad fija
     - Marcar como Estado no publicable toda posición/Orientación visual dependiente de DP-001
     - _Requirements: 33.1, 33.2, 33.3, 33.4, 33.5, 33.6, 33.7, 33.8_
-  - [ ] 3.3 Codificar tablas de órdenes, valores para impactar y contadores (req. 34, 36, 40)
+  - [x] 3.3 Codificar tablas de órdenes, valores para impactar y contadores (req. 34, 36, 40)
     - Crear fixtures de las seis filas de la Tabla de órdenes por tipo de unidad, valores base para impactar y el inventario de contadores funcionales de página 47 como Recursos propios
     - _Requirements: 34.18, 36.1, 40.8, 40.9_
   - [ ]* 3.4 Escribir pruebas de ejemplo de las tablas fijas

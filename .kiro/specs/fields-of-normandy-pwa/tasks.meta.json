@@ -12,6 +12,61 @@
         "chatSessionId": "sess_422c215b-a12f-4a94-af76-91f3f9a1b8ae",
         "timestamp": 1788861103774
       }
+    ],
+    "2.1 Definir modelos de catálogo y fuente": [
+      {
+        "executionId": "41b6d226-c84c-4f60-b802-96bd406a7017",
+        "chatSessionId": "sess_422c215b-a12f-4a94-af76-91f3f9a1b8ae",
+        "timestamp": 1788862799874
+      },
+      {
+        "executionId": "41b6d226-c84c-4f60-b802-96bd406a7017",
+        "chatSessionId": "sess_422c215b-a12f-4a94-af76-91f3f9a1b8ae",
+        "timestamp": 1788863652886
+      }
+    ],
+    "3.1 Codificar catálogo de Misiones, nombres, duración y objetivos (req. 32)": [
+      {
+        "executionId": "41b6d226-c84c-4f60-b802-96bd406a7017",
+        "chatSessionId": "sess_422c215b-a12f-4a94-af76-91f3f9a1b8ae",
+        "timestamp": 1788862801263
+      },
+      {
+        "executionId": "41b6d226-c84c-4f60-b802-96bd406a7017",
+        "chatSessionId": "sess_422c215b-a12f-4a94-af76-91f3f9a1b8ae",
+        "timestamp": 1788863654176
+      }
+    ],
+    "3.2 Codificar fuerzas británicas, tablas de revelado y unidades fijas (req. 33)": [
+      {
+        "executionId": "41b6d226-c84c-4f60-b802-96bd406a7017",
+        "chatSessionId": "sess_422c215b-a12f-4a94-af76-91f3f9a1b8ae",
+        "timestamp": 1788862802646
+      },
+      {
+        "executionId": "41b6d226-c84c-4f60-b802-96bd406a7017",
+        "chatSessionId": "sess_422c215b-a12f-4a94-af76-91f3f9a1b8ae",
+        "timestamp": 1788863655581
+      }
+    ],
+    "3.3 Codificar tablas de órdenes, valores para impactar y contadores (req. 34, 36, 40)": [
+      {
+        "executionId": "41b6d226-c84c-4f60-b802-96bd406a7017",
+        "chatSessionId": "sess_422c215b-a12f-4a94-af76-91f3f9a1b8ae",
+        "timestamp": 1788862803580
+      },
+      {
+        "executionId": "41b6d226-c84c-4f60-b802-96bd406a7017",
+        "chatSessionId": "sess_422c215b-a12f-4a94-af76-91f3f9a1b8ae",
+        "timestamp": 1788863656875
+      }
+    ],
+    "3. Fixtures canónicos verificados de las quince Misiones": [
+      {
+        "executionId": "41b6d226-c84c-4f60-b802-96bd406a7017",
+        "chatSessionId": "sess_422c215b-a12f-4a94-af76-91f3f9a1b8ae",
+        "timestamp": 1788863656922
+      }
     ]
   }
 }
