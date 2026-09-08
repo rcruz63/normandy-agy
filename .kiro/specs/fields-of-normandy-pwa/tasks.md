@@ -22,7 +22,7 @@ Las 25 propiedades de corrección del diseño se implementan cada una con exacta
     - Implementar `SourceRef`, `PublicationStatus`, `CatalogItem<T>`, `DecisionRecord`, `ConformanceEntry`, `LicenseEntry`, `RulesCatalog`, `MissionDefinition`, `CanonicalRule`, `CanonicalTable<I,O>` como tipos `Readonly` validados por constructores
     - Validar `missionRef` contra `N=01..15` y páginas `16+2(N-1)` / `17+2(N-1)`; conservar título inglés solo en metadatos de mantenimiento
     - _Requirements: 1.1, 1.2, 1.3, 1.4, 1.5, 3.5, 4.2, 4.3, 32.3_
-  - [ ] 2.2 Implementar `CatalogValidator` y `CatalogCompiler` fail-closed
+  - [x] 2.2 Implementar `CatalogValidator` y `CatalogCompiler` fail-closed
     - Validar identificadores únicos, referencias, cobertura/no solapamiento de tablas, exactamente quince Misiones y relaciones de inventario
     - Emitir catálogo inmutable con `rulesVersion` nuevo; nunca reescribir una versión publicada
     - _Requirements: 1.6, 1.10, 1.11, 2.1, 2.2, 2.7, 2.8, 4.1, 4.7, 4.9, 4.10, 17.7_
@@ -57,7 +57,7 @@ Las 25 propiedades de corrección del diseño se implementan cada una con exacta
   - Ensure all tests pass, ask the user if questions arise.
 
 - [ ] 5. Geometría hexagonal y modelos de mapa/ficha
-  - [ ] 5.1 Implementar modelos de mapa y ficha
+  - [x] 5.1 Implementar modelos de mapa y ficha
     - Implementar `HexMapDefinition`, `HexDefinition`, `HexEdge`, `VisualReview`, `PieceState` con aristas canónicas almacenadas una sola vez
     - _Requirements: 4.5, 40.1, 40.2, 40.3, 40.13_
   - [ ] 5.2 Implementar `HexGeometry` (adyacencia, distancia, ruta, Zona de fuego)
@@ -67,8 +67,8 @@ Las 25 propiedades de corrección del diseño se implementan cada una con exacta
     - **Property 8: Integridad geométrica, adyacencia y derivados**
     - **Validates: Requirements 4.5, 10.1, 10.2, 10.3, 10.5, 10.6, 14.1, 14.6, 35.1, 35.13, 35.14, 36.7, 36.8, 36.9, 37.5, 40.1, 40.2, 40.3, 40.11**
 
-- [ ] 6. Aleatoriedad reproducible versionada
-  - [ ] 6.1 Implementar `VersionedRandom` como máquina de estado pura
+- [x] 6. Aleatoriedad reproducible versionada
+  - [x] 6.1 Implementar `VersionedRandom` como máquina de estado pura
     - Implementar `RandomState`, `RandomStep`, `RandomConsumption` con Semilla opaca; registro inmutable de `algorithmVersion`; identificadores únicos por Partida y posiciones consecutivas; nunca `Math.random` en dominio
     - _Requirements: 19.2, 19.3, 19.4, 19.5, 19.11_
   - [ ]* 6.2 Escribir prueba de propiedad de determinismo de la secuencia
@@ -79,7 +79,7 @@ Las 25 propiedades de corrección del diseño se implementan cada una con exacta
     - **Validates: Requirements 7.2, 19.7, 19.9**
 
 - [ ] 7. Estado de partida, transición y validador de invariantes
-  - [ ] 7.1 Implementar modelos de estado y transición
+  - [x] 7.1 Implementar modelos de estado y transición
     - Implementar `GameState`, `GameSnapshot`, `TransitionProposal`, `GameCommand`, `TransitionDecision` (`accepted`/`rejected`/`blocked`) con modos `complete` y `stopped-after-consumption`; `GameState` nunca contiene estado de vista
     - _Requirements: 5.6, 7.1, 13.7, 17.6, 21.1_
   - [ ] 7.2 Implementar `InvariantValidator`

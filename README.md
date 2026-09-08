@@ -19,7 +19,7 @@ Este README se mantiene vivo: refleja por dónde vamos entre sesiones. El
 desarrollo no se completará en una sola sesión.
 
 - Especificación: **completa** (requisitos, diseño y plan de tareas aprobados).
-- Implementación: **2 de 28 tareas** completadas.
+- Implementación: **3 de 28 tareas** completadas.
 
 Última actualización: 8 de septiembre de 2026.
 
@@ -33,9 +33,9 @@ Leyenda: ⬜ pendiente · 🟦 en curso · ✅ completada
 | 2 | Catálogo canónico, esquemas y Publication Gate (fail-closed) | 🟦 |
 | 3 | Fixtures canónicos verificados de las quince misiones | ✅ |
 | 4 | Checkpoint - Catálogo y publicación | ⬜ |
-| 5 | Geometría hexagonal y modelos de mapa/ficha | ⬜ |
-| 6 | Aleatoriedad reproducible versionada | ⬜ |
-| 7 | Estado de partida, transición y validador de invariantes | ⬜ |
+| 5 | Geometría hexagonal y modelos de mapa/ficha | 🟦 |
+| 6 | Aleatoriedad reproducible versionada | ✅ |
+| 7 | Estado de partida, transición y validador de invariantes | 🟦 |
 | 8 | Motor de reglas: contrato de transición y precedencia canónica | ⬜ |
 | 9 | Submódulos de reglas: turno, órdenes y Moral | ⬜ |
 | 10 | Submódulos de reglas: combate, cobertura, terreno y especiales | ⬜ |

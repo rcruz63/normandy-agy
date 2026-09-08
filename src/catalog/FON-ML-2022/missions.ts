@@ -22,49 +22,38 @@
  * Nota de frontera: este módulo vive en `catalog/` y no importa DOM, IndexedDB,
  * red, reloj ni SDK de AWS. Es puro y determinista.
  *
- * Nota de integración (Tarea 2.1): los tipos de catálogo ricos
- * (`MissionDefinition`, `SourceRef`, `PublicationStatus`, …) los define la
- * Tarea 2.1 en `src/catalog/schemas/`. Mientras no estén fusionados, se declaran
- * aquí alias locales MÍNIMOS y estructuralmente compatibles con el diseño.
- * TODO(2.1): sustituir estos alias por las importaciones de
- * `src/catalog/schemas/` cuando estén disponibles.
+ * Nota de integración (Tarea 2.2): los tipos de catálogo ricos
+ * (`SourceRef`, `MissionRefString`, `DurationOptions`, …) los define la Tarea
+ * 2.1 en `src/catalog/schemas/` y aquí se IMPORTAN de su barril. Este módulo
+ * codifica la identidad de Misión como un subconjunto (`MissionIdentity`) del
+ * `MissionDefinition` canónico; el compilador (Tarea 2.2) ensambla la
+ * definición completa combinando esta identidad con fuerzas, revelado, mapa,
+ * etc.
  */
 import type { MissionId } from "../../domain/identity/index.js";
 import { missionId } from "../../domain/identity/index.js";
+import type {
+  DurationOptions,
+  MissionRefString,
+  SourceRef,
+} from "../schemas/index.js";
+import {
+  DURATION_OPTIONS,
+  missionMapPage as schemaMissionMapPage,
+  missionRulesPage as schemaMissionRulesPage,
+  sourceRef,
+} from "../schemas/index.js";
 
-// --- Alias locales mínimos (TODO 2.1: unificar con src/catalog/schemas/) ---
-
-/**
- * Referencia de fuente. Forma compatible con `SourceRef` del diseño (design.md).
- * TODO(2.1): reemplazar por el tipo canónico exportado por los esquemas.
- */
-export type SourceRef = Readonly<{
-  sourceVersion: "FON-ML-2022";
-  page: number;
-  element: string;
-  missionRef?: `FON-ML-2022-M${string}`;
-}>;
-
-/**
- * Las tres únicas opciones de duración por Misión (requisito 32.5).
- * Tupla ordenada base−1, base, base+1, como fija el diseño (`durationOptions`).
- */
-export type DurationOptions = readonly ["base-minus-one", "base", "base-plus-one"];
-
-/**
- * Constante compartida con las tres opciones de duración canónicas.
- * base−1 (requisito 32.8), base (32.4/32.10), base+1 (32.9).
- */
-export const DURATION_OPTIONS: DurationOptions = [
-  "base-minus-one",
-  "base",
-  "base-plus-one",
-] as const;
+// Reexporta los tipos y constantes canónicos para conservar la API previa del
+// fixture (consumida por pruebas y otras capas del catálogo).
+export type { DurationOptions, SourceRef };
+export { DURATION_OPTIONS };
 
 /**
  * Identidad verificada de una Misión (subconjunto propio de la Tarea 3.1).
- * TODO(2.1): converge con `MissionDefinition` de `src/catalog/schemas/`
- * (que añade `setup`, `map`, `britishForces`, `revealTable`, etc.).
+ * Converge con `MissionDefinition` de `src/catalog/schemas/`, que añade
+ * `setup`, `map`, `britishForces`, `revealTable`, etc. El compilador (Tarea
+ * 2.2) ensambla la `MissionDefinition` completa a partir de esta identidad.
  */
 export type MissionIdentity = Readonly<{
   id: MissionId;
@@ -81,7 +70,7 @@ export type MissionIdentity = Readonly<{
   /** Objetivo de victoria en es-ES (requisito 32.11). */
   objectiveEs: string;
   /** Referencia de misión `FON-ML-2022-Mnn`. */
-  missionRef: `FON-ML-2022-M${string}`;
+  missionRef: MissionRefString;
   /** Página de reglas de Misión y Página de Mapa (requisito 32 / 1). */
   sourceRefs: readonly [SourceRef, SourceRef];
 }>;
@@ -94,18 +83,18 @@ function twoDigits(n: number): string {
 }
 
 /** Referencia de misión canónica `FON-ML-2022-Mnn`. */
-function missionRefOf(n: number): `FON-ML-2022-M${string}` {
-  return `FON-ML-2022-M${twoDigits(n)}` as `FON-ML-2022-M${string}`;
+function missionRefOf(n: number): MissionRefString {
+  return `FON-ML-2022-M${twoDigits(n)}` as MissionRefString;
 }
 
-/** Página de reglas de Misión: `16 + 2 × (N - 1)`. */
+/** Página de reglas de Misión: `16 + 2 × (N - 1)` (constructor canónico). */
 export function missionRulesPage(n: number): number {
-  return 16 + 2 * (n - 1);
+  return schemaMissionRulesPage(n);
 }
 
-/** Página de Mapa: `17 + 2 × (N - 1)`. */
+/** Página de Mapa: `17 + 2 × (N - 1)` (constructor canónico). */
 export function missionMapPage(n: number): number {
-  return 17 + 2 * (n - 1);
+  return schemaMissionMapPage(n);
 }
 
 /**
@@ -242,20 +231,18 @@ function toMissionIdentity(seed: MissionSeed): MissionIdentity {
     objectiveEs: seed.objectiveEs,
     missionRef: ref,
     sourceRefs: [
-      {
-        sourceVersion: "FON-ML-2022",
+      sourceRef({
         page: missionRulesPage(seed.number),
         element: "Página de reglas de Misión",
         missionRef: ref,
-      },
-      {
-        sourceVersion: "FON-ML-2022",
+      }),
+      sourceRef({
         page: missionMapPage(seed.number),
         element: "Página de Mapa",
         missionRef: ref,
-      },
+      }),
     ],
-  } as const;
+  };
 }
 
 /**

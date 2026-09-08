@@ -20,82 +20,65 @@
  * aquí de forma estructuralmente compatible para permitir un typecheck autónomo.
  */
 import type { Brand } from "../../domain/identity/index.js";
-import { catalogId, type CatalogId, type RulesVersion } from "../../domain/identity/index.js";
+import { catalogId, rulesVersion, type RulesVersion } from "../../domain/identity/index.js";
+import type {
+  CanonicalTable,
+  LicenseEntry,
+  OrderCode,
+  OrderTableInput,
+  OrderTableResult,
+  PublicationStatus,
+  SourceRef,
+  TableRow,
+} from "../schemas/index.js";
+import { sourceRef } from "../schemas/index.js";
 
 // ---------------------------------------------------------------------------
-// TODO(2.1): sustituir estos alias por los tipos publicados en
-// `src/catalog/schemas/`. Reflejan la forma fijada por el diseño (design.md
-// §"Catálogo lúdico") para permitir un typecheck autónomo mientras 2.1 se
-// integra.
+// Tipos canónicos importados de `src/catalog/schemas/`
 // ---------------------------------------------------------------------------
-
-/** Marca de origen contra `FON-ML-2022`. Forma tomada de design.md. */
-export type SourceRef = Readonly<{
-  sourceVersion: "FON-ML-2022";
-  page: number;
-  element: string;
-  missionRef?: `FON-ML-2022-M${string}`;
-}>;
-
-/** Estado de publicación fail-closed. Forma tomada de design.md. */
-export type PublicationStatus =
-  | Readonly<{ kind: "published"; approvedAt: string }>
-  | Readonly<{
-      kind: "blocked";
-      blockers: readonly ("DP-001" | "DP-002" | "DP-003" | "test" | "traceability")[];
-    }>;
-
-/** Fila genérica de una tabla canónica (entrada → salida). */
-export type TableRow<I, O> = Readonly<{ input: I; output: O }>;
-
-/** Tabla canónica con dominio de entrada explícito. Forma tomada de design.md. */
-export type CanonicalTable<I, O> = Readonly<{
-  id: CatalogId;
-  rows: readonly TableRow<I, O>[];
-  inputDomain: readonly I[];
-  sourceRefs: readonly SourceRef[];
-}>;
-
-/** Entrada de inventario de licencias (Recursos propios). Forma de design.md. */
-export type LicenseEntry = Readonly<{
-  resourceId: string;
-  ownership: "own" | "licensed";
-  author: string;
-  provenance: string;
-  license?: string;
-  attribution?: string;
-  scope?: string;
-  evidenceRef?: string;
-}>;
+// La Tarea 2.2 unificó los antiguos alias locales (`SourceRef`,
+// `PublicationStatus`, `TableRow`, `CanonicalTable`, `LicenseEntry`) con el
+// esquema canónico, e incorporó `OrderCode`, `OrderTableInput` y
+// `OrderTableResult` como sub-modelos reales. Se reexportan los tipos que
+// consumen las pruebas y otras capas del catálogo.
+export type {
+  CanonicalTable,
+  LicenseEntry,
+  OrderCode,
+  OrderTableInput,
+  OrderTableResult,
+  PublicationStatus,
+  SourceRef,
+  TableRow,
+};
 
 // ---------------------------------------------------------------------------
 // Constantes de referencia de fuente
 // ---------------------------------------------------------------------------
 
-const rulesVersionFon2022 = "FON-ML-2022" as unknown as RulesVersion;
+const rulesVersionFon2022 = rulesVersion("FON-ML-2022");
 
 /** Referencias de fuente de la Tabla de órdenes (turnos, activación y órdenes). */
 const orderTableSourceRefs: readonly SourceRef[] = [
-  { sourceVersion: "FON-ML-2022", page: 6, element: "Turnos y activación" },
-  { sourceVersion: "FON-ML-2022", page: 7, element: "Órdenes y Tabla de órdenes" },
-  { sourceVersion: "FON-ML-2022", page: 8, element: "Órdenes" },
-  { sourceVersion: "FON-ML-2022", page: 14, element: "Resumen de reglas" },
+  sourceRef({ page: 6, element: "Turnos y activación" }),
+  sourceRef({ page: 7, element: "Órdenes y Tabla de órdenes" }),
+  sourceRef({ page: 8, element: "Órdenes" }),
+  sourceRef({ page: 14, element: "Resumen de reglas" }),
 ];
 
 /** Referencias de fuente de los Valores para impactar. */
 const hitValueSourceRefs: readonly SourceRef[] = [
-  { sourceVersion: "FON-ML-2022", page: 5, element: "Terreno" },
-  { sourceVersion: "FON-ML-2022", page: 12, element: "Semioruga, PIAT y Minas" },
-  { sourceVersion: "FON-ML-2022", page: 13, element: "Artillería y Ríos" },
-  { sourceVersion: "FON-ML-2022", page: 14, element: "Resumen de reglas" },
+  sourceRef({ page: 5, element: "Terreno" }),
+  sourceRef({ page: 12, element: "Semioruga, PIAT y Minas" }),
+  sourceRef({ page: 13, element: "Artillería y Ríos" }),
+  sourceRef({ page: 14, element: "Resumen de reglas" }),
 ];
 
 /** Referencia de fuente del inventario funcional de contadores (página 47). */
-const counterInventorySourceRef: SourceRef = {
-  sourceVersion: "FON-ML-2022",
+const counterInventorySourceRef: SourceRef = sourceRef({
   page: 47,
   element: "Inventario funcional de contadores",
-};
+});
 
 // ---------------------------------------------------------------------------
 // 1. Tabla de órdenes británica (Requisito 34 y 34.18)
@@ -113,13 +96,10 @@ export const britishUnitTypeNameEs: Readonly<Record<BritishUnitType, string>> = 
 };
 
 /**
- * Códigos de Orden verificados. Las etiquetas cortas (`RAL`, `GRE`, ...) son las
- * abreviaturas de la Tabla de órdenes del requisito 34; los nombres visibles se
- * redactan en `es-ES`.
+ * Nombre visible `es-ES` de cada Orden. Las abreviaturas (`RAL`, `GRE`, ...)
+ * son las de la Tabla de órdenes del requisito 34; el nombre visible es es-ES.
+ * El tipo {@link OrderCode} es canónico (importado del esquema).
  */
-export type OrderCode = "RAL" | "GRE" | "ADV" | "SCO" | "COV" | "FIRE";
-
-/** Nombre visible `es-ES` de cada Orden. */
 export const orderCodeNameEs: Readonly<Record<OrderCode, string>> = {
   RAL: "Reagrupar",
   GRE: "Granada",
@@ -128,17 +108,6 @@ export const orderCodeNameEs: Readonly<Record<OrderCode, string>> = {
   COV: "Cobertura",
   FIRE: "Fuego",
 };
-
-/** Resultado de una fila de la Tabla de órdenes: primera y segunda Orden. */
-export type OrderTableResult = Readonly<{
-  /** Orden cruzada con la primera columna (primer d6). */
-  first: OrderCode;
-  /** Orden cruzada con la segunda columna (segundo d6). */
-  second: OrderCode;
-}>;
-
-/** Entrada de la Tabla de órdenes: valor de un d6 (1..6). */
-export type OrderTableInput = 1 | 2 | 3 | 4 | 5 | 6;
 
 /** Dominio de entrada de toda Tabla de órdenes: los seis resultados de un d6. */
 export const orderTableInputDomain: readonly OrderTableInput[] = [1, 2, 3, 4, 5, 6];

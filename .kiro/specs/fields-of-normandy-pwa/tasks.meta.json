@@ -67,6 +67,61 @@
         "chatSessionId": "sess_422c215b-a12f-4a94-af76-91f3f9a1b8ae",
         "timestamp": 1788863656922
       }
+    ],
+    "2.2 Implementar `CatalogValidator` y `CatalogCompiler` fail-closed": [
+      {
+        "executionId": "c9383d81-ead4-4be9-983b-60e42a86b02c",
+        "chatSessionId": "sess_422c215b-a12f-4a94-af76-91f3f9a1b8ae",
+        "timestamp": 1788864812927
+      },
+      {
+        "executionId": "c9383d81-ead4-4be9-983b-60e42a86b02c",
+        "chatSessionId": "sess_422c215b-a12f-4a94-af76-91f3f9a1b8ae",
+        "timestamp": 1788865623647
+      }
+    ],
+    "5.1 Implementar modelos de mapa y ficha": [
+      {
+        "executionId": "c9383d81-ead4-4be9-983b-60e42a86b02c",
+        "chatSessionId": "sess_422c215b-a12f-4a94-af76-91f3f9a1b8ae",
+        "timestamp": 1788864814289
+      },
+      {
+        "executionId": "c9383d81-ead4-4be9-983b-60e42a86b02c",
+        "chatSessionId": "sess_422c215b-a12f-4a94-af76-91f3f9a1b8ae",
+        "timestamp": 1788865624423
+      }
+    ],
+    "6.1 Implementar `VersionedRandom` como máquina de estado pura": [
+      {
+        "executionId": "c9383d81-ead4-4be9-983b-60e42a86b02c",
+        "chatSessionId": "sess_422c215b-a12f-4a94-af76-91f3f9a1b8ae",
+        "timestamp": 1788864815765
+      },
+      {
+        "executionId": "c9383d81-ead4-4be9-983b-60e42a86b02c",
+        "chatSessionId": "sess_422c215b-a12f-4a94-af76-91f3f9a1b8ae",
+        "timestamp": 1788865625895
+      }
+    ],
+    "7.1 Implementar modelos de estado y transición": [
+      {
+        "executionId": "c9383d81-ead4-4be9-983b-60e42a86b02c",
+        "chatSessionId": "sess_422c215b-a12f-4a94-af76-91f3f9a1b8ae",
+        "timestamp": 1788864816427
+      },
+      {
+        "executionId": "c9383d81-ead4-4be9-983b-60e42a86b02c",
+        "chatSessionId": "sess_422c215b-a12f-4a94-af76-91f3f9a1b8ae",
+        "timestamp": 1788865626820
+      }
+    ],
+    "6. Aleatoriedad reproducible versionada": [
+      {
+        "executionId": "c9383d81-ead4-4be9-983b-60e42a86b02c",
+        "chatSessionId": "sess_422c215b-a12f-4a94-af76-91f3f9a1b8ae",
+        "timestamp": 1788865625971
+      }
     ]
   }
 }

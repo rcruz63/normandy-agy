@@ -20,22 +20,34 @@
  * inventan coordenadas ni orientaciones.
  */
 import type { Brand } from "../../domain/identity/index.js";
+import { catalogId } from "../../domain/identity/index.js";
+import type {
+  BritishForceKind,
+  CanonicalTable,
+  ForceEntry,
+  MissionRefString,
+  RevealResult,
+  SourceRef,
+  SquadDesignation,
+  TableRow,
+} from "../schemas/index.js";
+import { canonicalTable, sourceRef } from "../schemas/index.js";
 
 // ---------------------------------------------------------------------------
-// Alias estructurales provisionales
+// Tipos canónicos importados de `src/catalog/schemas/`
 // ---------------------------------------------------------------------------
-// TODO(2.1): unificar con los tipos de modelo de catálogo definidos en
-// `src/catalog/schemas/` (SourceRef, ForceEntry, RevealResult, TableRow,
-// CanonicalTable). Mientras la Tarea 2.1 no los publique, se declaran aquí
-// alias mínimos estructuralmente compatibles con el diseño (§Catálogo).
-
-/** Referencia de fuente verificada (diseño §SourceRef). */
-export type SourceRef = Readonly<{
-  sourceVersion: "FON-ML-2022";
-  page: number;
-  element: string;
-  missionRef?: `FON-ML-2022-M${string}`;
-}>;
+// Los sub-modelos `SourceRef`, `ForceEntry`, `BritishForceKind`, `RevealResult`,
+// `TableRow` y `CanonicalTable` provienen ahora del esquema canónico (Tarea 2.2
+// unificó los antiguos alias locales). Se reexportan para conservar la API que
+// consumen las pruebas y otras capas del catálogo.
+export type {
+  BritishForceKind,
+  CanonicalTable,
+  ForceEntry,
+  RevealResult,
+  SourceRef,
+  TableRow,
+};
 
 /** Marca de dato cuya posición/Orientación visual depende de DP-001. */
 export type NonPublishableVisual = Readonly<{
@@ -44,52 +56,6 @@ export type NonPublishableVisual = Readonly<{
   /** Aspecto visual pendiente (posición y/o Orientación). */
   aspect: "position" | "orientation" | "position-and-orientation";
   reason: string;
-}>;
-
-/**
- * Tipos de Unidad británica verificados en la tabla de fuerzas del req. 33.
- * Etiquetas visibles en es-ES.
- */
-export type BritishForceKind =
-  | "rifle-squad"
-  | "mg-team"
-  | "mortar"
-  | "piat";
-
-/** Entrada de fuerza británica de preparación de una Misión. */
-export type ForceEntry = Readonly<{
-  kind: BritishForceKind;
-  /** Nombre visible en es-ES. */
-  labelEs: string;
-  /**
-   * Designación de escuadra (A, B, C) cuando aplica; ausente para equipos y
-   * armas de apoyo únicas.
-   */
-  squad?: "A" | "B" | "C";
-}>;
-
-/**
- * Resultado de un Revelado (unidad alemana o Mina) al que se transforma un
- * resultado de d6 mediante la Tabla de revelado de la Misión.
- */
-export type RevealResult =
-  | "HMG"
-  | "LMG"
-  | "german-rifles"
-  | "mine";
-
-/** Fila de una tabla canónica: intervalo cerrado de entrada -> salida única. */
-export type TableRow<I, O> = Readonly<{
-  input: I;
-  output: O;
-}>;
-
-/** Tabla canónica de dominio cubierto, intervalos no solapados y salida única. */
-export type CanonicalTable<I, O> = Readonly<{
-  id: string;
-  rows: readonly TableRow<I, O>[];
-  inputDomain: readonly I[];
-  sourceRefs: readonly [SourceRef, ...SourceRef[]];
 }>;
 
 /** Un resultado de d6 (1..6). */
@@ -119,33 +85,31 @@ export function missionKey(missionNumber: number): MissionKey {
 }
 
 /** Referencia de misión «FON-ML-2022-Mnn» a partir del número. */
-export function missionRef(missionNumber: number): `FON-ML-2022-M${string}` {
-  return `FON-ML-2022-${missionKey(missionNumber)}` as `FON-ML-2022-M${string}`;
+export function missionRef(missionNumber: number): MissionRefString {
+  return `FON-ML-2022-${missionKey(missionNumber)}` as MissionRefString;
 }
 
 function forcesSourceRef(missionNumber: number): SourceRef {
-  return {
-    sourceVersion: "FON-ML-2022",
+  return sourceRef({
     page: missionPage(missionNumber),
     element: "Fuerzas británicas de preparación",
     missionRef: missionRef(missionNumber),
-  };
+  });
 }
 
 function revealSourceRef(missionNumber: number): SourceRef {
-  return {
-    sourceVersion: "FON-ML-2022",
+  return sourceRef({
     page: missionPage(missionNumber),
     element: "Tabla de revelado y unidades fijas adicionales",
     missionRef: missionRef(missionNumber),
-  };
+  });
 }
 
 // ---------------------------------------------------------------------------
 // Constructores de fuerzas
 // ---------------------------------------------------------------------------
 
-function rifleSquad(squad: "A" | "B" | "C"): ForceEntry {
+function rifleSquad(squad: SquadDesignation): ForceEntry {
   return { kind: "rifle-squad", labelEs: `Escuadra de fusileros ${squad}`, squad };
 }
 const MG_TEAM: ForceEntry = { kind: "mg-team", labelEs: "Equipo MG" };
@@ -234,12 +198,12 @@ function revealTable(
     input: value,
     output: assignment[value],
   }));
-  return {
-    id: `reveal-${missionKey(missionNumber)}`,
+  return canonicalTable<D6, RevealResult>({
+    id: catalogId(`FON-ML-2022-reveal-${missionKey(missionNumber)}`),
     rows,
     inputDomain: ALL_D6,
     sourceRefs: [revealSourceRef(missionNumber)],
-  };
+  });
 }
 
 /**

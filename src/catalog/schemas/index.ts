@@ -76,9 +76,22 @@ export type {
   PieceDefinition,
   ObjectiveDefinition,
   SetupDefinition,
+  BritishForceKind,
+  SquadDesignation,
   ForceEntry,
   RevealResult,
+  OrderTableInput,
+  OrderCode,
+  OrderTableResult,
   OrderTable,
   DeclarativePredicate,
   DeclarativeEffect,
 } from "./placeholders.js";
+
+export type {
+  MaintenanceCatalog,
+  CatalogValidationCode,
+  CatalogValidationError,
+  CatalogBuildResult,
+  CatalogCompiler,
+} from "./build.js";
