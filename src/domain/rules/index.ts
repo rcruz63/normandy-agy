@@ -26,3 +26,9 @@ export * from "./halftrack.js";
 export * from "./mines.js";
 export * from "./artillery.js";
 export * from "./reveal-resolver.js";
+// Tarea 11.2: preparación fiel (duración base∓1, fuerzas, unidades fijas
+// reveladas, objetivo tipado, tabla) y desenlace (victoria hasta el último
+// turno inclusive, derrota al concluir, solo el objetivo de la Misión,
+// suspensión ante precedencia no resuelta).
+export * from "./mission-setup.js";
+export * from "./mission-outcome.js";
