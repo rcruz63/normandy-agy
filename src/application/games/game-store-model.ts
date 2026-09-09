@@ -27,6 +27,14 @@ import type { GameSummary } from "../../domain/ports/index.js";
 export const DEFAULT_GENERATION_ID = "active" as const;
 
 /**
+ * Generación de STAGING para el reinicio de una Partida (Tarea 15.3). La
+ * preparación de reemplazo se escribe aquí, en una generación distinta de la
+ * activa, de modo que no toca ninguna Partida activa hasta la promoción atómica
+ * tras confirmación explícita (diseño §4, requisitos 7.4, 7.5, 7.6).
+ */
+export const RESTART_STAGING_GENERATION_ID = "restart-staging" as const;
+
+/**
  * `payload` del resumen de una Partida en el store `games`. Contiene el puntero
  * `latestSnapshotId` (fuente de verdad del enlace a la última Instantánea) y los
  * campos proyectables del resumen; se deriva íntegramente de la Instantánea

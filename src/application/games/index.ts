@@ -9,6 +9,7 @@
  */
 export {
   DEFAULT_GENERATION_ID,
+  RESTART_STAGING_GENERATION_ID,
   toGameRecordPayload,
   toGameSummary,
 } from "./game-store-model.js";
@@ -40,3 +41,33 @@ export type {
   SnapshotIdGenerator,
   GameCommandDispatcherDeps,
 } from "./game-command-dispatcher.js";
+
+export { buildInitialSnapshot } from "./initial-state-factory.js";
+export type {
+  GameIdentity,
+  InitialSnapshotInput,
+} from "./initial-state-factory.js";
+
+export { CreateGame } from "./create-game.js";
+export type { CreateGameDeps, CreateGameResult } from "./create-game.js";
+
+export { ResumeGame } from "./resume-game.js";
+export type {
+  ResumeGameDeps,
+  ResumeGameResult,
+  ResumeSummary,
+} from "./resume-game.js";
+
+export {
+  RestartGame,
+  RestartConfirmation,
+  RestartAlreadyResolvedError,
+} from "./restart-game.js";
+export type { RestartGameDeps } from "./restart-game.js";
+
+export { QuotaProbe } from "./quota-probe.js";
+export type {
+  QuotaProbeResult,
+  StorageEstimate,
+  StorageEstimator,
+} from "./quota-probe.js";
