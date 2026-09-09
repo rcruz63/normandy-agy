@@ -11,7 +11,12 @@
  * 10.2 añade las reglas de elementos especiales: `halftrack` (Semioruga solo
  * atacable por PIAT con Apoyo), `mines` (disparo y persistencia de la Mina) y
  * `artillery` (selección de objetivo 10+ sin Flanqueo y eliminación), que
- * componen con `combat-resolver` para el Valor para impactar.
+ * componen con `combat-resolver` para el Valor para impactar. La Tarea 11.1
+ * añade `reveal-resolver` (Revelado de Incógnitas: sustitución por la Tabla de
+ * la Misión en el mismo Hexágono, Orientación hacia la única reveladora o
+ * suspensión DP-002 ante empate, Explorar sin prueba inmediata de Mina y
+ * sustitución por Mina), que compone con `mines` para la persistencia y el
+ * disparo de prueba, y con `order-effects` para los disparadores.
  */
 export * from "./turn-order-policy.js";
 export * from "./morale-policy.js";
@@ -20,3 +25,4 @@ export * from "./combat-resolver.js";
 export * from "./halftrack.js";
 export * from "./mines.js";
 export * from "./artillery.js";
+export * from "./reveal-resolver.js";
