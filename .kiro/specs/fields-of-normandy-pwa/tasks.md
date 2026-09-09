@@ -140,20 +140,20 @@ Las 25 propiedades de corrección del diseño se implementan cada una con exacta
     - **Property 13: Selección y resolución de Artillería**
     - **Validates: Requirements 16.2, 39.13, 39.14, 39.15, 39.16, 39.17, 39.18**
 
-- [ ] 11. Submódulos de reglas: Revelado, Misión y desenlace
-  - [ ] 11.1 Implementar `RevealResolver` (Incógnitas, tabla, Orientación, Minas)
+- [x] 11. Submódulos de reglas: Revelado, Misión y desenlace
+  - [x] 11.1 Implementar `RevealResolver` (Incógnitas, tabla, Orientación, Minas)
     - Ocultar información previa al Revelado; sustituir Incógnita por resultado de la Tabla de la Misión en el mismo Hexágono; orientar hacia la única reveladora o suspender si el desempate está pendiente (DP-002)
     - _Requirements: 13.1, 13.2, 13.3, 13.4, 33.2, 35.4, 35.13, 35.14, 37.6, 37.7, 37.8, 37.9, 37.10, 37.11, 37.12, 37.13_
-  - [ ] 11.2 Implementar `MissionResolver` (preparación, duración, objetivo, desenlace)
+  - [x] 11.2 Implementar `MissionResolver` (preparación, duración, objetivo, desenlace)
     - Preparar exactamente mapa/fuerzas/fijas/objetivos/tablas de la Misión; duración base∓1; victoria solo si el objetivo se cumple hasta el último turno inclusive, derrota en otro caso; aplicar solo el objetivo de la Misión seleccionada
     - _Requirements: 5.1, 5.2, 5.3, 17.2, 17.3, 17.4, 17.5, 18.1, 18.2, 18.3, 32.6, 32.7, 33.1, 33.3, 33.4, 33.5_
-  - [ ]* 11.3 Escribir prueba de propiedad de ocultación y Revelado canónico
+  - [x]* 11.3 Escribir prueba de propiedad de ocultación y Revelado canónico
     - **Property 11: Ocultación y Revelado canónico**
     - **Validates: Requirements 13.1, 13.2, 13.3, 13.4, 33.2, 35.4, 35.13, 35.14, 37.6, 37.7, 37.8, 37.9, 37.10, 37.11, 37.12**
-  - [ ]* 11.4 Escribir prueba de propiedad de duración, tablas y desenlace
+  - [x]* 11.4 Escribir prueba de propiedad de duración, tablas y desenlace
     - **Property 24: Duración, tablas y desenlace por Misión**
     - **Validates: Requirements 17.2, 17.3, 17.4, 17.5, 18.1, 18.2, 32.4, 32.5, 32.6, 32.7, 32.8, 32.9, 32.10, 32.11, 33.2**
-  - [ ]* 11.5 Escribir prueba de propiedad de catálogo y preparación exactos
+  - [x]* 11.5 Escribir prueba de propiedad de catálogo y preparación exactos
     - **Property 2: Catálogo y preparación exactos por Misión**
     - **Validates: Requirements 4.1, 4.4, 4.5, 4.6, 4.7, 4.8, 5.1, 5.2, 5.3, 5.6, 8.1, 17.8, 32.1, 32.2, 32.3, 32.4, 32.5, 32.8, 32.9, 32.10, 32.11, 33.1, 33.3, 33.6, 33.7**
 
