@@ -14,11 +14,13 @@
  * Nota de frontera de tareas: varios tipos referenciados por el diseño
  * (`DifficultySelection`, `DurationSelection`, `PhaseId`, `ActivationState`,
  * `PieceState`, `UnknownState`, `ObjectiveState`, `ActiveEffect`,
- * `RandomState`, `SimpleLogEntry`, `DetailedLogEntry`, `IntegrityDescriptor`)
- * los definen tareas paralelas o posteriores (5.x geometría/ficha, 6.x
- * aleatoriedad, 13.x registros, 15.x/16.x persistencia). Para no colisionar con
- * esas tareas se declaran aquí como alias mínimos y opacos, y el cableado real
- * se hará en tareas 8.x/13.x/15.x. Cada alias lleva su TODO.
+ * `RandomState`, `IntegrityDescriptor`) los definen tareas paralelas o
+ * posteriores (5.x geometría/ficha, 6.x aleatoriedad, 15.x/16.x persistencia).
+ * Para no colisionar con esas tareas se declaran aquí como alias mínimos y
+ * opacos, y el cableado real se hará en tareas 8.x/15.x. Cada alias lleva su
+ * TODO. Los registros (`SimpleLogEntry`, `DetailedLogEntry`) ya los aporta el
+ * submódulo `../logging` (Tarea 13.1): se importan y reexportan desde aquí para
+ * que `GameSnapshot` use los tipos reales sin cambiar su forma pública.
  */
 import type {
   GameId,
@@ -27,6 +29,14 @@ import type {
   SaveVersion,
   SnapshotId,
 } from "../identity/index.js";
+import type {
+  DetailedLogEntry,
+  SimpleLogEntry,
+} from "../logging/index.js";
+
+// Reexporta los tipos reales de registro para consumidores de `state.js` que
+// los importaban desde aquí (13.1: sustituye los antiguos alias mínimos).
+export type { SimpleLogEntry, DetailedLogEntry } from "../logging/index.js";
 
 // --- Alias mínimos hacia modelos de tareas paralelas/posteriores ---
 // TODO(8.x): sustituir por el modelo de dificultad del catálogo/motor.
@@ -86,10 +96,6 @@ export type RandomState = Readonly<{
   position: number;
   algorithmVersion: string;
 }>;
-// TODO(13.1): sustituir por `SimpleLogEntry` del proyector de registros.
-export type SimpleLogEntry = Readonly<{ sequence: number; messageKey: string }>;
-// TODO(13.1): sustituir por `DetailedLogEntry` del proyector de registros.
-export type DetailedLogEntry = Readonly<{ sequence: number; messageKey: string }>;
 // TODO(16.1): sustituir por `IntegrityDescriptor` del `BackupCodec` (Tarea 16.1).
 export type IntegrityDescriptor = Readonly<{ algorithm: string; value: string }>;
 

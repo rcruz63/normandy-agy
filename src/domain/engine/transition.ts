@@ -28,7 +28,8 @@ import type { GameSnapshot } from "./state.js";
  * texto visible lo resuelve el proyector. `params` transporta datos para
  * interpolar sin acoplar el dominio al idioma.
  *
- * TODO(13.1/20.3): unificar con `DomainMessage` del proyector de registros.
+ * Tipo unificado del dominio: el proyector de registros (`../logging`,
+ * Tarea 13.1/20.3) reutiliza ESTE `DomainMessage` en lugar de duplicarlo.
  */
 export type DomainMessage = Readonly<{
   messageKey: string;
