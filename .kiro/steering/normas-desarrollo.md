@@ -19,12 +19,13 @@ Objetivo: todo el código debe ser comprensible, auditable y mantenible por una 
 
 ## 3. Modularidad
 - Responsabilidad única (SRP) por fichero: un solo dominio funcional bien delimitado.
-- Tamaño acotado a 200-250 líneas por fichero (excepción justificada para esquemas de datos o definiciones de tipos).
+- El tamaño es una GUÍA orientativa (referencia ~200-250 líneas), no un límite rígido: el objetivo real es que una persona pueda comprender y mantener el fichero sin ayuda de IA. No partas un fichero de forma artificial cuando su dominio es claro y contenido solo por superar esa referencia.
+- Divide cuando el fichero mezcle más de una abstracción o responsabilidad, o cuando su tamaño perjudique la comprensión; los esquemas de datos, definiciones de tipos y fixtures pueden superar la referencia sin problema.
 - Sin dependencias circulares; importaciones estrictamente unidireccionales.
 
 ## 4. Funciones
 - Atómicas: una única tarea con propósito evidente en su nombre en inglés.
-- Longitud por debajo de 25-30 líneas; si crecen, descomponer en auxiliares privadas.
+- Longitud como guía orientativa (~25-30 líneas): favorece la descomposición en auxiliares privadas cuando aporte claridad, sin convertirlo en una regla rígida.
 - Tipado estricto y explícito en parámetros y retorno. Prohibido `any` u otros tipos comodín sin esquema.
 - Favorecer pureza e inmutabilidad: sin efectos colaterales ni mutación de parámetros.
 
