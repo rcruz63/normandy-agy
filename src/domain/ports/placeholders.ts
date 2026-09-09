@@ -6,10 +6,10 @@
  * migraciones, paquete sin conexión) se detallan en tareas posteriores:
  *
  * - Catálogo y publicación: Tarea 2.
- * - Estado, transición e invariantes: Tarea 7.
+ * - Estado, transición e invariantes: Tarea 7 (ya sustituidos: ver más abajo).
  * - Motor de reglas: Tarea 8.
  * - Aleatoriedad: Tarea 6.
- * - Persistencia y unidad de trabajo: Tarea 15.
+ * - Persistencia y unidad de trabajo: Tarea 15 (ya sustituidos: ver más abajo).
  * - Copia, importación y migración: Tarea 16.
  * - Paquete sin conexión: Tarea 19.
  *
@@ -28,25 +28,38 @@ export type RulesCatalog = Brand<unknown, "RulesCatalog">;
 export type CatalogBuildResult = Brand<unknown, "CatalogBuildResult">;
 export type PublicationReport = Brand<unknown, "PublicationReport">;
 
-// --- Estado, comandos y transiciones (Tareas 7 y 8) ---
-export type GameState = Brand<unknown, "GameState">;
-export type GameSnapshot = Brand<unknown, "GameSnapshot">;
-export type GameCommand = Brand<unknown, "GameCommand">;
-export type TransitionProposal = Brand<unknown, "TransitionProposal">;
-export type ActionDescriptor = Brand<unknown, "ActionDescriptor">;
-export type DomainMessage = Brand<unknown, "DomainMessage">;
-export type Diagnostic = Brand<unknown, "Diagnostic">;
+// --- Estado, comandos y transiciones (Tareas 7 y 8: modelos reales) ---
+// Sustituidos por los modelos reales del Motor. El puerto no duplica formas:
+// reexporta desde `engine/state.ts` y `engine/transition.ts` para que
+// `RulesEngine`, `GameRepository` y `GameUnitOfWork` compartan exactamente el
+// mismo `GameSnapshot`/`GameCommand`/`TransitionProposal`/`DomainMessage`.
+export type {
+  GameState,
+  GameSnapshot,
+} from "../engine/state.js";
+export type {
+  GameCommand,
+  TransitionProposal,
+  DomainMessage,
+} from "../engine/transition.js";
+export type { ActionDescriptor } from "../engine/rules-engine.js";
+
+// --- Persistencia y unidad de trabajo (Tarea 15.2: modelos reales) ---
+// Sustituidos por los modelos reales de `game-persistence.ts`.
+export type { Diagnostic } from "./game-persistence.js";
 
 // --- Aleatoriedad (Tarea 6) ---
 export type RandomState = Brand<unknown, "RandomState">;
 export type RandomRequest = Brand<unknown, "RandomRequest">;
 export type RandomConsumption = Brand<unknown, "RandomConsumption">;
 
-// --- Persistencia y unidad de trabajo (Tarea 15) ---
-export type CommandOutcome = Brand<unknown, "CommandOutcome">;
-export type PersistableTransition = Brand<unknown, "PersistableTransition">;
-export type CommitReceipt = Brand<unknown, "CommitReceipt">;
-export type GameSummary = Brand<unknown, "GameSummary">;
+// --- Persistencia y unidad de trabajo (Tarea 15.2: modelos reales) ---
+export type {
+  CommandOutcome,
+  PersistableTransition,
+  CommitReceipt,
+  GameSummary,
+} from "./game-persistence.js";
 
 // --- Copia, importación y migración (Tarea 16) ---
 export type GameAggregate = Brand<unknown, "GameAggregate">;

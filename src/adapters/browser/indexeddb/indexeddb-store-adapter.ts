@@ -88,6 +88,33 @@ export type EnvelopeWrite<T> = Readonly<{
 }>;
 
 /**
+ * Escritura de un metadato dentro de un commit atómico (opcional).
+ *
+ * Permite actualizar, en la MISMA transacción del commit, un metadato de la
+ * Partida (p. ej. la generación activa o el estado de última confirmación) sin
+ * abrir una transacción aparte que rompería la atomicidad.
+ */
+export type MetaWrite<M> = Readonly<{
+  key: string;
+  write: EnvelopeWrite<M>;
+}>;
+
+/**
+ * Entrada del commit transaccional único {@link IndexedDbStoreAdapter.commitTransition}.
+ *
+ * Reúne todo lo que una transición confirmada debe escribir de forma indivisible:
+ * la nueva Instantánea íntegra (con ambos registros dentro del `payload`), el
+ * resumen de la Partida con su puntero `latestSnapshotId` y, opcionalmente, un
+ * metadato. El repositorio (Tarea 15.2) compone esta entrada; el adaptador solo
+ * hace I/O.
+ */
+export type CommitTransitionInput<S, G, M = never> = Readonly<{
+  snapshot: Readonly<{ key: SnapshotKey; write: EnvelopeWrite<S> }>;
+  game: Readonly<{ key: GameKey; write: EnvelopeWrite<G> }>;
+  meta?: MetaWrite<M>;
+}>;
+
+/**
  * Adaptador de bajo nivel. Mantiene la conexión abierta y la política de
  * compatibilidad con la que valida CADA lectura. Es reutilizable por 15.2
  * (repositorio/unidad de trabajo) y por 15.4 (cuarentena de alto nivel).
@@ -151,6 +178,90 @@ export class IndexedDbStoreAdapter {
       [key.generationId, key.gameId],
       key.gameId,
     );
+  }
+
+  /**
+   * Lee y valida TODOS los resúmenes de Partida de una generación, devolviendo
+   * sus `payload`. Cada sobre se valida (versión, integridad, `gameId` interno)
+   * como en cualquier otra lectura; ante un sobre corrupto se propaga
+   * {@link EnvelopeValidationError} para que la capa superior lo trate
+   * (cuarentena, Tarea 15.4). Reutilizable por el repositorio (Tarea 15.2) para
+   * `list()` sin exponer cursores a la capa de aplicación.
+   */
+  public async listGames<T>(generationId: GenerationId): Promise<readonly T[]> {
+    const database = this.requireDatabase();
+    return runTransaction(
+      database,
+      [OBJECT_STORES.games],
+      "readonly",
+      async (transaction) => {
+        const store = transaction.objectStore(OBJECT_STORES.games);
+        const rawRecords = await requestToPromise(store.getAll());
+        return rawRecords.map((raw) => {
+          const record = raw as GameRecord<unknown>;
+          if (record.generationId !== generationId) {
+            return undefined;
+          }
+          return openEnvelope<T>(record.envelope, this.compatibilityPolicy, {
+            expectedGameId: record.gameId,
+          });
+        }).filter((payload): payload is T => payload !== undefined);
+      },
+    );
+  }
+
+  // --- commit transaccional único (Tarea 15.2) -----------------------------
+
+  /**
+   * Confirma una transición escribiendo, en UNA sola transacción `readwrite`,
+   * la nueva Instantánea, el resumen de la Partida (con su puntero
+   * `latestSnapshotId` dentro del `payload`) y, opcionalmente, un metadato.
+   *
+   * ATOMICIDAD REAL: las operaciones `putSnapshot`/`putGame`/`putMeta` abren una
+   * transacción SEPARADA por store, lo que NO satisface el commit único que
+   * exigen los requisitos 7.7/21.9 (Instantánea + resumen + puntero + metadatos
+   * indivisibles, con abort atómico). Este método reutiliza el
+   * {@link runTransaction} del runtime abarcando los tres stores a la vez: si
+   * cualquier `put` falla, IndexedDB aborta TODOS los cambios (nada a medias) y
+   * la promesa se rechaza con {@link IndexedDbError}. La orquestación (cola por
+   * `gameId`, control optimista, validación de invariantes) vive en la capa de
+   * aplicación; aquí solo se realiza el I/O indivisible.
+   */
+  public async commitTransition<S, G, M = never>(
+    input: CommitTransitionInput<S, G, M>,
+  ): Promise<void> {
+    const database = this.requireDatabase();
+    const stores: ObjectStoreName[] = [OBJECT_STORES.snapshots, OBJECT_STORES.games];
+    if (input.meta !== undefined) {
+      stores.push(OBJECT_STORES.meta);
+    }
+
+    const snapshotRecord: SnapshotRecord<S> = {
+      ...input.snapshot.key,
+      envelope: this.seal(input.snapshot.write),
+    };
+    const gameRecord: GameRecord<G> = {
+      ...input.game.key,
+      envelope: this.seal(input.game.write),
+    };
+
+    await runTransaction(database, stores, "readwrite", async (transaction) => {
+      await requestToPromise(
+        transaction.objectStore(OBJECT_STORES.snapshots).put(snapshotRecord),
+      );
+      await requestToPromise(
+        transaction.objectStore(OBJECT_STORES.games).put(gameRecord),
+      );
+      if (input.meta !== undefined) {
+        const metaRecord: KeyedRecord<M> = {
+          key: input.meta.key,
+          envelope: this.seal(input.meta.write),
+        };
+        await requestToPromise(
+          transaction.objectStore(OBJECT_STORES.meta).put(metaRecord),
+        );
+      }
+    });
   }
 
   // --- migrationBackups ----------------------------------------------------

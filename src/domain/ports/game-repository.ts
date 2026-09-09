@@ -7,15 +7,15 @@
  * sobres corruptos sin borrar bytes.
  */
 import type { GameId } from "../identity/index.js";
+import type { GameSnapshot } from "../engine/state.js";
+import type { GameCommand } from "../engine/transition.js";
 import type {
   CommandOutcome,
   CommitReceipt,
   Diagnostic,
-  GameCommand,
-  GameSnapshot,
   GameSummary,
   PersistableTransition,
-} from "./placeholders.js";
+} from "./game-persistence.js";
 
 export interface GameUnitOfWork {
   execute(command: GameCommand): Promise<CommandOutcome>;

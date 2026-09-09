@@ -35,4 +35,6 @@ export type {
   KeyedRecord,
   QuarantineRecord,
   EnvelopeWrite,
+  MetaWrite,
+  CommitTransitionInput,
 } from "./indexeddb-store-adapter.js";

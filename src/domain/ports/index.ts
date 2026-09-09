@@ -37,6 +37,8 @@ export type {
   ActivationResult,
 } from "./placeholders.js";
 
+export type { DiagnosticCategory } from "./game-persistence.js";
+
 export type { RulesEngine, TransitionDecision } from "./rules-engine.js";
 export type { VersionedRandom, RandomStep } from "./versioned-random.js";
 export type { GameUnitOfWork, GameRepository } from "./game-repository.js";
