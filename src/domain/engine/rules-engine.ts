@@ -29,11 +29,14 @@
  *   este módulo NO consume aleatoriedad en las ramas `rejected`/`blocked`, el
  *   Estado aleatorio recibido se conserva intacto; la capa de aplicación lo
  *   persiste mediante `preservedRandomState`/`randomStateAfterDecision`.
- * - Tarea 8.3 (`stopped-after-consumption`) construye SOBRE este contrato. Aquí
- *   se deja el gancho `TODO(8.3)` donde ese comportamiento se acoplará; este
- *   módulo no consume aleatoriedad ni aplica efectos: solo resuelve precedencia
- *   y decide `accepted` (mediante el `apply` de la regla ganadora) / `rejected`
- *   / `blocked`.
+ * - Tarea 8.3 (`stopped-after-consumption`) construye SOBRE este contrato. El
+ *   `apply` de la regla ganadora puede devolver una propuesta en modo
+ *   `stopped-after-consumption` (construida con
+ *   {@link ./stopped-after-consumption.js}); este módulo la transporta sin
+ *   tratamiento especial: sigue siendo una decisión `accepted` cuyo `mode` la
+ *   distingue. Este módulo NO consume aleatoriedad ni aplica efectos: solo
+ *   resuelve precedencia y decide `accepted` (mediante el `apply` de la regla
+ *   ganadora) / `rejected` / `blocked`.
  *
  * Módulo puro y determinista: no importa DOM, IndexedDB, red, reloj ni SDK de
  * AWS; no usa `Math.random` ni `Date`. Todos los tipos son `Readonly`. Los
@@ -278,10 +281,16 @@ export interface RulesEngineView {
  * {@link ./random-preservation.js} (`preservedRandomState`,
  * `randomStateAfterDecision`) para que la capa de aplicación lo persista sin
  * reconstruirlo.
- * TODO(8.3): la detención `stopped-after-consumption` (avanzar exactamente una
- * vez el Estado aleatorio conservando el Consumo) la produce el `apply` del
- * submódulo correspondiente; el contrato de `accepted` ya la admite vía
- * `TransitionProposal.mode`.
+ *
+ * Detención `stopped-after-consumption` (Tarea 8.3, Propiedad 5): cuando el
+ * `apply` de la regla ganadora efectúa un Consumo aleatorio que los requisitos
+ * obligan a conservar (13.7, 17.6) y detecta una carencia, devuelve una
+ * propuesta atómica en ese modo (construida por
+ * {@link ./stopped-after-consumption.js#buildStoppedAfterConsumption}). El
+ * Motor la transporta como cualquier otra `accepted`: no la inspecciona ni la
+ * altera; el `mode` de la propuesta la distingue para la capa de aplicación y
+ * para {@link ../invariants/invariant-validator.js#validateProposal}, que exige
+ * el avance de exactamente una posición aleatoria.
  */
 export function createRulesEngine(): RulesEngineView {
   function decide(
@@ -306,7 +315,9 @@ export function createRulesEngine(): RulesEngineView {
     }
 
     // `winner`: la regla ganadora produce la propuesta. `apply` es puro y no
-    // muta sus argumentos (contrato de los submódulos).
+    // muta sus argumentos (contrato de los submódulos). La propuesta puede venir
+    // en modo `complete` o `stopped-after-consumption` (Tarea 8.3); el Motor la
+    // transporta sin tratamiento especial: `mode` la distingue aguas abajo.
     const proposal = resolution.rule.apply(snapshot, command);
     return accepted(proposal);
   }

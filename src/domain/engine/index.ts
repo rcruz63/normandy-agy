@@ -8,3 +8,4 @@ export * from "./state.js";
 export * from "./transition.js";
 export * from "./rules-engine.js";
 export * from "./random-preservation.js";
+export * from "./stopped-after-consumption.js";

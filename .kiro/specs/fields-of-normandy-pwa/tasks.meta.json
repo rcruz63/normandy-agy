@@ -11,6 +11,10 @@
     "8.5 Escribir prueba de propiedad de conservación ante rechazo/bloqueo": {
       "status": "passed",
       "lastRunTimestamp": 1788934274752
+    },
+    "8.6 Escribir prueba de propiedad de detención tras consumo": {
+      "status": "passed",
+      "lastRunTimestamp": 1788934602563
     }
   },
   "executionHistory": {
