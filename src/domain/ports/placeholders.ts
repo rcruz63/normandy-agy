@@ -61,11 +61,19 @@ export type {
   GameSummary,
 } from "./game-persistence.js";
 
-// --- Copia, importación y migración (Tarea 16) ---
-export type GameAggregate = Brand<unknown, "GameAggregate">;
-export type BackupPackage = Brand<unknown, "BackupPackage">;
-export type ValidatedBackup = Brand<unknown, "ValidatedBackup">;
-export type BackupFailure = Brand<unknown, "BackupFailure">;
+// --- Copia e importación (Tarea 16.1: modelos reales) ---
+// Sustituidos por los modelos reales de `persistence/backup-package.ts`. El
+// puerto no duplica formas: reexporta el `GameAggregate`/`BackupPackage`/
+// `ValidatedBackup`/`BackupFailure` reales para que `BackupCodec` comparta
+// exactamente el mismo modelo que la implementación y el flujo de staging.
+export type {
+  GameAggregate,
+  BackupPackage,
+  ValidatedBackup,
+  BackupFailure,
+} from "../persistence/backup-package.js";
+
+// --- Migración (Tarea 16.2/16.3) ---
 export type MigrationPlan = Brand<unknown, "MigrationPlan">;
 export type MigrationResult = Brand<unknown, "MigrationResult">;
 export type StorageGeneration = Brand<unknown, "StorageGeneration">;
