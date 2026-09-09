@@ -12,6 +12,7 @@ export {
   DEFAULT_GENERATION_ID,
   RESTART_STAGING_GENERATION_ID,
   IMPORT_STAGING_GENERATION_ID,
+  MIGRATION_STAGING_GENERATION_ID,
   ACTIVE_GENERATION_META_KEY,
   toGameRecordPayload,
   toGameSummary,
@@ -116,3 +117,13 @@ export type {
   CollisionResolution,
   CollisionResolutions,
 } from "./import-backup.js";
+
+export { MigrateStorage } from "./migrate-storage.js";
+export type {
+  MigrateStorageDeps,
+  BackupIdGenerator,
+  MigrationOutcome,
+  MigrationConfirmed,
+  MigrationOrchestrationFailure,
+  MigrationOrchestrationReason,
+} from "./migrate-storage.js";

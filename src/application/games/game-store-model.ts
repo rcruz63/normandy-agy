@@ -44,6 +44,16 @@ export const RESTART_STAGING_GENERATION_ID = "restart-staging" as const;
 export const IMPORT_STAGING_GENERATION_ID = "import-staging" as const;
 
 /**
+ * Generación de STAGING para una migración de Versión de guardado (Tarea 16.3).
+ * La generación activa se copia como `migrationBackup` recuperable y la cadena
+ * de migradores puros produce una nueva generación que se escribe aquí, en una
+ * generación distinta de la activa, la de reinicio y la de importación, de modo
+ * que ninguna Partida activa se toca hasta la confirmación atómica que cambia
+ * el puntero de generación activa (diseño §6, requisitos 22.6, 22.7, 22.8).
+ */
+export const MIGRATION_STAGING_GENERATION_ID = "migration-staging" as const;
+
+/**
  * Clave del metadato (store `meta`) que apunta a la generación de almacenamiento
  * activa. El paso 5 del flujo de importación consolida los agregados y, DESPUÉS,
  * actualiza este puntero dentro de la MISMA transacción (diseño §6).

@@ -73,10 +73,16 @@ export type {
   BackupFailure,
 } from "../persistence/backup-package.js";
 
-// --- Migración (Tarea 16.2/16.3) ---
-export type MigrationPlan = Brand<unknown, "MigrationPlan">;
-export type MigrationResult = Brand<unknown, "MigrationResult">;
-export type StorageGeneration = Brand<unknown, "StorageGeneration">;
+// --- Migración (Tarea 16.3: modelos reales) ---
+// Sustituidos por los modelos reales de `persistence/migration.ts`. El puerto
+// no duplica formas: reexporta el `StorageGeneration`/`MigrationPlan`/
+// `MigrationResult` reales para que `MigrationRegistry` comparta exactamente el
+// mismo modelo que la implementación pura y el flujo de orquestación (16.3).
+export type {
+  StorageGeneration,
+  MigrationPlan,
+  MigrationResult,
+} from "../persistence/migration.js";
 
 // --- Paquete sin conexión (Tarea 19) ---
 export type OfflinePackageManifest = Brand<unknown, "OfflinePackageManifest">;
