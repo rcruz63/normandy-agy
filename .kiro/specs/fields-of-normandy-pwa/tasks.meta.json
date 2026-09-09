@@ -15,6 +15,10 @@
     "8.6 Escribir prueba de propiedad de detención tras consumo": {
       "status": "passed",
       "lastRunTimestamp": 1788934602563
+    },
+    "9.4 Escribir prueba de propiedad de activación, órdenes y Moral": {
+      "status": "passed",
+      "lastRunTimestamp": 1788937246555
     }
   },
   "executionHistory": {
