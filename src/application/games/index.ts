@@ -1,11 +1,12 @@
 /**
- * Persistencia de Partidas en la capa de aplicación (Tarea 15.2).
+ * Persistencia de Partidas en la capa de aplicación (Tareas 15.2-15.4).
  *
  * Punto de entrada de la orquestación de casos de uso de Partida sobre el
  * adaptador de IndexedDB (Tarea 15.1): repositorio real, unidad de trabajo con
- * cola/mutex por `gameId`, la fábrica de desenlaces y el modelo del resumen de
- * Partida. Las Tareas 15.3 (creación/reanudación/reinicio, sonda de cuota) y
- * 15.4 (cuarentena de alto nivel, recuperación) construirán sobre esta base.
+ * cola/mutex por `gameId`, la fábrica de desenlaces, el modelo del resumen de
+ * Partida, la creación/reanudación/reinicio y la sonda de cuota (Tarea 15.3) y
+ * la cuarentena y recuperación de corrupción con diagnóstico pendiente en
+ * memoria (Tarea 15.4).
  */
 export {
   DEFAULT_GENERATION_ID,
@@ -71,3 +72,27 @@ export type {
   StorageEstimate,
   StorageEstimator,
 } from "./quota-probe.js";
+
+export { PendingDiagnosticRegistry } from "./pending-diagnostic.js";
+export type {
+  PendingDiagnostic,
+  PendingDiagnosticInput,
+} from "./pending-diagnostic.js";
+
+export { QuarantineLedger } from "./quarantine-ledger.js";
+export type { QuarantineEntry } from "./quarantine-ledger.js";
+
+export {
+  CORRUPT_SNAPSHOT_MESSAGE_KEY,
+  QUARANTINE_WRITE_FAILURE_MESSAGE_KEY,
+  corruptSnapshotDiagnostic,
+  quarantineWriteFailureDiagnostic,
+} from "./recovery-diagnostics.js";
+
+export { CorruptionRecoveryService } from "./corruption-recovery.js";
+export type {
+  QuarantineArchive,
+  RestoredSnapshotNotice,
+  SafeResumeResult,
+  CorruptionRecoveryDeps,
+} from "./corruption-recovery.js";
