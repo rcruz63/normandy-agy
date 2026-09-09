@@ -173,26 +173,26 @@ Las 25 propiedades de corrección del diseño se implementan cada una con exacta
     - **Property 15: Determinismo del replay del Motor**
     - **Validates: Requirements 19.6, 20.1, 20.2, 20.3, 20.4, 21.1**
 
-- [ ] 15. Persistencia IndexedDB y atomicidad
-  - [ ] 15.1 Implementar adaptador IndexedDB con object stores versionados
+- [x] 15. Persistencia IndexedDB y atomicidad
+  - [x] 15.1 Implementar adaptador IndexedDB con object stores versionados
     - Crear stores `games`, `snapshots`, `migrationBackups`, `quarantine`, `settings`, `meta`; validar versión, integridad del sobre, `gameId` interno y compatibilidad en cada lectura; usar `fake-indexeddb` para pruebas
     - _Requirements: 6.3, 22.1, 28.6_
-  - [ ] 15.2 Implementar `GameRepository` y `GameUnitOfWork` con cola por gameId
+  - [x] 15.2 Implementar `GameRepository` y `GameUnitOfWork` con cola por gameId
     - Mutex/cola por `gameId`; commit transaccional único de Instantánea + ambos registros + metadatos + `latestSnapshotId`; `expectedSnapshotId` obsoleto rechazado sin reglas ni azar; abort restaura última confirmada
     - _Requirements: 7.1, 7.7, 7.8, 7.9, 21.4, 21.9, 21.10_
-  - [ ] 15.3 Implementar creación, reanudación y reinicio de Partidas
+  - [x] 15.3 Implementar creación, reanudación y reinicio de Partidas
     - Crear con Instantánea inicial única; reanudar restaurando todo; reinicio atómico en staging con confirmación cancelable; conservar Partidas ante cancelación/fallo; sonda de cuota sin tocar Partidas existentes
     - _Requirements: 5.4, 5.5, 5.7, 6.1, 6.2, 6.4, 6.5, 6.6, 6.7, 7.2, 7.3, 7.4, 7.5, 7.6, 19.1, 19.7, 17.8_
-  - [ ] 15.4 Implementar cuarentena y recuperación de corrupción
+  - [x] 15.4 Implementar cuarentena y recuperación de corrupción
     - Aislar sobres corruptos sin borrar bytes, excluir de reanudación, conservar demás Partidas; indicar fecha/id de Instantánea restaurada tras cierre inesperado; `PendingDiagnostic` en memoria
     - _Requirements: 19.9, 19.10, 21.5, 21.6, 21.7, 21.8_
-  - [ ]* 15.5 Escribir prueba de propiedad de commit atómico o identidad
+  - [x]* 15.5 Escribir prueba de propiedad de commit atómico o identidad
     - **Property 6: Commit atómico o identidad**
     - **Validates: Requirements 5.4, 5.7, 7.1, 7.5, 7.6, 7.7, 7.8, 21.4, 21.9, 21.10, 22.3, 22.4, 22.5, 22.6, 22.7, 22.8, 22.9, 23.11**
-  - [ ]* 15.6 Escribir prueba de propiedad de aislamiento entre Partidas
+  - [x]* 15.6 Escribir prueba de propiedad de aislamiento entre Partidas
     - **Property 7: Aislamiento entre Partidas**
     - **Validates: Requirements 6.1, 6.3, 6.5, 6.7, 7.5, 7.6, 18.3, 20.5, 21.6**
-  - [ ]* 15.7 Escribir pruebas de integración de persistencia y recuperación
+  - [x]* 15.7 Escribir pruebas de integración de persistencia y recuperación
     - Confirmar/abortar en cada punto de fallo, reabrir contexto, crear/reanudar al menos veinte Partidas por Entorno probado, corromper agregado, cuota insuficiente y eliminación externa
     - _Requirements: 6.2, 7.7, 21.6, 23.11, 31.7_
 

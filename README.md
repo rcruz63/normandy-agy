@@ -19,7 +19,7 @@ Este README se mantiene vivo: refleja por dónde vamos entre sesiones. El
 desarrollo no se completará en una sola sesión.
 
 - Especificación: **completa** (requisitos, diseño y plan de tareas aprobados).
-- Implementación: **14 de 28 tareas** completadas.
+- Implementación: **15 de 28 tareas** completadas.
 
 Última actualización: 9 de septiembre de 2026.
 
@@ -43,7 +43,7 @@ Leyenda: ⬜ pendiente · 🟦 en curso · ✅ completada
 | 12 | Checkpoint - Motor de reglas completo | ✅ |
 | 13 | Registros estructurados y proyector es-ES | ✅ |
 | 14 | Determinismo del replay del Motor | ✅ |
-| 15 | Persistencia IndexedDB y atomicidad | ⬜ |
+| 15 | Persistencia IndexedDB y atomicidad | ✅ |
 | 16 | Exportación, importación y migraciones | ⬜ |
 | 17 | Incompatibilidad de versiones y diagnósticos de recuperación | ⬜ |
 | 18 | Checkpoint - Persistencia, copia y migración | ⬜ |

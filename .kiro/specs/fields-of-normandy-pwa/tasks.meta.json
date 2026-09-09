@@ -281,6 +281,97 @@
         "chatSessionId": "sess_b2bcd3b7-da04-433b-8a51-a6f83d65085d",
         "timestamp": 1788949289993
       }
+    ],
+    "15.1 Implementar adaptador IndexedDB con object stores versionados": [
+      {
+        "executionId": "adeae4b0-a46d-42f0-80cb-e478a4dd6047",
+        "chatSessionId": "sess_b2bcd3b7-da04-433b-8a51-a6f83d65085d",
+        "timestamp": 1788949824403
+      },
+      {
+        "executionId": "adeae4b0-a46d-42f0-80cb-e478a4dd6047",
+        "chatSessionId": "sess_b2bcd3b7-da04-433b-8a51-a6f83d65085d",
+        "timestamp": 1788951869511
+      }
+    ],
+    "15.2 Implementar `GameRepository` y `GameUnitOfWork` con cola por gameId": [
+      {
+        "executionId": "adeae4b0-a46d-42f0-80cb-e478a4dd6047",
+        "chatSessionId": "sess_b2bcd3b7-da04-433b-8a51-a6f83d65085d",
+        "timestamp": 1788951889108
+      },
+      {
+        "executionId": "adeae4b0-a46d-42f0-80cb-e478a4dd6047",
+        "chatSessionId": "sess_b2bcd3b7-da04-433b-8a51-a6f83d65085d",
+        "timestamp": 1788953303456
+      }
+    ],
+    "15.3 Implementar creación, reanudación y reinicio de Partidas": [
+      {
+        "executionId": "adeae4b0-a46d-42f0-80cb-e478a4dd6047",
+        "chatSessionId": "sess_b2bcd3b7-da04-433b-8a51-a6f83d65085d",
+        "timestamp": 1788953312778
+      },
+      {
+        "executionId": "adeae4b0-a46d-42f0-80cb-e478a4dd6047",
+        "chatSessionId": "sess_b2bcd3b7-da04-433b-8a51-a6f83d65085d",
+        "timestamp": 1788954104931
+      }
+    ],
+    "15.4 Implementar cuarentena y recuperación de corrupción": [
+      {
+        "executionId": "adeae4b0-a46d-42f0-80cb-e478a4dd6047",
+        "chatSessionId": "sess_b2bcd3b7-da04-433b-8a51-a6f83d65085d",
+        "timestamp": 1788954108600
+      },
+      {
+        "executionId": "adeae4b0-a46d-42f0-80cb-e478a4dd6047",
+        "chatSessionId": "sess_b2bcd3b7-da04-433b-8a51-a6f83d65085d",
+        "timestamp": 1788954610661
+      }
+    ],
+    "15. Persistencia IndexedDB y atomicidad": [
+      {
+        "executionId": "adeae4b0-a46d-42f0-80cb-e478a4dd6047",
+        "chatSessionId": "sess_b2bcd3b7-da04-433b-8a51-a6f83d65085d",
+        "timestamp": 1788954610780
+      }
+    ],
+    "15.5 Escribir prueba de propiedad de commit atómico o identidad": [
+      {
+        "executionId": "adeae4b0-a46d-42f0-80cb-e478a4dd6047",
+        "chatSessionId": "sess_b2bcd3b7-da04-433b-8a51-a6f83d65085d",
+        "timestamp": 1788954620273
+      },
+      {
+        "executionId": "adeae4b0-a46d-42f0-80cb-e478a4dd6047",
+        "chatSessionId": "sess_b2bcd3b7-da04-433b-8a51-a6f83d65085d",
+        "timestamp": 1788954886538
+      }
+    ],
+    "15.6 Escribir prueba de propiedad de aislamiento entre Partidas": [
+      {
+        "executionId": "adeae4b0-a46d-42f0-80cb-e478a4dd6047",
+        "chatSessionId": "sess_b2bcd3b7-da04-433b-8a51-a6f83d65085d",
+        "timestamp": 1788954621659
+      },
+      {
+        "executionId": "adeae4b0-a46d-42f0-80cb-e478a4dd6047",
+        "chatSessionId": "sess_b2bcd3b7-da04-433b-8a51-a6f83d65085d",
+        "timestamp": 1788955664438
+      }
+    ],
+    "15.7 Escribir pruebas de integración de persistencia y recuperación": [
+      {
+        "executionId": "adeae4b0-a46d-42f0-80cb-e478a4dd6047",
+        "chatSessionId": "sess_b2bcd3b7-da04-433b-8a51-a6f83d65085d",
+        "timestamp": 1788954623045
+      },
+      {
+        "executionId": "adeae4b0-a46d-42f0-80cb-e478a4dd6047",
+        "chatSessionId": "sess_b2bcd3b7-da04-433b-8a51-a6f83d65085d",
+        "timestamp": 1788955943587
+      }
     ]
   }
 }
