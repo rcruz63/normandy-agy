@@ -327,6 +327,21 @@ Las 25 propiedades de corrección del diseño se implementan cada una con exacta
 - [ ] 28. Checkpoint final - Ensure all tests pass
   - Ensure all tests pass, ask the user if questions arise.
 
+- [ ] 29. Refactor de conformidad con las normas de desarrollo
+  - Aplicar las normas de desarrollo (`docs/normas.md`) al código ya escrito en Tareas 1-8 como refactor no funcional que preserva el comportamiento público
+  - Dividir los ficheros que superen 200-250 líneas y mezclen más de una abstracción en submódulos del mismo dominio (p. ej. `src/domain/invariants/invariant-validator.ts`, `src/catalog/compiler/catalog-validator.ts`, `src/catalog/publication/publication-gate.ts`, `src/domain/geometry/map.ts`, `src/domain/geometry/hex-geometry.ts`, `src/domain/engine/rules-engine.ts`), respetando la excepción de ficheros de esquemas/tipos y fixtures de datos (p. ej. `src/catalog/FON-ML-2022/*.ts`, `src/catalog/schemas/catalog.ts`, `src/catalog/schemas/publication.ts`), que no se dividen solo por longitud
+  - Mantener las funciones por debajo de ~25-30 líneas con cláusulas de guarda y un máximo de 2 niveles de indentación; auditar y refactorizar las que excedan el límite
+  - Sustituir los alias provisionales `TODO(n.x)` en `src/domain/engine/state.ts` y `src/domain/engine/transition.ts` por los tipos reales donde ya existan (Tareas 5/6/13) o, si aún no hay tipo real, convertir el `TODO` en una nota rastreable conforme a las normas; eliminar cualquier stub/`TODO` fantasma no solicitado
+  - Verificar la ausencia de `any`/tipos comodín, de valores mágicos (usar constantes con nombre en inglés) y de errores silenciados
+  - Confirmar que es un refactor no funcional: no cambia comportamiento, mantiene verdes `typecheck`, `typecheck:domain` y las pruebas existentes
+  - [ ] 29.1 Refactor de conformidad del dominio
+    - Dividir y ajustar `src/domain/invariants/invariant-validator.ts`, `src/domain/geometry/map.ts`, `src/domain/geometry/hex-geometry.ts`, `src/domain/engine/rules-engine.ts`; limpiar los alias `TODO` de `src/domain/engine/state.ts` y `src/domain/engine/transition.ts`
+    - _Requirements: N/A (conformidad con docs/normas.md)_
+  - [ ] 29.2 Refactor de conformidad del catálogo
+    - Dividir y ajustar `src/catalog/compiler/catalog-validator.ts` y `src/catalog/publication/publication-gate.ts`, preservando la excepción de esquemas/tipos y fixtures
+    - _Requirements: N/A (conformidad con docs/normas.md)_
+  - _Requirements: N/A (conformidad con docs/normas.md)_
+
 ## Notes
 
 - Tareas marcadas con `*` son opcionales (pruebas) y pueden omitirse para un MVP más rápido; las tareas de implementación nunca son opcionales.
@@ -335,6 +350,7 @@ Las 25 propiedades de corrección del diseño se implementan cada una con exacta
 - No se resuelven DP-001/DP-002/DP-003 ni se inventan reglas; el contenido dependiente permanece en Estado no publicable mediante el Publication Gate.
 - No se copia contenido del PDF, no hay campañas ni sincronización, y no se asume cobertura de coste cero: el `ProductionGate` es fail-closed.
 - Los checkpoints permiten validación incremental antes de continuar.
+- La Tarea 29 aplica las normas de desarrollo (`docs/normas.md`) al código ya escrito como refactor no funcional: divide ficheros y funciones que superan los límites, limpia alias `TODO` provisionales y verifica ausencia de `any`/valores mágicos/errores silenciados sin cambiar el comportamiento ni romper las pruebas existentes.
 
 ## Task Dependency Graph
 
@@ -358,7 +374,8 @@ Las 25 propiedades de corrección del diseño se implementan cada una con exacta
     { "id": 14, "tasks": ["20.3", "21.1", "21.2", "25.2"] },
     { "id": 15, "tasks": ["20.4", "20.5", "20.6", "21.3", "25.3", "25.4", "26.1"] },
     { "id": 16, "tasks": ["26.2", "27.1"] },
-    { "id": 17, "tasks": ["27.2"] }
+    { "id": 17, "tasks": ["27.2"] },
+    { "id": 18, "tasks": ["29.1", "29.2"] }
   ]
 }
 ```
