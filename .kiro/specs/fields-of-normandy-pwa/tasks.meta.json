@@ -19,6 +19,14 @@
     "9.4 Escribir prueba de propiedad de activación, órdenes y Moral": {
       "status": "passed",
       "lastRunTimestamp": 1788937246555
+    },
+    "16.4 Escribir prueba de propiedad de round-trip de exportación/importación": {
+      "status": "passed",
+      "lastRunTimestamp": 1788972988676
+    },
+    "16.5 Escribir prueba de propiedad de migración conservadora y recuperable": {
+      "status": "passed",
+      "lastRunTimestamp": 1788973275166
     }
   },
   "executionHistory": {
@@ -371,6 +379,286 @@
         "executionId": "adeae4b0-a46d-42f0-80cb-e478a4dd6047",
         "chatSessionId": "sess_b2bcd3b7-da04-433b-8a51-a6f83d65085d",
         "timestamp": 1788955943587
+      }
+    ],
+    "4. Checkpoint - Catálogo y publicación": [
+      {
+        "executionId": "44b28caf-32c2-47a1-a0db-a0cd35630252",
+        "chatSessionId": "sess_bf5e1d1f-8012-400f-b7d7-7d689acc292f",
+        "timestamp": 1788970676188
+      }
+    ],
+    "16.1 Implementar `BackupCodec` con serialización canónica versionada": [
+      {
+        "executionId": "44b28caf-32c2-47a1-a0db-a0cd35630252",
+        "chatSessionId": "sess_bf5e1d1f-8012-400f-b7d7-7d689acc292f",
+        "timestamp": 1788970676234
+      },
+      {
+        "executionId": "44b28caf-32c2-47a1-a0db-a0cd35630252",
+        "chatSessionId": "sess_bf5e1d1f-8012-400f-b7d7-7d689acc292f",
+        "timestamp": 1788970693237
+      },
+      {
+        "executionId": "44b28caf-32c2-47a1-a0db-a0cd35630252",
+        "chatSessionId": "sess_bf5e1d1f-8012-400f-b7d7-7d689acc292f",
+        "timestamp": 1788971854920
+      }
+    ],
+    "16.2 Implementar flujo de importación fail-closed": [
+      {
+        "executionId": "44b28caf-32c2-47a1-a0db-a0cd35630252",
+        "chatSessionId": "sess_bf5e1d1f-8012-400f-b7d7-7d689acc292f",
+        "timestamp": 1788970676324
+      },
+      {
+        "executionId": "44b28caf-32c2-47a1-a0db-a0cd35630252",
+        "chatSessionId": "sess_bf5e1d1f-8012-400f-b7d7-7d689acc292f",
+        "timestamp": 1788971868519
+      },
+      {
+        "executionId": "44b28caf-32c2-47a1-a0db-a0cd35630252",
+        "chatSessionId": "sess_bf5e1d1f-8012-400f-b7d7-7d689acc292f",
+        "timestamp": 1788972222191
+      }
+    ],
+    "16.3 Implementar `MigrationRegistry` con backup y rollback": [
+      {
+        "executionId": "44b28caf-32c2-47a1-a0db-a0cd35630252",
+        "chatSessionId": "sess_bf5e1d1f-8012-400f-b7d7-7d689acc292f",
+        "timestamp": 1788970676365
+      },
+      {
+        "executionId": "44b28caf-32c2-47a1-a0db-a0cd35630252",
+        "chatSessionId": "sess_bf5e1d1f-8012-400f-b7d7-7d689acc292f",
+        "timestamp": 1788972223288
+      },
+      {
+        "executionId": "44b28caf-32c2-47a1-a0db-a0cd35630252",
+        "chatSessionId": "sess_bf5e1d1f-8012-400f-b7d7-7d689acc292f",
+        "timestamp": 1788972772850
+      }
+    ],
+    "17.1 Implementar detección de versiones incompatibles y diagnóstico exportable": [
+      {
+        "executionId": "44b28caf-32c2-47a1-a0db-a0cd35630252",
+        "chatSessionId": "sess_bf5e1d1f-8012-400f-b7d7-7d689acc292f",
+        "timestamp": 1788970676413
+      }
+    ],
+    "18. Checkpoint - Persistencia, copia y migración": [
+      {
+        "executionId": "44b28caf-32c2-47a1-a0db-a0cd35630252",
+        "chatSessionId": "sess_bf5e1d1f-8012-400f-b7d7-7d689acc292f",
+        "timestamp": 1788970676455
+      },
+      {
+        "executionId": "a22b33d7-6567-4334-bae7-e381ebbc1037",
+        "chatSessionId": "sess_e38760c7-6b68-4927-8d43-c5d9174512b1",
+        "timestamp": 1788993118506
+      },
+      {
+        "executionId": "a22b33d7-6567-4334-bae7-e381ebbc1037",
+        "chatSessionId": "sess_e38760c7-6b68-4927-8d43-c5d9174512b1",
+        "timestamp": 1788993707910
+      }
+    ],
+    "19.1 Implementar `OfflinePackageManifest` y service worker con cachés staging/current/previous": [
+      {
+        "executionId": "44b28caf-32c2-47a1-a0db-a0cd35630252",
+        "chatSessionId": "sess_bf5e1d1f-8012-400f-b7d7-7d689acc292f",
+        "timestamp": 1788970676493
+      },
+      {
+        "executionId": "33137ea6-f720-4042-a5fa-7a8d1c593dec",
+        "chatSessionId": "sess_5d7a8b5c-1fde-4d1d-b2ce-930dae256ade",
+        "timestamp": 1788994967231
+      },
+      {
+        "executionId": "33137ea6-f720-4042-a5fa-7a8d1c593dec",
+        "chatSessionId": "sess_5d7a8b5c-1fde-4d1d-b2ce-930dae256ade",
+        "timestamp": 1788995634616
+      }
+    ],
+    "19.2 Implementar `OfflinePackageCoordinator` (stage/activate/rollback/health check)": [
+      {
+        "executionId": "44b28caf-32c2-47a1-a0db-a0cd35630252",
+        "chatSessionId": "sess_bf5e1d1f-8012-400f-b7d7-7d689acc292f",
+        "timestamp": 1788970676530
+      },
+      {
+        "executionId": "33137ea6-f720-4042-a5fa-7a8d1c593dec",
+        "chatSessionId": "sess_5d7a8b5c-1fde-4d1d-b2ce-930dae256ade",
+        "timestamp": 1788995638252
+      }
+    ],
+    "20.1 Implementar adaptadores de entrada e `IntentTranslator`": [
+      {
+        "executionId": "44b28caf-32c2-47a1-a0db-a0cd35630252",
+        "chatSessionId": "sess_bf5e1d1f-8012-400f-b7d7-7d689acc292f",
+        "timestamp": 1788970676568
+      }
+    ],
+    "20.2 Implementar `ViewState` independiente y renderizado SVG del mapa": [
+      {
+        "executionId": "44b28caf-32c2-47a1-a0db-a0cd35630252",
+        "chatSessionId": "sess_bf5e1d1f-8012-400f-b7d7-7d689acc292f",
+        "timestamp": 1788970676615
+      }
+    ],
+    "20.3 Implementar proyecciones de acciones, registros y selectores es-ES": [
+      {
+        "executionId": "44b28caf-32c2-47a1-a0db-a0cd35630252",
+        "chatSessionId": "sess_bf5e1d1f-8012-400f-b7d7-7d689acc292f",
+        "timestamp": 1788970676654
+      }
+    ],
+    "21.1 Implementar codificación accesible y `CapabilityDetector`": [
+      {
+        "executionId": "44b28caf-32c2-47a1-a0db-a0cd35630252",
+        "chatSessionId": "sess_bf5e1d1f-8012-400f-b7d7-7d689acc292f",
+        "timestamp": 1788970676725
+      }
+    ],
+    "21.2 Implementar animaciones con equivalente persistente en Registro simple": [
+      {
+        "executionId": "44b28caf-32c2-47a1-a0db-a0cd35630252",
+        "chatSessionId": "sess_bf5e1d1f-8012-400f-b7d7-7d689acc292f",
+        "timestamp": 1788970676773
+      }
+    ],
+    "22. Checkpoint - PWA, interfaz y accesibilidad": [
+      {
+        "executionId": "44b28caf-32c2-47a1-a0db-a0cd35630252",
+        "chatSessionId": "sess_bf5e1d1f-8012-400f-b7d7-7d689acc292f",
+        "timestamp": 1788970676809
+      }
+    ],
+    "23.1 Implementar `AccessVerifierRenderer` y CloudFront Function viewer-request": [
+      {
+        "executionId": "44b28caf-32c2-47a1-a0db-a0cd35630252",
+        "chatSessionId": "sess_bf5e1d1f-8012-400f-b7d7-7d689acc292f",
+        "timestamp": 1788970676853
+      }
+    ],
+    "23.2 Implementar `LocalLock` con verificador local independiente": [
+      {
+        "executionId": "44b28caf-32c2-47a1-a0db-a0cd35630252",
+        "chatSessionId": "sess_bf5e1d1f-8012-400f-b7d7-7d689acc292f",
+        "timestamp": 1788970676894
+      }
+    ],
+    "24.1 Implementar stack CDK de S3 privado, OAC y CloudFront": [
+      {
+        "executionId": "44b28caf-32c2-47a1-a0db-a0cd35630252",
+        "chatSessionId": "sess_bf5e1d1f-8012-400f-b7d7-7d689acc292f",
+        "timestamp": 1788970676936
+      }
+    ],
+    "24.2 Implementar plan FREE, presupuesto y exclusiones de coste": [
+      {
+        "executionId": "44b28caf-32c2-47a1-a0db-a0cd35630252",
+        "chatSessionId": "sess_bf5e1d1f-8012-400f-b7d7-7d689acc292f",
+        "timestamp": 1788970676987
+      }
+    ],
+    "25.1 Implementar `ProductionEvidence` y preflight fail-closed": [
+      {
+        "executionId": "44b28caf-32c2-47a1-a0db-a0cd35630252",
+        "chatSessionId": "sess_bf5e1d1f-8012-400f-b7d7-7d689acc292f",
+        "timestamp": 1788970677044
+      }
+    ],
+    "25.2 Implementar pipeline por fases y promoción condicionada": [
+      {
+        "executionId": "44b28caf-32c2-47a1-a0db-a0cd35630252",
+        "chatSessionId": "sess_bf5e1d1f-8012-400f-b7d7-7d689acc292f",
+        "timestamp": 1788970677136
+      }
+    ],
+    "26.1 Implementar generación de Matriz de conformidad y gate de aceptación": [
+      {
+        "executionId": "44b28caf-32c2-47a1-a0db-a0cd35630252",
+        "chatSessionId": "sess_bf5e1d1f-8012-400f-b7d7-7d689acc292f",
+        "timestamp": 1788970677182
+      }
+    ],
+    "27.1 Integrar UI, aplicación, dominio, persistencia, offline y acceso": [
+      {
+        "executionId": "44b28caf-32c2-47a1-a0db-a0cd35630252",
+        "chatSessionId": "sess_bf5e1d1f-8012-400f-b7d7-7d689acc292f",
+        "timestamp": 1788970677225
+      }
+    ],
+    "28. Checkpoint final - Ensure all tests pass": [
+      {
+        "executionId": "44b28caf-32c2-47a1-a0db-a0cd35630252",
+        "chatSessionId": "sess_bf5e1d1f-8012-400f-b7d7-7d689acc292f",
+        "timestamp": 1788970677267
+      }
+    ],
+    "29.1 Refactor de conformidad del dominio": [
+      {
+        "executionId": "44b28caf-32c2-47a1-a0db-a0cd35630252",
+        "chatSessionId": "sess_bf5e1d1f-8012-400f-b7d7-7d689acc292f",
+        "timestamp": 1788970677324
+      }
+    ],
+    "29.2 Refactor de conformidad del catálogo": [
+      {
+        "executionId": "44b28caf-32c2-47a1-a0db-a0cd35630252",
+        "chatSessionId": "sess_bf5e1d1f-8012-400f-b7d7-7d689acc292f",
+        "timestamp": 1788970677374
+      }
+    ],
+    "16. Exportación, importación y migraciones": [
+      {
+        "executionId": "44b28caf-32c2-47a1-a0db-a0cd35630252",
+        "chatSessionId": "sess_bf5e1d1f-8012-400f-b7d7-7d689acc292f",
+        "timestamp": 1788972772962
+      }
+    ],
+    "16.4 Escribir prueba de propiedad de round-trip de exportación/importación": [
+      {
+        "executionId": "44b28caf-32c2-47a1-a0db-a0cd35630252",
+        "chatSessionId": "sess_bf5e1d1f-8012-400f-b7d7-7d689acc292f",
+        "timestamp": 1788972783672
+      },
+      {
+        "executionId": "44b28caf-32c2-47a1-a0db-a0cd35630252",
+        "chatSessionId": "sess_bf5e1d1f-8012-400f-b7d7-7d689acc292f",
+        "timestamp": 1788973048612
+      }
+    ],
+    "16.5 Escribir prueba de propiedad de migración conservadora y recuperable": [
+      {
+        "executionId": "44b28caf-32c2-47a1-a0db-a0cd35630252",
+        "chatSessionId": "sess_bf5e1d1f-8012-400f-b7d7-7d689acc292f",
+        "timestamp": 1788973050690
+      },
+      {
+        "executionId": "44b28caf-32c2-47a1-a0db-a0cd35630252",
+        "chatSessionId": "sess_bf5e1d1f-8012-400f-b7d7-7d689acc292f",
+        "timestamp": 1788973321431
+      }
+    ],
+    "16.6 Escribir pruebas de integración de exportar/importar/migrar": [
+      {
+        "executionId": "44b28caf-32c2-47a1-a0db-a0cd35630252",
+        "chatSessionId": "sess_bf5e1d1f-8012-400f-b7d7-7d689acc292f",
+        "timestamp": 1788973320178
+      },
+      {
+        "executionId": "44b28caf-32c2-47a1-a0db-a0cd35630252",
+        "chatSessionId": "sess_bf5e1d1f-8012-400f-b7d7-7d689acc292f",
+        "timestamp": 1788973600248
+      }
+    ],
+    "19. Paquete sin conexión y actualización segura": [
+      {
+        "executionId": "33137ea6-f720-4042-a5fa-7a8d1c593dec",
+        "chatSessionId": "sess_5d7a8b5c-1fde-4d1d-b2ce-930dae256ade",
+        "timestamp": 1788995638344
       }
     ]
   }

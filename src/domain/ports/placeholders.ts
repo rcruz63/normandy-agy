@@ -84,8 +84,15 @@ export type {
   MigrationResult,
 } from "../persistence/migration.js";
 
-// --- Paquete sin conexión (Tarea 19) ---
-export type OfflinePackageManifest = Brand<unknown, "OfflinePackageManifest">;
-export type OfflineAvailability = Brand<unknown, "OfflineAvailability">;
-export type StagedPackageResult = Brand<unknown, "StagedPackageResult">;
-export type ActivationResult = Brand<unknown, "ActivationResult">;
+// --- Paquete sin conexión (Tarea 19.1: modelos reales) ---
+// Sustituidos por los modelos reales de `offline/offline-package.ts`. El puerto
+// no duplica formas: reexporta el `OfflinePackageManifest`/`OfflineAvailability`/
+// `StagedPackageResult`/`ActivationResult` reales para que
+// `OfflinePackageCoordinator` comparta exactamente el mismo modelo que el
+// adaptador de Cache Storage, el service worker y la orquestación (19.2).
+export type {
+  OfflinePackageManifest,
+  OfflineAvailability,
+  StagedPackageResult,
+  ActivationResult,
+} from "../offline/offline-package.js";

@@ -224,11 +224,11 @@ Las 26 propiedades de corrección del diseño se implementan cada una con exacta
 - [x] 18. Checkpoint - Persistencia, copia y migración
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 19. Paquete sin conexión y actualización segura
-  - [~] 19.1 Implementar `OfflinePackageManifest` y service worker con cachés staging/current/previous
+- [x] 19. Paquete sin conexión y actualización segura
+  - [x] 19.1 Implementar `OfflinePackageManifest` y service worker con cachés staging/current/previous
     - Enumerar versión, recursos, longitud e integridad; cachés `fon-staging/current/previous`; `staging` nunca sirve a clientes
     - _Requirements: 23.1, 23.2, 28.8_
-  - [~] 19.2 Implementar `OfflinePackageCoordinator` (stage/activate/rollback/health check)
+  - [x] 19.2 Implementar `OfflinePackageCoordinator` (stage/activate/rollback/health check)
     - `stage` descarga y verifica todo antes de completitud; `activate` cambia puntero con confirmación si hay Partida abierta; health check de shell/catálogo/migradores/compatibilidad; ante fallo restaurar `previous` sin borrar; limpieza solo tras arranque confirmado, nunca borra Partidas
     - _Requirements: 23.3, 23.4, 23.5, 23.6, 23.7, 23.8, 23.9, 23.11, 28.7_
   - [ ]* 19.3 Escribir prueba de propiedad de equivalencia offline y rollback
