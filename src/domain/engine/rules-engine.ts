@@ -24,12 +24,16 @@
  * dominio permanece puro y desacoplado del esquema del catálogo.
  *
  * Fronteras de tareas hermanas:
- * - Tarea 8.2 (conservación ante rechazo/bloqueo previo al azar) y Tarea 8.3
- *   (`stopped-after-consumption`) construyen SOBRE este contrato. Aquí se dejan
- *   ganchos `TODO(8.2)` / `TODO(8.3)` donde esos comportamientos se acoplarán;
- *   este módulo no consume aleatoriedad ni aplica efectos: solo resuelve
- *   precedencia y decide `accepted` (mediante un `effectApplier` inyectado por
- *   los submódulos) / `rejected` / `blocked`.
+ * - Tarea 8.2 (conservación ante rechazo/bloqueo previo al azar): garantía YA
+ *   activa aquí y hecha explícita en {@link ./random-preservation.js}. Como
+ *   este módulo NO consume aleatoriedad en las ramas `rejected`/`blocked`, el
+ *   Estado aleatorio recibido se conserva intacto; la capa de aplicación lo
+ *   persiste mediante `preservedRandomState`/`randomStateAfterDecision`.
+ * - Tarea 8.3 (`stopped-after-consumption`) construye SOBRE este contrato. Aquí
+ *   se deja el gancho `TODO(8.3)` donde ese comportamiento se acoplará; este
+ *   módulo no consume aleatoriedad ni aplica efectos: solo resuelve precedencia
+ *   y decide `accepted` (mediante el `apply` de la regla ganadora) / `rejected`
+ *   / `blocked`.
  *
  * Módulo puro y determinista: no importa DOM, IndexedDB, red, reloj ni SDK de
  * AWS; no usa `Math.random` ni `Date`. Todos los tipos son `Readonly`. Los
@@ -267,9 +271,13 @@ export interface RulesEngineView {
  * cuyo `enabled(state)` es verdadero. No inventa Acciones ad hoc ni añade
  * `default`.
  *
- * TODO(8.2): la conservación exacta del Estado aleatorio ante `rejected`/
- * `blocked` previos al azar es intrínseca aquí (no se toca aleatoriedad), pero
- * la Tarea 8.2 añadirá las pruebas de conservación y los ganchos de submódulos.
+ * Conservación ante rechazo/bloqueo previo al azar (Tarea 8.2, Propiedad 4):
+ * las ramas `rejected` y `blocked` NO tocan aleatoriedad, por lo que el Estado
+ * aleatorio recibido se conserva EXACTAMENTE (misma `seed`, `position` y
+ * `algorithmVersion`). Ese invariante se expone de forma reutilizable en
+ * {@link ./random-preservation.js} (`preservedRandomState`,
+ * `randomStateAfterDecision`) para que la capa de aplicación lo persista sin
+ * reconstruirlo.
  * TODO(8.3): la detención `stopped-after-consumption` (avanzar exactamente una
  * vez el Estado aleatorio conservando el Consumo) la produce el `apply` del
  * submódulo correspondiente; el contrato de `accepted` ya la admite vía

@@ -7,6 +7,10 @@
     "2.4 Escribir prueba de propiedad de autoridad, trazabilidad y publicación cerrada": {
       "status": "passed",
       "lastRunTimestamp": 1788867164106
+    },
+    "8.5 Escribir prueba de propiedad de conservación ante rechazo/bloqueo": {
+      "status": "passed",
+      "lastRunTimestamp": 1788934274752
     }
   },
   "executionHistory": {
