@@ -221,7 +221,7 @@ Las 26 propiedades de corrección del diseño se implementan cada una con exacta
     - Impedir reanudar/importar con reglas/algoritmo/guardado no soportado sin sustituir versión compatible; permitir exportar Instantánea/diagnóstico; incluir diagnóstico pendiente en exportación de recuperación cuando IndexedDB no acepte escritura
     - _Requirements: 19.9, 19.10, 21.10, 23.10_
 
-- [~] 18. Checkpoint - Persistencia, copia y migración
+- [x] 18. Checkpoint - Persistencia, copia y migración
   - Ensure all tests pass, ask the user if questions arise.
 
 - [ ] 19. Paquete sin conexión y actualización segura
