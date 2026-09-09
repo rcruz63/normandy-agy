@@ -262,6 +262,25 @@
         "chatSessionId": "sess_422c215b-a12f-4a94-af76-91f3f9a1b8ae",
         "timestamp": 1788870523356
       }
+    ],
+    "14.1 Escribir prueba de propiedad de determinismo del replay": [
+      {
+        "executionId": "bc3b9030-c92c-47b3-a301-02dcb35a1671",
+        "chatSessionId": "sess_b2bcd3b7-da04-433b-8a51-a6f83d65085d",
+        "timestamp": 1788949069934
+      },
+      {
+        "executionId": "bc3b9030-c92c-47b3-a301-02dcb35a1671",
+        "chatSessionId": "sess_b2bcd3b7-da04-433b-8a51-a6f83d65085d",
+        "timestamp": 1788949289947
+      }
+    ],
+    "14. Determinismo del replay del Motor": [
+      {
+        "executionId": "bc3b9030-c92c-47b3-a301-02dcb35a1671",
+        "chatSessionId": "sess_b2bcd3b7-da04-433b-8a51-a6f83d65085d",
+        "timestamp": 1788949289993
+      }
     ]
   }
 }

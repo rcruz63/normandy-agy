@@ -168,8 +168,8 @@ Las 25 propiedades de corrección del diseño se implementan cada una con exacta
     - **Property 17: Registros completos, ordenados y aislados**
     - **Validates: Requirements 8.7, 12.3, 12.5, 14.5, 16.4, 19.4, 20.1, 20.2, 20.3, 20.4, 20.5, 20.6, 20.7, 38.8**
 
-- [ ] 14. Determinismo del replay del Motor
-  - [ ]* 14.1 Escribir prueba de propiedad de determinismo del replay
+- [x] 14. Determinismo del replay del Motor
+  - [x]* 14.1 Escribir prueba de propiedad de determinismo del replay
     - **Property 15: Determinismo del replay del Motor**
     - **Validates: Requirements 19.6, 20.1, 20.2, 20.3, 20.4, 21.1**
 
