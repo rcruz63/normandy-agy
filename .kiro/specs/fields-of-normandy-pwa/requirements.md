@@ -119,6 +119,12 @@ Los criterios de aceptación usan traducciones directas de los patrones EARS:
 - **Semilla:** Valor inicial que determina una secuencia reproducible de resultados pseudoaleatorios.
 - **Estado aleatorio:** Semilla, posición de secuencia, versión del algoritmo y demás datos necesarios para continuar la misma secuencia.
 - **Consumo aleatorio:** Solicitud individual de un resultado al Gestor de aleatoriedad.
+- **Dominio aleatorio:** Especificación verificable de los resultados admitidos por un Consumo aleatorio; para dados incluye cantidad, número de caras y orden.
+- **Tirada de dados:** Resolución aleatoria cuyo dominio especifica una cantidad ordenada y variable de dados y el número de caras de cada dado.
+- **Tirada pendiente:** Solicitud identificada de una Tirada de dados que conserva Partida, Instantánea, contexto, orden de dados y metadatos de resolución, y que todavía no ha modificado el Estado de partida ni el Estado aleatorio.
+- **Modo de tirada:** Elección local entre Automático, que usa caras generadas por el Gestor de aleatoriedad, y Manual, que usa caras de dados físicos introducidas en orden por el Jugador después de reservar el mismo paso aleatorio.
+- **Coordinador de tiradas:** Componente de aplicación que valida y resuelve una Tirada pendiente en el Modo de tirada elegido sin trasladar reglas lúdicas a la Interfaz.
+- **Componente de tirada:** Diálogo visible y accesible que presenta dados, permite seleccionar el Modo de tirada, recoge caras manuales y proyecta el cálculo y el efecto de una Tirada de dados.
 - **Registro simple:** Historial en español que resume acciones y resultados relevantes para el Jugador.
 - **Registro detallado:** Historial de depuración que conserva entradas, tiradas, objetivos, modificadores, fórmulas, resultados y trazabilidad aleatoria.
 - **Instantánea:** Representación persistente, íntegra y versionada de un Estado de partida.
@@ -479,15 +485,18 @@ Las propuestas afectadas se mantendrán fuera de los Datos canónicos y, cuando 
 
 1. CUANDO se cree una Partida, EL Gestor de aleatoriedad DEBERÁ aceptar una Semilla introducida por el Propietario o generar una Semilla que pueda copiarse antes de la primera Acción irreversible.
 2. EL Gestor de aleatoriedad DEBERÁ incluir en el Estado aleatorio la Semilla, la posición de secuencia y la Versión del algoritmo aleatorio.
-3. CUANDO el Motor de reglas necesite aleatoriedad para una resolución aceptada, EL Gestor de aleatoriedad DEBERÁ producir un Consumo aleatorio con un identificador único dentro de la Partida y la siguiente posición consecutiva de secuencia.
-4. CUANDO se registre un Consumo aleatorio, EL Registro detallado DEBERÁ conservar el identificador de Partida, la posición de secuencia, el contexto, el intervalo o tabla, el resultado bruto y el resultado interpretado.
-5. CUANDO dos Partidas usen la misma Versión de reglas, Versión del algoritmo aleatorio, Semilla, estado inicial y secuencia de acciones aceptadas, EL Gestor de aleatoriedad DEBERÁ producir la misma secuencia de consumos.
-6. CUANDO dos Partidas usen la misma Versión de reglas, estado inicial, secuencia de acciones aceptadas y secuencia de Consumos aleatorios, EL Motor de reglas DEBERÁ producir el mismo Estado de partida final.
+3. CUANDO el Motor de reglas solicite un resultado programático para una resolución aceptada, EL Gestor de aleatoriedad DEBERÁ producir un Consumo aleatorio con origen `automatic`, un identificador único dentro de la Partida y la siguiente posición consecutiva de secuencia.
+4. CUANDO se registre un Consumo aleatorio, EL Registro detallado DEBERÁ conservar el identificador de Partida, la posición de secuencia, el origen `automatic` o `manual`, el contexto, el intervalo o tabla, las caras efectivas ordenadas cuando el dominio sea una Tirada de dados, el resultado bruto efectivo y el resultado interpretado.
+5. CUANDO dos Partidas usen la misma Versión de reglas, Versión del algoritmo aleatorio, Semilla, estado inicial y secuencia de acciones aceptadas en modo Automático, EL Gestor de aleatoriedad DEBERÁ producir la misma secuencia de consumos y caras efectivas.
+6. CUANDO dos Partidas usen la misma Versión de reglas, estado inicial, secuencia de acciones aceptadas y secuencia de Consumos aleatorios efectivos, incluidos los de origen `manual`, EL Motor de reglas DEBERÁ producir el mismo Estado de partida final.
 7. CUANDO se reanude una Instantánea, EL Gestor de aleatoriedad DEBERÁ continuar desde la posición de secuencia guardada sin repetir ni omitir consumos.
 8. SI una acción se cancela o se rechaza antes de requerir una resolución aleatoria, ENTONCES EL Gestor de aleatoriedad DEBERÁ conservar la posición de secuencia anterior.
 9. SI una Instantánea contiene un Estado aleatorio incompatible, ENTONCES EL Gestor de partidas DEBERÁ impedir la reanudación sin sustituir la última Instantánea compatible.
 10. CUANDO una Instantánea contenga un Estado aleatorio incompatible, EL Gestor de partidas DEBERÁ permitir exportar la Instantánea para diagnóstico.
 11. EL Gestor de aleatoriedad DEBERÁ mantener inmutable la correspondencia entre cada Versión del algoritmo aleatorio y el procedimiento que genera la secuencia.
+12. CUANDO el Coordinador de tiradas resuelva una Tirada pendiente en modo Manual, EL Gestor de aleatoriedad DEBERÁ ejecutar y reservar exactamente el mismo paso siguiente que habría usado el modo Automático desde el Estado aleatorio vigente.
+13. CUANDO el Coordinador de tiradas confirme una Tirada de dados manual válida, EL Coordinador de tiradas DEBERÁ crear el Consumo aleatorio efectivo con origen `manual`, las caras manuales ordenadas y el Estado aleatorio siguiente de la reserva, sin conservar las caras programáticas descartadas como resultado de juego.
+14. CUANDO una reproducción alcance un Consumo aleatorio de origen `manual`, EL Motor de reglas DEBERÁ usar las caras manuales efectivas persistidas sin solicitar otra entrada ni efectuar otro Consumo aleatorio.
 
 ### Requisito 20: Registro simple y registro detallado
 
@@ -496,7 +505,7 @@ Las propuestas afectadas se mantendrán fuera de los Datos canónicos y, cuando 
 #### Criterios de aceptación
 
 1. CUANDO se resuelva una acción o evento relevante, EL Registro simple DEBERÁ añadir una entrada con el identificador de Partida, un número de secuencia consecutivo, el turno, la fase, el actor, la acción y el resultado.
-2. CUANDO se resuelva una tirada o consulta de tabla, EL Registro detallado DEBERÁ añadir una entrada con el identificador de Partida, un número de secuencia consecutivo, el valor bruto, el valor objetivo, los valores base, cada modificador con nombre y signo, la fórmula, la comparación y el resultado final.
+2. CUANDO se resuelva una Tirada de dados, EL Registro detallado DEBERÁ añadir una entrada con el identificador de Partida, un número de secuencia consecutivo, el Modo de tirada, el origen del Consumo aleatorio, cada cara efectiva en su orden, el resultado interpretado y el efecto obtenido.
 3. CUANDO una resolución no requiera tirada, EL Registro detallado DEBERÁ añadir las entradas, reglas, prioridades y cálculos deterministas usados.
 4. CUANDO una resolución use Datos canónicos, EL Registro detallado DEBERÁ incluir la Versión de reglas y las Referencias de fuente aplicables.
 5. EL Gestor de partidas DEBERÁ guardar ambos registros dentro de cada Instantánea sin mezclar entradas de identificadores de Partida distintos.
@@ -504,6 +513,9 @@ Las propuestas afectadas se mantendrán fuera de los Datos canónicos y, cuando 
 7. EL Registro detallado DEBERÁ ordenar sus entradas por el número de secuencia dentro de la Partida y por el orden de cálculo dentro de cada resolución.
 8. CUANDO el Jugador cambie entre ambos registros, LA Interfaz DEBERÁ conservar el Estado de partida y la posición de lectura de cada registro.
 9. SI una entrada detallada supera el espacio visible, ENTONCES LA Interfaz DEBERÁ permitir expandir y contraer la entrada sin eliminar contenido.
+10. CUANDO una Tirada de dados consulte una tabla, EL Registro detallado DEBERÁ conservar la tabla canónica, la fila, la columna o el intervalo aplicados y el efecto obtenido.
+11. CUANDO una Tirada de dados no consulte una tabla, EL Registro detallado DEBERÁ conservar el valor objetivo, los valores base, cada modificador con nombre y signo, la fórmula, la comparación y el efecto obtenido.
+12. CUANDO una Tirada de dados produzca un resultado visible, EL Registro simple DEBERÁ conservar un equivalente textual persistente y ordenado de las caras efectivas y del efecto comunicado por la animación.
 
 ### Requisito 21: Integridad, errores y acciones no válidas
 
@@ -987,6 +999,47 @@ Referencias de fuente: Mapas en las páginas 17, 19, 21, 23, 25, 27, 29, 31, 33,
 12. LA Plataforma AWS DEBERÁ excluir del paquete desplegado las ilustraciones, mapas y contadores reproducidos del PDF fuente.
 13. MIENTRAS un Mapa hexagonal no haya superado la Segunda revisión visual correspondiente, EL Catálogo funcional DEBERÁ mantener en Estado no publicable el Mapa hexagonal completo y la preparación de la Misión afectada.
 
+### Requisito 41: Tiradas de dados visuales, automáticas y manuales
+
+**Historia de usuario:** Como Jugador, quiero resolver cada Tirada de dados mediante un componente visual en modo Automático o Manual, para ver cómo se obtiene cada efecto y poder usar dados físicos sin perder continuidad ni trazabilidad.
+
+#### Criterios de aceptación
+
+1. CUANDO una resolución requiera una Tirada de dados, EL Motor de reglas DEBERÁ declarar una Tirada pendiente antes de aplicar el resultado.
+2. CUANDO el Motor de reglas declare una Tirada pendiente, EL Motor de reglas DEBERÁ incluir un identificador único, el identificador de Partida, la Instantánea esperada, el contexto, la cantidad y caras de cada dado, el orden de los dados y los metadatos de tabla o cálculo aplicables.
+3. MIENTRAS una Tirada pendiente no disponga de una resolución válida, EL Gestor de partidas DEBERÁ conservar sin modificación el Estado de partida, ambos registros y la posición de secuencia aleatoria confirmados.
+4. EL Motor de reglas DEBERÁ canalizar todas las Tiradas de dados mediante el contrato único de Tirada pendiente y resolución validada.
+5. CUANDO la Interfaz reciba una Tirada pendiente, EL Componente de tirada DEBERÁ aparecer y representar la cantidad ordenada de dados y el número de caras de cada dado indicados por la solicitud.
+6. CUANDO aparezca el Componente de tirada, EL Componente de tirada DEBERÁ permitir elegir entre los modos Automático y Manual.
+7. CUANDO el Jugador elija un Modo de tirada, LA Interfaz DEBERÁ guardar la elección como última preferencia local sin incorporarla al Estado de partida, a las reglas ni a los datos necesarios para reproducir la Partida.
+8. CUANDO el Jugador resuelva una Tirada pendiente en modo Automático, EL Coordinador de tiradas DEBERÁ solicitar al Gestor de aleatoriedad el siguiente paso programático y adoptar sus caras como caras efectivas del dominio solicitado.
+9. CUANDO el Jugador resuelva una Tirada pendiente en modo Manual, EL Componente de tirada DEBERÁ solicitar una cara entera por cada dado en el orden declarado por la solicitud.
+10. SI una cara manual no es un entero comprendido entre 1 y el número de caras del dado correspondiente, ENTONCES EL Coordinador de tiradas DEBERÁ rechazar la entrada sin resolver la Tirada pendiente, confirmar un Consumo aleatorio ni modificar el Estado de partida o los registros.
+11. CUANDO todas las caras manuales sean válidas, EL Coordinador de tiradas DEBERÁ solicitar al Gestor de aleatoriedad exactamente el paso que habría utilizado el modo Automático desde el Estado aleatorio vigente.
+12. CUANDO una Tirada manual reserve el paso automático correspondiente, EL Coordinador de tiradas DEBERÁ avanzar al mismo Estado aleatorio siguiente, con la misma posición e identificador de Consumo aleatorio que la reserva programática.
+13. CUANDO se confirme una Tirada manual válida, EL Coordinador de tiradas DEBERÁ persistir un Consumo aleatorio con origen `manual`, las caras manuales efectivas en orden y el resultado interpretado.
+14. CUANDO se confirme una Tirada manual válida, EL Coordinador de tiradas DEBERÁ descartar las caras programáticas reservadas sin mostrarlas ni persistirlas como resultado de juego.
+15. CUANDO una reproducción encuentre una Tirada manual confirmada, EL Motor de reglas DEBERÁ usar las caras manuales efectivas persistidas sin volver a solicitar entrada física ni reservar otro paso aleatorio.
+16. CUANDO una Tirada de dados consulte una tabla, EL Componente de tirada DEBERÁ mostrar la tabla canónica, destacar la fila, columna o intervalo aplicado y mostrar el efecto obtenido.
+17. CUANDO una Tirada de dados no consulte una tabla, EL Componente de tirada DEBERÁ mostrar el valor objetivo, los valores base, cada modificador, la fórmula o comparación aplicable y el efecto obtenido.
+18. CUANDO el Componente de tirada presente una resolución, EL Componente de tirada DEBERÁ representar cada dado con apariencia de dado y una animación de rotación que termine en la cara efectiva correspondiente.
+19. SI el navegador o el Jugador solicita reducción de movimiento, ENTONCES EL Componente de tirada DEBERÁ reducir o suprimir la animación y conservar el mismo resultado textual accesible.
+20. MIENTRAS se ejecute una animación de dados, EL Gestor de partidas DEBERÁ mantener la resolución y la confirmación del Estado de partida independientes de los eventos visuales de finalización de la animación.
+21. CUANDO el Jugador cierre el Componente de tirada antes de resolver la Tirada pendiente, EL Coordinador de tiradas DEBERÁ cancelar la solicitud sin cambiar el Estado de partida, ambos registros ni la posición de secuencia aleatoria.
+22. CUANDO el Jugador cierre el Componente de tirada después de confirmar la resolución, LA Interfaz DEBERÁ ocultar el componente y conservar el efecto, los registros y el Estado aleatorio confirmados.
+23. SI una resolución identifica otra Tirada pendiente, otra Partida, otra Instantánea o un contexto distinto, ENTONCES EL Motor de reglas DEBERÁ rechazar la resolución sin cambiar el Estado de partida, los registros ni la posición de secuencia aleatoria.
+24. CUANDO una Tirada pendiente se resuelva correctamente, EL Motor de reglas DEBERÁ aceptar su resolución una sola vez y aplicar exactamente un Consumo aleatorio efectivo.
+25. LA Interfaz DEBERÁ permitir operar el Componente de tirada mediante tacto, ratón y teclado.
+26. LA Interfaz DEBERÁ presentar los controles del Componente de tirada con una dimensión mínima de 44 por 44 Píxeles CSS.
+27. LA Interfaz DEBERÁ asociar un nombre accesible en español con cada dado, entrada y control del Componente de tirada.
+28. CUANDO una Tirada de dados produzca caras y un efecto, EL Componente de tirada DEBERÁ anunciar el resultado mediante texto accesible y una región de estado.
+29. CUANDO una Tirada de dados produzca caras y un efecto, EL Registro simple DEBERÁ conservar un equivalente textual persistente y ordenado del resultado comunicado visualmente.
+30. CUANDO el navegador aplique una ampliación de texto del 200 % o cambie entre orientación vertical y horizontal, EL Componente de tirada DEBERÁ conservar legibles los dados, entradas, cálculos, efectos y controles sin pérdida de contenido.
+31. MIENTRAS la Aplicación permanezca en Modo sin conexión, EL Coordinador de tiradas DEBERÁ resolver los modos Automático y Manual sin solicitudes de red.
+32. CUANDO una Tirada de dados futura declare una cantidad o número de caras distintos de d6 o 2d6, EL Componente de tirada DEBERÁ representar el dominio declarado sin asumir una cantidad fija de dos dados.
+33. CUANDO una Tirada de dados futura declare una cantidad o número de caras distintos de d6 o 2d6, EL Coordinador de tiradas DEBERÁ validar y resolver el dominio declarado sin asumir una cantidad fija de dos dados.
+34. CUANDO activación, combate, Revelado, Minas, Artillería o cualquier regla presente o futura use un Dominio aleatorio de dados, EL Motor de reglas DEBERÁ crear la Tirada pendiente correspondiente sin permitir una generación o entrada de caras alternativa en la Interfaz o en un submódulo de reglas.
+
 ## Mejoras futuras fuera de alcance
 
 - **Campaña configurable:** posible función futura para agrupar Misiones y conservar historial. La función no forma parte del alcance base, no podrá atribuirse a `FON-ML-2022` y requerirá una especificación independiente antes de definir cualquier relación entre Partidas.
@@ -1015,6 +1068,7 @@ El contenido técnico de esta sección y de los requisitos 27 a 29 está **paraf
 | Dificultad, victoria y derrota | 17, 18 y 32 |
 | Partidas individuales independientes y varios guardados | 6, 7, 18 y 22 |
 | Aleatoriedad reproducible y auditable | 19 |
+| Tiradas visuales automáticas/manuales, reserva y continuidad | 19, 20, 24, 25 y 41 |
 | Registro simple y detallado | 20 |
 | Persistencia local y exportación/importación manual sin sincronización | 22 y 23 |
 | PWA y funcionamiento sin conexión | 23 |

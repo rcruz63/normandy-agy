@@ -6,7 +6,7 @@ Este plan convierte el diseño aprobado en pasos de codificación incrementales 
 
 Se respetan las fronteras del diseño: el dominio no importa DOM, IndexedDB, red, reloj ni SDK de AWS. El contenido no verificado permanece en Estado no publicable: **no se resuelve DP-001/DP-002/DP-003, no se inventan reglas, no se copia contenido protegido del PDF, no hay campañas ni sincronización, y no se asume cobertura de coste cero no verificada.** Los valores lúdicos concretos que ya están en los requisitos 32-39 se codifican como fixtures/catálogo; cualquier dato visual o de mapa que dependa de DP-001 se deja como fixture bloqueado.
 
-Las 25 propiedades de corrección del diseño se implementan cada una con exactamente una prueba `fast-check` (`numRuns >= 100`) y su etiqueta exacta `// Feature: fields-of-normandy-pwa, Property {n}: {texto}`. Los sub-tareas de prueba marcadas con `*` son opcionales.
+Las 26 propiedades de corrección del diseño se implementan cada una con exactamente una prueba `fast-check` (`numRuns >= 100`) y su etiqueta exacta `// Feature: fields-of-normandy-pwa, Property {n}: {texto}`. Los sub-tareas de prueba marcadas con `*` son opcionales.
 
 ## Tasks
 
@@ -53,7 +53,7 @@ Las 25 propiedades de corrección del diseño se implementan cada una con exacta
     - Verificar filas exactas de req. 32-34/36 contra fixtures, conjunto exacto M01..M15 y páginas de referencia
     - _Requirements: 32.1, 33.1, 34.18, 36.1_
 
-- [ ] 4. Checkpoint - Catálogo y publicación
+- [~] 4. Checkpoint - Catálogo y publicación
   - Ensure all tests pass, ask the user if questions arise.
 
 - [x] 5. Geometría hexagonal y modelos de mapa/ficha
@@ -196,39 +196,39 @@ Las 25 propiedades de corrección del diseño se implementan cada una con exacta
     - Confirmar/abortar en cada punto de fallo, reabrir contexto, crear/reanudar al menos veinte Partidas por Entorno probado, corromper agregado, cuota insuficiente y eliminación externa
     - _Requirements: 6.2, 7.7, 21.6, 23.11, 31.7_
 
-- [ ] 16. Exportación, importación y migraciones
-  - [ ] 16.1 Implementar `BackupCodec` con serialización canónica versionada
+- [x] 16. Exportación, importación y migraciones
+  - [x] 16.1 Implementar `BackupCodec` con serialización canónica versionada
     - Definir `BackupPackage`, `IntegrityDescriptor`, canonicalización UTF-8/orden estable; `encode`/`validate`; round-trip por equivalencia estructural; suma como detección de alteración accidental, no firma/cifrado
     - _Requirements: 22.2, 22.3, 22.11_
-  - [ ] 16.2 Implementar flujo de importación fail-closed
+  - [x] 16.2 Implementar flujo de importación fail-closed
     - Leer sin escribir; validar envoltorio/versión/canonicalización/suma/ids/Instantáneas/registros/aleatorio/invariantes; staging completo; colisión de `gameId` bloquea con cancelar o reemplazar explícito; confirmar en una sola transacción y luego cambiar generación activa
     - _Requirements: 22.4, 22.5, 22.11_
-  - [ ] 16.3 Implementar `MigrationRegistry` con backup y rollback
+  - [x] 16.3 Implementar `MigrationRegistry` con backup y rollback
     - Copiar generación activa como `migrationBackup`; cadena de migradores puros sobre staging; verificar conservación de todos los campos/registros/aleatorio; cambiar `activeGenerationId` solo si todo válido; conservar copia anterior; sin llamadas a servidor
     - _Requirements: 22.6, 22.7, 22.8, 22.9, 22.10_
-  - [ ]* 16.4 Escribir prueba de propiedad de round-trip de exportación/importación
+  - [x]* 16.4 Escribir prueba de propiedad de round-trip de exportación/importación
     - **Property 18: Round-trip de exportación e importación**
     - **Validates: Requirements 22.2, 22.3, 22.4, 22.5, 22.11**
-  - [ ]* 16.5 Escribir prueba de propiedad de migración conservadora y recuperable
+  - [x]* 16.5 Escribir prueba de propiedad de migración conservadora y recuperable
     - **Property 19: Migración conservadora y recuperable**
     - **Validates: Requirements 22.6, 22.7, 22.8, 22.9**
-  - [ ]* 16.6 Escribir pruebas de integración de exportar/importar/migrar
+  - [x]* 16.6 Escribir pruebas de integración de exportar/importar/migrar
     - Exportar en un contexto e importar explícitamente en otro sin canal de sincronización; migración con fallo intermedio y rollback
     - _Requirements: 22.10, 22.11_
 
 - [ ] 17. Incompatibilidad de versiones y diagnósticos de recuperación
-  - [ ] 17.1 Implementar detección de versiones incompatibles y diagnóstico exportable
+  - [~] 17.1 Implementar detección de versiones incompatibles y diagnóstico exportable
     - Impedir reanudar/importar con reglas/algoritmo/guardado no soportado sin sustituir versión compatible; permitir exportar Instantánea/diagnóstico; incluir diagnóstico pendiente en exportación de recuperación cuando IndexedDB no acepte escritura
     - _Requirements: 19.9, 19.10, 21.10, 23.10_
 
-- [ ] 18. Checkpoint - Persistencia, copia y migración
+- [~] 18. Checkpoint - Persistencia, copia y migración
   - Ensure all tests pass, ask the user if questions arise.
 
 - [ ] 19. Paquete sin conexión y actualización segura
-  - [ ] 19.1 Implementar `OfflinePackageManifest` y service worker con cachés staging/current/previous
+  - [~] 19.1 Implementar `OfflinePackageManifest` y service worker con cachés staging/current/previous
     - Enumerar versión, recursos, longitud e integridad; cachés `fon-staging/current/previous`; `staging` nunca sirve a clientes
     - _Requirements: 23.1, 23.2, 28.8_
-  - [ ] 19.2 Implementar `OfflinePackageCoordinator` (stage/activate/rollback/health check)
+  - [~] 19.2 Implementar `OfflinePackageCoordinator` (stage/activate/rollback/health check)
     - `stage` descarga y verifica todo antes de completitud; `activate` cambia puntero con confirmación si hay Partida abierta; health check de shell/catálogo/migradores/compatibilidad; ante fallo restaurar `previous` sin borrar; limpieza solo tras arranque confirmado, nunca borra Partidas
     - _Requirements: 23.3, 23.4, 23.5, 23.6, 23.7, 23.8, 23.9, 23.11, 28.7_
   - [ ]* 19.3 Escribir prueba de propiedad de equivalencia offline y rollback
@@ -238,45 +238,65 @@ Las 25 propiedades de corrección del diseño se implementan cada una con exacta
     - Descarga completa e instalable; ciclo completo con red bloqueada; ausencia de requests de juego; reconexión sin mutar Partidas; fallo por recurso/fase; confirmación con Partida abierta; rollback y limpieza tras health check
     - _Requirements: 23.1, 23.3, 23.5, 23.6, 23.8, 23.9_
 
-- [ ] 20. Interfaz, entrada normalizada y estado de vista
-  - [ ] 20.1 Implementar adaptadores de entrada e `IntentTranslator`
+- [ ] 20. Interfaz, tiradas visuales, entrada normalizada y estado de vista
+  - [ ] 20.1 Implementar contrato de tirada en dos fases y `DiceRollCoordinator`
+    - Añadir `DiceRollRequest`, `DiceRollResolution`, `DiceOutcomeProjection` y la rama `awaiting-roll` sin mutación; reanudar el Motor solo con una resolución de uso único ligada a solicitud, Partida, Instantánea y contexto
+    - Resolver Automático mediante `VersionedRandom.next`; en Manual validar cada cara ordenada, reservar exactamente el mismo paso, descartar las caras programáticas y persistir `source="manual"`, caras efectivas y resultado interpretado con el mismo siguiente Estado aleatorio
+    - Canalizar por el contrato único todas las tiradas actuales y futuras con `RandomDomain.kind === "dice"`, incluidas activación/órdenes, combate, Revelado, Minas y Artillería, sin generación ad hoc en UI o submódulos
+    - _Requirements: 19.3, 19.4, 19.5, 19.6, 19.8, 19.12, 19.13, 19.14, 20.2, 41.1, 41.2, 41.3, 41.4, 41.8, 41.9, 41.10, 41.11, 41.12, 41.13, 41.14, 41.15, 41.23, 41.24, 41.31, 41.33, 41.34_
+  - [~] 20.2 Implementar adaptadores de entrada e `IntentTranslator`
     - Producir `InteractionIntent` idéntico por dispositivo; eliminar `source` antes de `GameCommand`; alternativa visible a gesto/hover/secundario/rueda/arrastre; Acción irreversible con `selected`→`confirmed`
     - _Requirements: 24.1, 24.2, 24.3, 24.5, 24.10, 24.11, 24.12_
-  - [ ] 20.2 Implementar `ViewState` independiente y renderizado SVG del mapa
+  - [~] 20.3 Implementar `ViewState` independiente y renderizado SVG del mapa
     - Zoom/paneo/orientación/tamaño/lectura como `ViewState` sin tocar `GameState`; mapa SVG responsive con capa semántica sincronizada; conservar selección y estado ante adaptación/orientación
     - _Requirements: 20.8, 24.6, 24.7, 24.8, 24.9, 30.8, 40.10, 40.11_
-  - [ ] 20.3 Implementar proyecciones de acciones, registros y selectores es-ES
+  - [ ] 20.4 Implementar `DiceRollDialog` visual y accesible
+    - Renderizar cantidad variable de dados en orden, selector Automático/Manual en cada aparición y última preferencia local fuera de `GameState`; recoger una cara entera por dado en Manual
+    - Mostrar `DiceOutcomeProjection` con tabla canónica y fila/columna/intervalo destacados o, sin tabla, objetivo/bases/modificadores/fórmula/comparación, y el efecto obtenido
+    - Representar dados propios con rotación hasta cada cara efectiva; hacer commit independiente de `animationend`, soportar `prefers-reduced-motion`, texto/`aria-live`, tacto/ratón/teclado, 44×44, 200 %, vertical/horizontal y funcionamiento offline
+    - Cerrar antes de resolver cancela la solicitud sin commit/consumo; cerrar después solo oculta el diálogo sin deshacer el efecto
+    - _Requirements: 20.10, 20.11, 20.12, 24.1, 24.2, 24.3, 24.4, 24.5, 24.7, 24.8, 24.12, 25.3, 25.4, 25.5, 25.6, 41.5, 41.6, 41.7, 41.9, 41.10, 41.16, 41.17, 41.18, 41.19, 41.20, 41.21, 41.22, 41.25, 41.26, 41.27, 41.28, 41.29, 41.30, 41.31, 41.32_
+  - [~] 20.5 Implementar proyecciones de acciones, registros y selectores es-ES
     - Selector de Misiones solo `published` con nombre propio; alternar registros conservando estado y posición de lectura; expandir/contraer entradas detalladas; `Intl` con locale `es-ES`
     - _Requirements: 3.1, 3.2, 3.3, 3.4, 20.9, 32.2, 32.12_
-  - [ ]* 20.4 Escribir prueba de propiedad de equivalencia tacto/ratón
+  - [ ]* 20.6 Escribir prueba de propiedad de continuidad y resolución íntegra de tiradas
+    - **Property 26: Continuidad y resolución íntegra de tiradas automáticas y manuales**
+    - Añadir la etiqueta exacta `// Feature: fields-of-normandy-pwa, Property 26: Continuidad y resolución íntegra de tiradas automáticas y manuales`
+    - **Validates: Requirements 19.3, 19.4, 19.5, 19.6, 19.8, 19.12, 19.13, 19.14, 20.2, 20.10, 20.11, 20.12, 24.11, 24.12, 25.6, 41.1, 41.2, 41.3, 41.4, 41.8, 41.9, 41.10, 41.11, 41.12, 41.13, 41.14, 41.15, 41.16, 41.17, 41.19, 41.20, 41.21, 41.22, 41.23, 41.24, 41.25, 41.28, 41.29, 41.31, 41.32, 41.33, 41.34**
+  - [ ]* 20.7 Escribir pruebas unitarias, de integración, componente y Playwright de tiradas
+    - Inventariar activación 2d6, combate, Revelado 1d6, Minas y Artillería; fallar si cualquier productor evita `DiceRollRequest`
+    - Cubrir Automático/Manual, orden y cantidad variable de caras, reserva manual, replay, entrada inválida, reuso/cruce, cierre antes/después, tabla y no-tabla, persistencia de modo/origen y ausencia de bypass
+    - Cubrir animación independiente, reducción de movimiento, tacto/ratón/teclado, `aria-live`, 44×44, 200 %, vertical/horizontal, offline y ausencia de solicitudes de red
+    - _Requirements: 19.12, 19.13, 19.14, 20.2, 20.10, 20.11, 20.12, 24.1, 24.2, 24.4, 24.7, 24.8, 25.3, 25.4, 25.6, 33.2, 34.6, 35.6, 39.7, 39.8, 39.9, 39.10, 39.15, 39.17, 41.1, 41.4, 41.5, 41.8, 41.9, 41.10, 41.11, 41.12, 41.13, 41.14, 41.15, 41.16, 41.17, 41.18, 41.19, 41.20, 41.21, 41.22, 41.23, 41.24, 41.25, 41.26, 41.27, 41.28, 41.29, 41.30, 41.31, 41.32, 41.33, 41.34_
+  - [ ]* 20.8 Escribir prueba de propiedad de equivalencia tacto/ratón
     - **Property 21: Equivalencia entre tacto y ratón**
     - **Validates: Requirements 24.1, 24.2, 24.3, 24.5, 24.11, 24.12**
-  - [ ]* 20.5 Escribir prueba de propiedad de estado de vista independiente
+  - [ ]* 20.9 Escribir prueba de propiedad de estado de vista independiente
     - **Property 22: Estado de vista independiente del dominio**
     - **Validates: Requirements 20.8, 24.6, 24.7, 24.8, 24.9**
-  - [ ]* 20.6 Escribir prueba de propiedad de proyección íntegra en es-ES
+  - [ ]* 20.10 Escribir prueba de propiedad de proyección íntegra en es-ES
     - **Property 23: Proyección íntegra en español de España**
     - **Validates: Requirements 3.1, 3.2, 3.3, 3.4, 3.5, 3.6, 8.6, 21.3, 25.4, 25.7, 32.2, 32.3, 32.12**
 
 - [ ] 21. Accesibilidad y detección de capacidades
-  - [ ] 21.1 Implementar codificación accesible y `CapabilityDetector`
+  - [~] 21.1 Implementar codificación accesible y `CapabilityDetector`
     - Estado/bando/Orientación/terreno/selección/resultados mediante texto/forma/patrón/icono además de color; objetivos táctiles 44×44 px CSS; nombres accesibles es-ES; instrucciones textuales; comprobar instalación/IndexedDB/SW/tacto y bloquear inicio ante carencia obligatoria conservando exportación
     - _Requirements: 10.7, 24.4, 25.1, 25.4, 25.5, 25.7, 31.3, 31.4, 31.7_
-  - [ ] 21.2 Implementar animaciones con equivalente persistente en Registro simple
+  - [~] 21.2 Implementar animaciones con equivalente persistente en Registro simple
     - Cada animación de cambio de estado tiene entrada persistente y ordenada en Registro simple
     - _Requirements: 25.6_
   - [ ]* 21.3 Escribir pruebas de accesibilidad (axe-core, contraste, 200%)
     - Contraste 4,5:1 / 3:1, foco, nombres accesibles, reflow a 200% sin pérdida, objetivos 44×44, snapshots visuales propios en orientaciones sin capturas del PDF
     - _Requirements: 24.7, 24.8, 25.2, 25.3_
 
-- [ ] 22. Checkpoint - PWA, interfaz y accesibilidad
+- [~] 22. Checkpoint - PWA, interfaz y accesibilidad
   - Ensure all tests pass, ask the user if questions arise.
 
 - [ ] 23. Control de acceso y Bloqueo local
-  - [ ] 23.1 Implementar `AccessVerifierRenderer` y CloudFront Function viewer-request
+  - [~] 23.1 Implementar `AccessVerifierRenderer` y CloudFront Function viewer-request
     - Generar función con material verificador versionado inyectado en despliegue (compatible runtime 2.0); exigir HTTP Basic; devolver 401 + `WWW-Authenticate` + `Cache-Control: no-store` sin origen; eliminar cabecera sensible; sin logs ni secretos en repo/S3/bundle
     - _Requirements: 26.1, 26.2, 26.3, 26.4, 26.5, 26.6, 26.7, 26.8, 26.9_
-  - [ ] 23.2 Implementar `LocalLock` con verificador local independiente
+  - [~] 23.2 Implementar `LocalLock` con verificador local independiente
     - Verificador local con `algorithmVersion`/parámetros/sal/material sin guardar clave recuperable; bloquear al iniciar offline ocultando reglas/Partidas; informar que no cifra IndexedDB/Cache ni revoca copias descargadas
     - _Requirements: 26.10, 26.11, 26.12, 26.13, 26.14_
   - [ ]* 23.3 Escribir pruebas de acceso y ausencia de secretos
@@ -284,10 +304,10 @@ Las 25 propiedades de corrección del diseño se implementan cada una con exacta
     - _Requirements: 26.4, 26.6, 26.7_
 
 - [ ] 24. Infraestructura como código (CDK) y hosting seguro
-  - [ ] 24.1 Implementar stack CDK de S3 privado, OAC y CloudFront
+  - [~] 24.1 Implementar stack CDK de S3 privado, OAC y CloudFront
     - Bucket S3 Standard con bloqueo público, propiedad sin ACL, política limitada a distribución/OAC; distribución solo HTTPS con dominio `*.cloudfront.net`; función asociada a `viewer-request`; roles separados síntesis/despliegue vs lectura de origen con permisos mínimos
     - _Requirements: 27.1, 27.2, 27.3, 27.4, 27.5, 27.6, 27.7, 27.8, 27.12_
-  - [ ] 24.2 Implementar plan FREE, presupuesto y exclusiones de coste
+  - [~] 24.2 Implementar plan FREE, presupuesto y exclusiones de coste
     - Declarar suscripción `PricingPlanManager` `CloudFront/FREE` y WAF incluido; Zero spend budget por correo y Avisos de franquicia 50/80/100%; excluir pay-as-you-go, dominio registrado, Lambda@Edge, KMS, DNSSEC, logs facturables, Firehose y canales de pago
     - _Requirements: 28.1, 28.2, 28.3, 28.4, 28.16, 29.1, 29.2, 29.3, 29.4, 29.5, 29.6, 29.7, 29.8_
   - [ ]* 24.3 Escribir pruebas de IaC deterministas (sin desplegar)
@@ -295,10 +315,10 @@ Las 25 propiedades de corrección del diseño se implementan cada una con exacta
     - _Requirements: 27.3, 27.5, 27.7, 27.12, 28.3_
 
 - [ ] 25. Bloqueo de producción fail-closed y observabilidad
-  - [ ] 25.1 Implementar `ProductionEvidence` y preflight fail-closed
+  - [~] 25.1 Implementar `ProductionEvidence` y preflight fail-closed
     - Derivar del plan de IaC todas las categorías de operación S3 (admin y lecturas de origen); exigir evidencia vigente de coste 0 € por categoría y 100% del almacenamiento; verificar elegibilidad FREE, sin pay-as-you-go/migración, volumen S3 en crédito, HTTPS, dominio, bloqueo público, OAC, permisos mínimos, recursos excluidos y auth sin exponer secretos; `unknown`=`fail`; regenerar por cambio de IaC/cuenta/precio/condiciones
     - _Requirements: 27.9, 27.10, 27.11, 28.9, 28.10, 28.11, 28.12, 28.13, 28.14, 28.15, 29.9, 29.10, 29.11, 29.12_
-  - [ ] 25.2 Implementar pipeline por fases y promoción condicionada
+  - [~] 25.2 Implementar pipeline por fases y promoción condicionada
     - Fases `build-content`/`test`/`synth`/`preflight`/`deploy-staging`/`verify-staging`/`promote`; solo `promote` crea/actualiza producción con `ProductionEvidence=allow` de la misma ejecución; alertas/franquicia/budget nunca cambian `deny` a `allow`
     - _Requirements: 27.9, 28.12, 28.13, 29.11_
   - [ ]* 25.3 Escribir prueba de propiedad del gate de producción fail-closed
@@ -309,7 +329,7 @@ Las 25 propiedades de corrección del diseño se implementan cada una con exacta
     - _Requirements: 29.9, 29.10, 29.11, 29.12_
 
 - [ ] 26. Matriz de conformidad y segunda revisión visual
-  - [ ] 26.1 Implementar generación de Matriz de conformidad y gate de aceptación
+  - [~] 26.1 Implementar generación de Matriz de conformidad y gate de aceptación
     - `CatalogCompiler` genera la Matriz y falla ante elementos huérfanos/faltantes/fallidos/no verificados; registrar segunda revisión visual (revisor, fecha, resultado, Referencia de misión) sin guardar páginas/capturas del PDF; asociar cada partida de aceptación con Versión de reglas, Semilla y Versión de guardado
     - _Requirements: 2.1, 2.3, 2.6, 30.9, 30.10, 31.8, 40.4, 40.5_
   - [ ]* 26.2 Escribir pruebas de conformidad y matriz de Entorno probado
@@ -317,14 +337,14 @@ Las 25 propiedades de corrección del diseño se implementan cada una con exacta
     - _Requirements: 31.2, 31.5, 31.6, 31.9_
 
 - [ ] 27. Cableado final y verificación de versión candidata
-  - [ ] 27.1 Integrar UI, aplicación, dominio, persistencia, offline y acceso
+  - [~] 27.1 Integrar UI, aplicación, dominio, persistencia, offline y acceso
     - Conectar `GameCommandDispatcher` → `GameUnitOfWork` → Motor → Invariantes → IndexedDB y proyecciones a UI; verificar que ningún valor lúdico vive en UI ni ramas ad hoc; contenido no publicable permanece bloqueado extremo a extremo
     - _Requirements: 5.1, 20.1, 24.11, 30.1, 30.3, 30.12, 40.12_
   - [ ]* 27.2 Escribir pruebas E2E/contract de flujo completo
     - Contract tests tacto=ratón mismo `GameCommand`; E2E de todas las acciones con un puntero táctil y solo ratón; verificar ausencia de contenido del PDF en el paquete
     - _Requirements: 24.1, 24.2, 24.11, 30.12, 40.12_
 
-- [ ] 28. Checkpoint final - Ensure all tests pass
+- [~] 28. Checkpoint final - Ensure all tests pass
   - Ensure all tests pass, ask the user if questions arise.
 
 - [ ] 29. Refactor de conformidad con las normas de desarrollo
@@ -334,10 +354,10 @@ Las 25 propiedades de corrección del diseño se implementan cada una con exacta
   - Sustituir los alias provisionales `TODO(n.x)` en `src/domain/engine/state.ts` y `src/domain/engine/transition.ts` por los tipos reales donde ya existan (Tareas 5/6/13) o, si aún no hay tipo real, convertir el `TODO` en una nota rastreable conforme a las normas; eliminar cualquier stub/`TODO` fantasma no solicitado
   - Verificar la ausencia de `any`/tipos comodín, de valores mágicos (usar constantes con nombre en inglés) y de errores silenciados
   - Confirmar que es un refactor no funcional: no cambia comportamiento, mantiene verdes `typecheck`, `typecheck:domain` y las pruebas existentes
-  - [ ] 29.1 Refactor de conformidad del dominio
+  - [~] 29.1 Refactor de conformidad del dominio
     - Revisar `src/domain/invariants/invariant-validator.ts`, `src/domain/geometry/map.ts`, `src/domain/geometry/hex-geometry.ts`, `src/domain/engine/rules-engine.ts` y dividirlos SOLO cuando mezclen más de una abstracción o su tamaño perjudique la comprensión/mantenibilidad; limpiar los alias `TODO` de `src/domain/engine/state.ts` y `src/domain/engine/transition.ts`
     - _Requirements: N/A (conformidad con docs/normas.md)_
-  - [ ] 29.2 Refactor de conformidad del catálogo
+  - [~] 29.2 Refactor de conformidad del catálogo
     - Revisar `src/catalog/compiler/catalog-validator.ts` y `src/catalog/publication/publication-gate.ts` y dividirlos SOLO cuando mezclen más de una abstracción o su tamaño perjudique la comprensión/mantenibilidad, preservando la excepción de esquemas/tipos y fixtures
     - _Requirements: N/A (conformidad con docs/normas.md)_
   - _Requirements: N/A (conformidad con docs/normas.md)_
@@ -370,9 +390,9 @@ Las 25 propiedades de corrección del diseño se implementan cada una con exacta
     { "id": 10, "tasks": ["15.5", "15.6", "15.7", "16.4", "16.5", "16.6", "17.1"] },
     { "id": 11, "tasks": ["19.1", "23.1", "24.1"] },
     { "id": 12, "tasks": ["19.2", "23.2", "24.2"] },
-    { "id": 13, "tasks": ["19.3", "19.4", "20.1", "20.2", "23.3", "24.3", "25.1"] },
-    { "id": 14, "tasks": ["20.3", "21.1", "21.2", "25.2"] },
-    { "id": 15, "tasks": ["20.4", "20.5", "20.6", "21.3", "25.3", "25.4", "26.1"] },
+    { "id": 13, "tasks": ["19.3", "19.4", "20.1", "20.2", "20.3", "23.3", "24.3", "25.1"] },
+    { "id": 14, "tasks": ["20.4", "20.5", "21.1", "21.2", "25.2"] },
+    { "id": 15, "tasks": ["20.6", "20.7", "20.8", "20.9", "20.10", "21.3", "25.3", "25.4", "26.1"] },
     { "id": 16, "tasks": ["26.2", "27.1"] },
     { "id": 17, "tasks": ["27.2"] },
     { "id": 18, "tasks": ["29.1", "29.2"] }

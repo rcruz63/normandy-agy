@@ -45,6 +45,7 @@ El contenido consultado se ha resumido y parafraseado; no se reproduce documenta
 | Catálogo, publicación, fuente y recursos propios | 1-5, 30, 32, 33, 40; DP-001..003 |
 | Motor, secuencias y reglas concretas | 5, 8-18, 32-39 |
 | Partidas, atomicidad, aleatoriedad y registros | 6, 7, 19-22 |
+| Tiradas visuales en dos fases, reserva manual y proyección | 19, 20, 24, 25, 41 |
 | Persistencia, copia, migración y offline | 7, 21-23 |
 | Interfaz, modalidades, idioma y accesibilidad | 3, 20, 24, 25, 31 |
 | Acceso, alojamiento, coste y observabilidad | 26-29 |
@@ -64,6 +65,7 @@ flowchart TB
     subgraph Aplicacion[Aplicación]
         CMD[Command Dispatcher por Partida]
         UOW[Game Unit of Work]
+        DICE[Coordinador de tiradas]
         PM[Gestor de partidas]
         BACKUP[Exportación, importación y migración]
         UPDATE[Coordinador de actualización]
@@ -86,7 +88,9 @@ flowchart TB
     INPUT -->|Intent normalizado| CMD
     CMD --> UOW
     UOW --> ENGINE
-    ENGINE --> RNG
+    ENGINE -.->|Tirada pendiente| DICE
+    DICE -->|Reserva local| RNG
+    DICE -->|Resolución validada| UOW
     ENGINE --> INV
     ENGINE --> PROJ
     CATALOG --> ENGINE
@@ -229,11 +233,12 @@ interface RulesEngine {
 
 type TransitionDecision =
   | Readonly<{ kind: "accepted"; proposal: TransitionProposal }>
+  | Readonly<{ kind: "awaiting-roll"; request: DiceRollRequest }>
   | Readonly<{ kind: "rejected"; reason: DomainMessage }>
   | Readonly<{ kind: "blocked"; reason: DomainMessage; decisionRef: DecisionRef }>;
 ```
 
-`decide` no muta sus argumentos. `rejected` y los bloqueos detectados antes de una resolución aleatoria devuelven exactamente el Estado aleatorio recibido. Cuando un requisito exige conservar un Consumo ya efectuado aunque el resultado no pueda aplicarse (13.7 y 17.6), el resultado es una propuesta atómica `stopped-after-consumption`: solo avanza el Estado aleatorio y añade el consumo/diagnóstico; no revela ni aplica el efecto incompleto.
+`decide` no muta sus argumentos. `awaiting-roll` tampoco muta el Estado de partida, los registros ni el Estado aleatorio: declara la información necesaria y devuelve el control a aplicación. `rejected` y los bloqueos detectados antes de una resolución aleatoria devuelven exactamente el Estado aleatorio recibido. Cuando un requisito exige conservar un Consumo ya efectuado aunque el resultado no pueda aplicarse (13.7 y 17.6), el resultado es una propuesta atómica `stopped-after-consumption`: solo avanza el Estado aleatorio y añade el consumo/diagnóstico; no revela ni aplica el efecto incompleto.
 
 Los submódulos puros son:
 
@@ -245,7 +250,7 @@ Los submódulos puros son:
 - `MissionResolver`: preparación, duración, dificultad, objetivos y desenlace (5, 17-18, 32-33).
 - `InvariantValidator`: referencias, ocupación, estado de fichas, secuencias, registros, aleatoriedad y demás invariantes declarados por la Versión de reglas (21).
 
-### 3. Aleatoriedad reproducible
+### 3. Aleatoriedad reproducible y resolución de dados en dos fases
 
 `VersionedRandom` es una máquina de estado pura. La Semilla es un valor opaco serializable validado por la implementación correspondiente; el diseño no fija su formato, longitud ni rango.
 
@@ -261,7 +266,112 @@ type RandomStep = Readonly<{
 }>;
 ```
 
-El registro de implementaciones es inmutable: el mismo `algorithmVersion` nunca cambia de procedimiento. Una versión nueva usa otro identificador y se conserva el lector de versiones presentes en guardados compatibles. El identificador de Consumo es único dentro de la Partida y su posición es consecutiva. Nunca se llama a `Math.random` desde el dominio (requisito 19).
+El registro de implementaciones es inmutable: el mismo `algorithmVersion` nunca cambia de procedimiento. Una versión nueva usa otro identificador y se conserva el lector de versiones presentes en guardados compatibles. El identificador de Consumo es único dentro de la Partida y su posición es consecutiva. Nunca se llama a `Math.random` desde el dominio, aplicación ni Interfaz para resolver una Tirada de dados (requisitos 19 y 41).
+
+El contrato actual de `RulesEngine.decide` continúa siendo síncrono, pero una resolución que necesita dados se divide en dos fases. En la primera, el Motor devuelve `awaiting-roll` con una solicitud declarativa y no consume aleatoriedad. Aplicación presenta la solicitud, coordina el modo elegido y reanuda el Motor con una resolución vinculada a esa solicitud. Solo la segunda fase puede producir una `TransitionProposal` confirmable.
+
+```ts
+type DiceRollRequestId = Brand<string, "DiceRollRequestId">;
+type DiceRollSource = "automatic" | "manual";
+
+type DiceRollDomain = Readonly<{
+  kind: "dice";
+  count: number;
+  sides: number;
+}>;
+
+type DiceOutcomeMetadata =
+  | Readonly<{
+      kind: "table";
+      tableId: CatalogId;
+      sourceRefs: readonly SourceRef[];
+    }>
+  | Readonly<{
+      kind: "calculation";
+      targetValue: number;
+      baseValues: readonly NamedValue[];
+      modifiers: readonly SignedModifier[];
+      formula: string;
+      comparison: Comparison;
+      sourceRefs: readonly SourceRef[];
+    }>;
+
+type DiceRollRequest = Readonly<{
+  id: DiceRollRequestId;
+  gameId: GameId;
+  expectedSnapshotId: SnapshotId;
+  context: RandomContext;
+  domain: DiceRollDomain;
+  diceOrder: readonly number[];
+  outcomeMetadata: DiceOutcomeMetadata;
+}>;
+
+type DiceRollResolution = Readonly<{
+  requestId: DiceRollRequestId;
+  gameId: GameId;
+  expectedSnapshotId: SnapshotId;
+  context: RandomContext;
+  source: DiceRollSource;
+  effectiveFaces: readonly number[];
+  nextRandomState: RandomState;
+  consumption: RandomConsumption;
+}>;
+
+type DiceRollInput =
+  | Readonly<{ source: "automatic" }>
+  | Readonly<{ source: "manual"; faces: readonly number[] }>;
+
+interface DiceRollCoordinator {
+  resolve(
+    request: DiceRollRequest,
+    input: DiceRollInput,
+    currentRandomState: RandomState
+  ): DiceRollCoordinationResult;
+
+  cancel(requestId: DiceRollRequestId): DiceRollCancellation;
+}
+```
+
+`DiceRollCoordinator` vive en `application/`; usa el puerto `VersionedRandom`, pero no calcula tablas, umbrales ni efectos. `DiceRollDialog` vive en `ui/` y solo produce `DiceRollInput`. Los adapters locales guardan la preferencia visual y las solicitudes en vuelo si la estrategia de ciclo de vida del navegador lo requiere; ninguna de esas estructuras entra en `GameState`.
+
+La resolución tiene estas semánticas exactas:
+
+1. **Solicitud:** el Motor crea un `DiceRollRequest` para todo `RandomDomain.kind === "dice"`. Activación/órdenes, combate, Revelado, Minas, Artillería y cualquier tirada futura usan este único punto; los submódulos y la UI no generan caras por su cuenta.
+2. **Automático:** el Coordinador llama una vez a `VersionedRandom.next` desde el `RandomState` confirmado, adopta sus caras como `DiceRollResolution.effectiveFaces`, conserva el siguiente estado y crea el Consumo confirmado con `source="automatic"` y esas mismas caras en `rawResult`.
+3. **Manual:** antes de reservar, el Coordinador valida que existan exactamente `count` caras, en orden, y que cada valor sea entero dentro de `1..sides`. Si la entrada es inválida, devuelve fallo de validación sin invocar `next`.
+4. **Reserva manual:** con entrada válida, el Coordinador llama una vez a `VersionedRandom.next` exactamente como en Automático. Conserva de esa reserva el siguiente `RandomState`, posición e identificador, descarta las caras programáticas y construye `DiceRollResolution.effectiveFaces` con las caras físicas ordenadas. Al confirmar, el Consumo conserva `source="manual"` y esas caras físicas efectivas en `rawResult`. Las caras programáticas descartadas no se muestran ni se persisten como resultado de juego.
+5. **Interpretación:** el Coordinador entrega `DiceRollResolution` al Motor. `RulesEngine.resumeRoll` verifica identidad, Partida, `expectedSnapshotId`, contexto, dominio y uso único; después interpreta las caras mediante las reglas canónicas y completa el Consumo con el resultado interpretado. Aplicación confirma conjuntamente el efecto, los registros y el Estado aleatorio reservado.
+6. **Replay:** una reproducción usa `source` y `rawResult` persistidos. Una tirada manual reproducida no solicita entrada ni ejecuta otra reserva; una secuencia puramente automática conserva el determinismo existente.
+
+La solicitud se registra en un almacén efímero de aplicación por `requestId`, ligado a `gameId`, `expectedSnapshotId` y contexto. Una resolución solo puede consumirse una vez. Una resolución reutilizada, obsoleta o cruzada se rechaza antes de interpretar caras o confirmar un Consumo. Cerrar antes de resolver elimina la solicitud efímera: no hay commit, registro ni avance aleatorio. Cerrar después de confirmar elimina únicamente el estado visual.
+
+La proyección del resultado también es un dato estructurado producido por dominio, nunca una inferencia de la UI:
+
+```ts
+type DiceOutcomeProjection =
+  | Readonly<{
+      kind: "table";
+      tableId: CatalogId;
+      rows: readonly TableProjectionRow[];
+      appliedRowId: string;
+      appliedColumnId?: string;
+      appliedInterval?: string;
+      effect: DomainEffectProjection;
+      sourceRefs: readonly SourceRef[];
+    }>
+  | Readonly<{
+      kind: "calculation";
+      targetValue: number;
+      baseValues: readonly NamedValue[];
+      modifiers: readonly SignedModifier[];
+      formula: string;
+      comparison: Comparison;
+      effect: DomainEffectProjection;
+      sourceRefs: readonly SourceRef[];
+    }>;
+```
+
+La rama de tabla contiene la tabla canónica y destaca fila, columna o intervalo aplicado. La rama de cálculo conserva objetivo, bases, modificadores, fórmula/comparación y efecto. Ambas alimentan el diálogo, el Registro simple y el Registro detallado sin duplicar lógica lúdica en presentación.
 
 ### 4. Game Unit of Work y Gestor de partidas
 
@@ -288,6 +398,8 @@ sequenceDiagram
     participant Q as Cola por Partida
     participant U as Unit of Work
     participant E as Motor puro
+    participant D as Coordinador de tiradas
+    participant R as Aleatoriedad versionada
     participant I as Invariantes
     participant DB as IndexedDB
 
@@ -298,8 +410,18 @@ sequenceDiagram
     alt rechazada o bloqueada antes de aleatoriedad
         E-->>U: estado y posición sin cambios
         U-->>UI: explicación es-ES
-    else propuesta
+    else awaiting-roll
+        E-->>U: DiceRollRequest sin mutación
+        U-->>UI: mostrar DiceRollDialog
+        UI->>D: modo y caras manuales opcionales
+        D->>R: reservar exactamente un paso
+        R-->>D: siguiente estado y consumo reservado
+        D->>E: DiceRollResolution validada
+        E-->>U: propuesta con efecto y consumo efectivo
+    else propuesta sin tirada
         E-->>U: estado + registros + Estado aleatorio
+    end
+    opt existe propuesta confirmable
         U->>I: validar propuesta completa
         alt invariante inválida
             I-->>U: diagnóstico
@@ -409,13 +531,48 @@ type InteractionIntent = Readonly<{
 
 `IntentTranslator` elimina `source` antes de construir `GameCommand`; por tanto, la modalidad nunca llega al Motor. Gesto, hover, botón secundario, rueda y arrastre siempre tienen un control visible alternativo. Una Acción irreversible usa dos estados de UI, `selected` y `confirmed`; solo `confirmed` emite comando. Zoom, paneo, cambio de orientación, cambio de tamaño, selección y posición de lectura son `ViewState` separado y no modifican `GameState`.
 
-El mapa propio usa SVG responsive para geometría y una lista/árbol semántico sincronizado para nombres accesibles. Los objetivos táctiles tienen al menos 44×44 píxeles CSS. Estado, bando, Orientación, terreno, selección y resultados combinan texto/forma/patrón/icono además de color. Los estilos se validan a 200 % de texto y contrastes 4,5:1 o 3:1 según el caso. Los mensajes proceden de un catálogo `es-ES`; fechas y números usan `Intl` con locale explícita. El inglés solo puede aparecer en metadatos de mantenimiento no visibles durante el juego (requisitos 3, 24, 25 y 31).
+`DiceRollDialog` es la única presentación de una `DiceRollRequest`. El diálogo no genera aleatoriedad ni interpreta reglas: emite la elección/entrada hacia `DiceRollCoordinator` y renderiza `DiceOutcomeProjection` devuelta por dominio. La preferencia de modo se conserva localmente y sirve solo como selección inicial de la siguiente aparición.
+
+```ts
+type DiceRollPreference = Readonly<{
+  lastSource: DiceRollSource;
+}>;
+
+type DiceRollDialogState =
+  | Readonly<{
+      kind: "pending-entry";
+      request: DiceRollRequest;
+      selectedSource: DiceRollSource;
+      manualFaces: readonly (number | undefined)[];
+    }>
+  | Readonly<{
+      kind: "resolving";
+      request: DiceRollRequest;
+      source: DiceRollSource;
+    }>
+  | Readonly<{
+      kind: "resolved";
+      request: DiceRollRequest;
+      resolution: DiceRollResolution;
+      outcome: DiceOutcomeProjection;
+    }>;
+```
+
+Para cada aparición, el diálogo crea tantos dados como indique `domain.count`, sin asumir dos, y etiqueta su orden. En modo Manual presenta una entrada entera por dado y no habilita confirmación hasta superar validación estructural; la validación autoritativa permanece en el Coordinador. En Automático no solicita caras. Tras resolver, la proyección de tabla muestra el conjunto canónico y destaca fila, columna o intervalo aplicado; la proyección de cálculo muestra objetivo, bases, modificadores, fórmula/comparación y efecto.
+
+El ciclo de vida distingue explícitamente dos cierres. En `pending-entry` o antes de obtener una resolución válida, cerrar invoca `cancel(request.id)` y descarta solo estado efímero: no se crea propuesta, consumo ni registro. En `resolved`, cerrar oculta el diálogo y descarta estado de vista; no emite comando inverso ni deshace el commit. Si la Instantánea cambia mientras el diálogo está abierto, la resolución queda obsoleta y se rechaza.
+
+Cada dado usa una representación visual propia con rotación hasta la cara efectiva, pero CSS no es autoridad de dominio. El Coordinador, la reanudación del Motor y el commit no esperan `animationend`; una animación interrumpida, deshabilitada o no soportada conserva el mismo resultado. `prefers-reduced-motion` y una preferencia equivalente reducen o suprimen la rotación. Una región `aria-live` y texto persistente anuncian caras ordenadas y efecto, y el Registro simple conserva el equivalente de cualquier cambio comunicado visualmente.
+
+El diálogo es operable con tacto, ratón y teclado; ofrece foco visible, nombres `es-ES`, controles de al menos 44×44 píxeles CSS y orden de tabulación estable. El contenido conserva reflow a 200 %, orientaciones vertical/horizontal y lectura completa de tabla o cálculo. Todo el flujo usa únicamente dominio, aplicación y almacenamiento local, por lo que ambos modos funcionan sin red.
+
+El mapa propio usa SVG responsive para geometría y una lista/árbol semántico sincronizado para nombres accesibles. Los objetivos táctiles tienen al menos 44×44 píxeles CSS. Estado, bando, Orientación, terreno, selección y resultados combinan texto/forma/patrón/icono además de color. Los estilos se validan a 200 % de texto y contrastes 4,5:1 o 3:1 según el caso. Los mensajes proceden de un catálogo `es-ES`; fechas y números usan `Intl` con locale explícita. El inglés solo puede aparecer en metadatos de mantenimiento no visibles durante el juego (requisitos 3, 24, 25, 31 y 41).
 
 `CapabilityDetector` comprueba instalación, IndexedDB, service worker/cache y tacto de un puntero. Una carencia obligatoria bloquea el inicio de una Partida con explicación; si IndexedDB puede leerse, la exportación permanece disponible.
 
 ### 9. Registros y diagnósticos
 
-El Motor genera entradas estructuradas, no texto concatenado. Un proyector `es-ES` produce Registro simple y detallado. Cada entrada lleva secuencia por Partida; el detallado añade orden de cálculo, valores, modificadores con signo, fórmula, resultado, Versión de reglas, referencias y Consumos aleatorios.
+El Motor genera entradas estructuradas, no texto concatenado. Un proyector `es-ES` produce Registro simple y detallado. Cada entrada lleva secuencia por Partida; para dados, el detallado conserva `source`, caras efectivas ordenadas y `DiceOutcomeProjection`: tabla/fila/columna/intervalo o bien objetivo, bases, modificadores, fórmula/comparación y efecto. El Registro simple conserva las caras y el efecto como equivalente persistente de la animación. Las demás entradas detalladas mantienen orden de cálculo, valores, modificadores con signo, fórmula, resultado, Versión de reglas, referencias y Consumos aleatorios.
 
 Un fallo de persistencia crea antes del reintento un `PendingDiagnostic` en memoria con identificador, fase y última Instantánea. Si IndexedDB acepta escrituras auxiliares, se confirma en el agregado; si el fallo impide toda escritura, se incluye en la exportación de recuperación disponible desde la UI. Nunca se inventa una transición para registrar un error. La observación de la PWA se limita a estos diagnósticos locales descargables y a la Matriz de conformidad; no se envía telemetría (requisitos 20-21 y 29).
 
@@ -695,6 +852,7 @@ type RandomConsumption = Readonly<{
   gameId: GameId;
   id: Brand<string, "RandomConsumptionId">;
   position: number;
+  source: DiceRollSource;
   context: RandomContext;
   requestedDomain: RandomDomain;
   rawResult: readonly number[];
@@ -729,7 +887,7 @@ type DetailedLogEntry = Readonly<{
 }>;
 ```
 
-Las secuencias son monotónicas dentro de una Partida, no globales. `messageKey` debe existir en el catálogo único `es-ES`; no se persiste prosa inglesa como instrucción de juego.
+Las secuencias son monotónicas dentro de una Partida, no globales. `messageKey` debe existir en el catálogo único `es-ES`; no se persiste prosa inglesa como instrucción de juego. Para un dominio `dice`, `rawResult` contiene una única copia persistida de las caras efectivas ordenadas que gobiernan la Partida: las generadas en Automático o las introducidas en Manual según `source`. `DiceRollResolution.effectiveFaces` pertenece exclusivamente al DTO de la fase intermedia y no añade otro campo persistido. Las caras programáticas usadas solo para reservar el avance de una tirada manual se descartan y no forman parte de `RandomConsumption` ni se persisten como resultado de juego.
 
 ### Copias, migraciones y paquete offline
 
@@ -949,6 +1107,12 @@ En este diseño, cada propiedad se comprueba sobre funciones puras o adaptadores
 
 **Validates: Requirements 27.9, 27.10, 27.11, 28.3, 28.4, 28.9, 28.10, 28.11, 28.12, 28.13, 28.14, 28.15, 28.16, 29.7, 29.8, 29.11**
 
+### Property 26: Continuidad y resolución íntegra de tiradas automáticas y manuales
+
+**For all (para todo)** `DiceRollDomain` válido con cantidad variable, toda Tirada pendiente vinculada a una Partida/Instantánea y ambos Modos de tirada, Automático usa exactamente las caras generadas por la reserva y Manual usa exactamente las caras ordenadas validadas mientras alcanza el mismo siguiente Estado aleatorio, posición e identificador que la reserva automática equivalente; cada resolución válida se aplica una sola vez y proyecta exactamente la tabla/fila/columna/intervalo o el cálculo/comparación y efecto canónicos, con independencia de la modalidad de entrada o animación, mientras una entrada inválida, una resolución cruzada/reutilizada o una cancelación previa produce identidad completa.
+
+**Validates: Requirements 19.3, 19.4, 19.5, 19.6, 19.8, 19.12, 19.13, 19.14, 20.2, 20.10, 20.11, 20.12, 24.11, 24.12, 25.6, 41.1, 41.2, 41.3, 41.4, 41.8, 41.9, 41.10, 41.11, 41.12, 41.13, 41.14, 41.15, 41.16, 41.17, 41.19, 41.20, 41.21, 41.22, 41.23, 41.24, 41.25, 41.28, 41.29, 41.31, 41.32, 41.33, 41.34**
+
 ## Error Handling
 
 ### Taxonomía
@@ -956,6 +1120,8 @@ En este diseño, cada propiedad se comprueba sobre funciones puras o adaptadores
 | Clase | Origen | Resultado de dominio | Persistencia/recuperación | Mensaje |
 |---|---|---|---|---|
 | `rejected` | Comando no permitido por estado o secuencia | Identidad; sin consumo nuevo | No se crea Instantánea | Explicación `es-ES` y condición incumplida |
+| `invalid-roll-input` | Cantidad, orden o cara manual fuera de `DiceRollDomain` | Identidad; no se reserva `VersionedRandom.next` | Tirada pendiente disponible para corregir o cancelar | Dado afectado y rango válido |
+| `stale-roll-resolution` | Solicitud reutilizada o resolución de otra Partida, Instantánea o contexto | Identidad; sin interpretación ni consumo nuevo | Se descarta la resolución cruzada; Instantánea confirmada intacta | Solicitud obsoleta o no coincidente, sin revelar datos de otra Partida |
 | `blocked` | Dato, prioridad, revisión o DP pendiente | Identidad si aún no hubo consumo | No se publica o no avanza; vínculo a decisión | Referencia de fuente/DP afectada |
 | `stopped-after-consumption` | Carencia detectada tras consumo obligatorio | Solo consumo y diagnóstico; ningún efecto incompleto | Commit atómico de snapshot auditado | Fase, consumo e intervalo/fuente ausente |
 | `invalid-proposal` | Invariante rota por el Motor | Descartar propuesta | Restaurar última Instantánea confirmada | Diagnóstico con snapshot restaurado |
@@ -1029,6 +1195,14 @@ Se mantienen pocas y significativas:
 - validadores de esquema y políticas de publicación.
 
 Las pruebas de ejemplos no duplican permutaciones ya cubiertas por PBT.
+
+### Tiradas automáticas y manuales
+
+La **Property 26** se implementa con una única prueba `fast-check` y dominios generados de cantidad y caras variables. El modelo compara ambos modos desde el mismo `RandomState`: Automático adopta la reserva completa; Manual sustituye solo las caras efectivas y debe conservar exactamente el siguiente estado, posición e identificador. El generador incluye entradas manuales fuera de rango, cantidades incorrectas, solicitudes obsoletas/cruzadas, reuso y cancelación, que deben producir identidad.
+
+Las pruebas unitarias e integración inventarían todos los productores actuales de dados y fallan si alguno evita `DiceRollRequest`: activación/órdenes 2d6, combate, Revelado 1d6, Minas y Artillería. También verifican orden de caras, tabla con fila/columna/intervalo, resolución sin tabla con cálculo completo, persistencia de `source` y replay manual sin nueva reserva.
+
+Las pruebas de componente y Playwright cubren aparición/desaparición, selector por aparición y última preferencia local, cantidad variable, entrada cara por cara, cierre antes y después de resolver, animación independiente del commit, `prefers-reduced-motion`, región `aria-live`, controles de 44×44, reflow a 200 %, vertical/horizontal y operación completa mediante tacto, ratón y teclado. Ambos modos se ejecutan con red bloqueada y la suite comprueba ausencia de solicitudes y de cualquier generación de caras en UI.
 
 ### Integración de persistencia y recuperación
 
