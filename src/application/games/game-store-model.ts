@@ -35,6 +35,27 @@ export const DEFAULT_GENERATION_ID = "active" as const;
 export const RESTART_STAGING_GENERATION_ID = "restart-staging" as const;
 
 /**
+ * Generación de STAGING para la importación de una copia (Tarea 16.2). Los
+ * agregados validados se escriben aquí ANTES de cualquier confirmación, en una
+ * generación distinta tanto de la activa como de la de reinicio, de modo que
+ * ninguna Partida activa se toca hasta la confirmación explícita en una sola
+ * transacción (diseño §6, requisitos 22.4, 22.5).
+ */
+export const IMPORT_STAGING_GENERATION_ID = "import-staging" as const;
+
+/**
+ * Clave del metadato (store `meta`) que apunta a la generación de almacenamiento
+ * activa. El paso 5 del flujo de importación consolida los agregados y, DESPUÉS,
+ * actualiza este puntero dentro de la MISMA transacción (diseño §6).
+ */
+export const ACTIVE_GENERATION_META_KEY = "active-generation" as const;
+
+/** `payload` del metadato que identifica la generación activa vigente. */
+export type ActiveGenerationMeta = Readonly<{
+  activeGenerationId: string;
+}>;
+
+/**
  * `payload` del resumen de una Partida en el store `games`. Contiene el puntero
  * `latestSnapshotId` (fuente de verdad del enlace a la última Instantánea) y los
  * campos proyectables del resumen; se deriva íntegramente de la Instantánea

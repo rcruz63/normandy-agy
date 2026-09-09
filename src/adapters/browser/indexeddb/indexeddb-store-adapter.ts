@@ -115,6 +115,32 @@ export type CommitTransitionInput<S, G, M = never> = Readonly<{
 }>;
 
 /**
+ * Agregado a escribir dentro de un commit de importación: la Instantánea íntegra
+ * y el resumen de la Partida con su puntero `latestSnapshotId`, ambos bajo la
+ * misma generación destino. El adaptador solo hace I/O; la validación profunda y
+ * la resolución de colisiones viven en la capa de aplicación (Tarea 16.2).
+ */
+export type ImportAggregateWrite<S, G> = Readonly<{
+  snapshot: Readonly<{ key: SnapshotKey; write: EnvelopeWrite<S> }>;
+  game: Readonly<{ key: GameKey; write: EnvelopeWrite<G> }>;
+}>;
+
+/**
+ * Entrada del commit transaccional único de importación
+ * {@link IndexedDbStoreAdapter.commitImport}.
+ *
+ * Reúne VARIOS agregados (Instantánea + resumen por Partida) y un metadato
+ * opcional (p. ej. el puntero de generación activa) que deben escribirse de
+ * forma INDIVISIBLE en una sola transacción. Si cualquier escritura falla,
+ * IndexedDB aborta TODAS (nada a medias) y la generación activa previa se
+ * conserva íntegra (requisitos 22.4, 22.5).
+ */
+export type CommitImportInput<S, G, M = never> = Readonly<{
+  aggregates: readonly ImportAggregateWrite<S, G>[];
+  meta?: MetaWrite<M>;
+}>;
+
+/**
  * Adaptador de bajo nivel. Mantiene la conexión abierta y la política de
  * compatibilidad con la que valida CADA lectura. Es reutilizable por 15.2
  * (repositorio/unidad de trabajo) y por 15.4 (cuarentena de alto nivel).
@@ -252,6 +278,64 @@ export class IndexedDbStoreAdapter {
       await requestToPromise(
         transaction.objectStore(OBJECT_STORES.games).put(gameRecord),
       );
+      if (input.meta !== undefined) {
+        const metaRecord: KeyedRecord<M> = {
+          key: input.meta.key,
+          envelope: this.seal(input.meta.write),
+        };
+        await requestToPromise(
+          transaction.objectStore(OBJECT_STORES.meta).put(metaRecord),
+        );
+      }
+    });
+  }
+
+  // --- commit transaccional único de importación (Tarea 16.2) --------------
+
+  /**
+   * Confirma VARIOS agregados importados en UNA sola transacción `readwrite`
+   * sobre `snapshots`, `games` y (opcionalmente) `meta`. Para cada agregado
+   * escribe la Instantánea íntegra y el resumen de la Partida con su puntero
+   * `latestSnapshotId`; tras las escrituras, y dentro de la MISMA transacción,
+   * actualiza el metadato de generación activa si se aporta.
+   *
+   * ATOMICIDAD REAL (requisitos 22.4, 22.5): a diferencia de invocar
+   * `putSnapshot`/`putGame`/`putMeta` por separado (una transacción por store,
+   * que dejaría escrituras a medias ante un fallo), este método abarca los tres
+   * stores a la vez reutilizando {@link runTransaction}. Si cualquier `put`
+   * falla, IndexedDB aborta TODOS los cambios (importación fail-closed) y la
+   * generación activa previa permanece intacta; la promesa se rechaza con
+   * {@link IndexedDbError}. La detección de colisiones de `gameId`, la
+   * confirmación explícita y la validación de invariantes viven en la capa de
+   * aplicación; aquí solo se realiza el I/O indivisible.
+   */
+  public async commitImport<S, G, M = never>(
+    input: CommitImportInput<S, G, M>,
+  ): Promise<void> {
+    const database = this.requireDatabase();
+    const stores: ObjectStoreName[] = [OBJECT_STORES.snapshots, OBJECT_STORES.games];
+    if (input.meta !== undefined) {
+      stores.push(OBJECT_STORES.meta);
+    }
+
+    const records = input.aggregates.map((aggregate) => ({
+      snapshotRecord: {
+        ...aggregate.snapshot.key,
+        envelope: this.seal(aggregate.snapshot.write),
+      } as SnapshotRecord<S>,
+      gameRecord: {
+        ...aggregate.game.key,
+        envelope: this.seal(aggregate.game.write),
+      } as GameRecord<G>,
+    }));
+
+    await runTransaction(database, stores, "readwrite", async (transaction) => {
+      const snapshots = transaction.objectStore(OBJECT_STORES.snapshots);
+      const games = transaction.objectStore(OBJECT_STORES.games);
+      for (const record of records) {
+        await requestToPromise(snapshots.put(record.snapshotRecord));
+        await requestToPromise(games.put(record.gameRecord));
+      }
       if (input.meta !== undefined) {
         const metaRecord: KeyedRecord<M> = {
           key: input.meta.key,

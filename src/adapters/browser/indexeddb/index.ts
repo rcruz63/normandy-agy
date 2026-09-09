@@ -37,4 +37,6 @@ export type {
   EnvelopeWrite,
   MetaWrite,
   CommitTransitionInput,
+  ImportAggregateWrite,
+  CommitImportInput,
 } from "./indexeddb-store-adapter.js";

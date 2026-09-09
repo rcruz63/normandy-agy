@@ -11,10 +11,15 @@
 export {
   DEFAULT_GENERATION_ID,
   RESTART_STAGING_GENERATION_ID,
+  IMPORT_STAGING_GENERATION_ID,
+  ACTIVE_GENERATION_META_KEY,
   toGameRecordPayload,
   toGameSummary,
 } from "./game-store-model.js";
-export type { GameRecordPayload } from "./game-store-model.js";
+export type {
+  GameRecordPayload,
+  ActiveGenerationMeta,
+} from "./game-store-model.js";
 
 export { PerGameQueue } from "./per-game-queue.js";
 
@@ -96,3 +101,18 @@ export type {
   SafeResumeResult,
   CorruptionRecoveryDeps,
 } from "./corruption-recovery.js";
+
+export {
+  ImportBackup,
+  ImportPreview,
+  ImportAlreadyResolvedError,
+  UnresolvedCollisionError,
+} from "./import-backup.js";
+export type {
+  ImportBackupDeps,
+  ImportFailure,
+  ImportRejection,
+  ImportRejectionReason,
+  CollisionResolution,
+  CollisionResolutions,
+} from "./import-backup.js";
