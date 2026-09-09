@@ -19,7 +19,7 @@ Este README se mantiene vivo: refleja por dónde vamos entre sesiones. El
 desarrollo no se completará en una sola sesión.
 
 - Especificación: **completa** (requisitos, diseño y plan de tareas aprobados).
-- Implementación: **8 de 28 tareas** completadas.
+- Implementación: **9 de 28 tareas** completadas.
 
 Última actualización: 9 de septiembre de 2026.
 
@@ -37,7 +37,7 @@ Leyenda: ⬜ pendiente · 🟦 en curso · ✅ completada
 | 6 | Aleatoriedad reproducible versionada | ✅ |
 | 7 | Estado de partida, transición y validador de invariantes | ✅ |
 | 8 | Motor de reglas: contrato de transición y precedencia canónica | ✅ |
-| 9 | Submódulos de reglas: turno, órdenes y Moral | ⬜ |
+| 9 | Submódulos de reglas: turno, órdenes y Moral | ✅ |
 | 10 | Submódulos de reglas: combate, cobertura, terreno y especiales | ⬜ |
 | 11 | Submódulos de reglas: Revelado, Misión y desenlace | ⬜ |
 | 12 | Checkpoint - Motor de reglas completo | ⬜ |
