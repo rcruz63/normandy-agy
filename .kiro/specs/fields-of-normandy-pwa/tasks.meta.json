@@ -224,6 +224,32 @@
         "chatSessionId": "sess_422c215b-a12f-4a94-af76-91f3f9a1b8ae",
         "timestamp": 1788867225354
       }
+    ],
+    "8.1 Implementar `RulesEngine.decide`/`availableActions` y precedencia": [
+      {
+        "executionId": "86a879e0-4403-4d77-9d45-69ae9ef3c369",
+        "chatSessionId": "sess_422c215b-a12f-4a94-af76-91f3f9a1b8ae",
+        "timestamp": 1788868877773
+      },
+      {
+        "executionId": "86a879e0-4403-4d77-9d45-69ae9ef3c369",
+        "chatSessionId": "sess_422c215b-a12f-4a94-af76-91f3f9a1b8ae",
+        "timestamp": 1788870521180
+      }
+    ],
+    "8.4 Escribir prueba de propiedad de precedencia canónica": [
+      {
+        "executionId": "86a879e0-4403-4d77-9d45-69ae9ef3c369",
+        "chatSessionId": "sess_422c215b-a12f-4a94-af76-91f3f9a1b8ae",
+        "timestamp": 1788870522080
+      }
+    ],
+    "8.2 Implementar conservación ante rechazo/bloqueo previo al azar": [
+      {
+        "executionId": "86a879e0-4403-4d77-9d45-69ae9ef3c369",
+        "chatSessionId": "sess_422c215b-a12f-4a94-af76-91f3f9a1b8ae",
+        "timestamp": 1788870523356
+      }
     ]
   }
 }

@@ -90,7 +90,7 @@ Las 25 propiedades de corrección del diseño se implementan cada una con exacta
     - _Requirements: 21.2, 21.3, 21.5_
 
 - [ ] 8. Motor de reglas: contrato de transición y precedencia canónica
-  - [ ] 8.1 Implementar `RulesEngine.decide`/`availableActions` y precedencia
+  - [x] 8.1 Implementar `RulesEngine.decide`/`availableActions` y precedencia
     - Resolver reglas por políticas de prioridad del catálogo; regla concreta (req. 32-40) prevalece sobre genérica; ausencia de prioridad produce `blocked` + `DecisionRef`, sin `default`; `decide` no muta argumentos
     - _Requirements: 5.8, 8.8, 8.9, 9.7, 10.9, 11.6, 11.7, 11.8, 11.9, 12.6, 12.7, 13.9, 14.7, 14.8, 15.6, 15.7, 16.7, 17.9, 18.6_
   - [ ] 8.2 Implementar conservación ante rechazo/bloqueo previo al azar
@@ -99,7 +99,7 @@ Las 25 propiedades de corrección del diseño se implementan cada una con exacta
   - [ ] 8.3 Implementar detención `stopped-after-consumption`
     - Conservar Consumo ya efectuado (13.7, 17.6): avanzar exactamente una vez el Estado aleatorio, registrar consumo/diagnóstico, sin aplicar efecto incompleto
     - _Requirements: 13.5, 13.6, 13.7, 13.8, 17.5, 17.6, 17.7_
-  - [ ]* 8.4 Escribir prueba de propiedad de precedencia canónica
+  - [x]* 8.4 Escribir prueba de propiedad de precedencia canónica
     - **Property 3: Precedencia canónica sin reglas implícitas**
     - **Validates: Requirements 5.8, 8.8, 8.9, 9.7, 10.9, 11.6, 11.7, 11.8, 11.9, 12.6, 12.7, 13.9, 14.7, 14.8, 15.6, 15.7, 16.7, 17.9, 18.6**
   - [ ]* 8.5 Escribir prueba de propiedad de conservación ante rechazo/bloqueo
