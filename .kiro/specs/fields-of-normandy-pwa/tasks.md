@@ -89,54 +89,54 @@ Las 25 propiedades de corrección del diseño se implementan cada una con exacta
     - Cubrir `rejected`, `blocked`, `stopped-after-consumption`, `invalid-proposal`
     - _Requirements: 21.2, 21.3, 21.5_
 
-- [ ] 8. Motor de reglas: contrato de transición y precedencia canónica
+- [x] 8. Motor de reglas: contrato de transición y precedencia canónica
   - [x] 8.1 Implementar `RulesEngine.decide`/`availableActions` y precedencia
     - Resolver reglas por políticas de prioridad del catálogo; regla concreta (req. 32-40) prevalece sobre genérica; ausencia de prioridad produce `blocked` + `DecisionRef`, sin `default`; `decide` no muta argumentos
     - _Requirements: 5.8, 8.8, 8.9, 9.7, 10.9, 11.6, 11.7, 11.8, 11.9, 12.6, 12.7, 13.9, 14.7, 14.8, 15.6, 15.7, 16.7, 17.9, 18.6_
-  - [ ] 8.2 Implementar conservación ante rechazo/bloqueo previo al azar
+  - [x] 8.2 Implementar conservación ante rechazo/bloqueo previo al azar
     - `rejected` y bloqueos previos a resolución aleatoria devuelven exactamente el Estado aleatorio recibido
     - _Requirements: 8.5, 9.5, 10.3, 11.4, 14.7, 15.4, 16.5, 18.4, 19.8, 21.2_
-  - [ ] 8.3 Implementar detención `stopped-after-consumption`
+  - [x] 8.3 Implementar detención `stopped-after-consumption`
     - Conservar Consumo ya efectuado (13.7, 17.6): avanzar exactamente una vez el Estado aleatorio, registrar consumo/diagnóstico, sin aplicar efecto incompleto
     - _Requirements: 13.5, 13.6, 13.7, 13.8, 17.5, 17.6, 17.7_
   - [x]* 8.4 Escribir prueba de propiedad de precedencia canónica
     - **Property 3: Precedencia canónica sin reglas implícitas**
     - **Validates: Requirements 5.8, 8.8, 8.9, 9.7, 10.9, 11.6, 11.7, 11.8, 11.9, 12.6, 12.7, 13.9, 14.7, 14.8, 15.6, 15.7, 16.7, 17.9, 18.6**
-  - [ ]* 8.5 Escribir prueba de propiedad de conservación ante rechazo/bloqueo
+  - [x]* 8.5 Escribir prueba de propiedad de conservación ante rechazo/bloqueo
     - **Property 4: Conservación ante rechazo o bloqueo previo al azar**
     - **Validates: Requirements 5.4, 6.7, 7.4, 8.5, 9.5, 10.3, 10.8, 11.4, 11.7, 12.6, 13.6, 14.7, 15.4, 16.5, 18.4, 19.8, 21.2, 21.9, 24.12, 34.19, 35.3**
-  - [ ]* 8.6 Escribir prueba de propiedad de detención tras consumo
+  - [x]* 8.6 Escribir prueba de propiedad de detención tras consumo
     - **Property 5: Detención posterior a un consumo sin efecto incompleto**
     - **Validates: Requirements 13.5, 13.6, 13.7, 13.8, 17.5, 17.6, 17.7**
 
-- [ ] 9. Submódulos de reglas: turno, órdenes y Moral
-  - [ ] 9.1 Implementar `TurnOrderPolicy` (secuencia, activaciones, tablas de órdenes)
+- [x] 9. Submódulos de reglas: turno, órdenes y Moral
+  - [x] 9.1 Implementar `TurnOrderPolicy` (secuencia, activaciones, tablas de órdenes)
     - Fase británica antes que alemana; activación una a una; cruce de d6 con columnas; opciones exactas por Moral/dobles; resolución de órdenes en orden definido
     - _Requirements: 8.1, 8.2, 8.3, 8.4, 34.2, 34.3, 34.6, 34.7, 34.8, 34.9, 34.10, 34.11, 34.12, 34.13, 34.14, 34.15, 34.18, 34.19_
-  - [ ] 9.2 Implementar `MoralePolicy` (impactos, Reagrupar, limitación)
+  - [x] 9.2 Implementar `MoralePolicy` (impactos, Reagrupar, limitación)
     - Moral normal→baja al impacto, baja→eliminación; baja limita a primera Orden aunque Reagrupar restaure Moral en esa activación
     - _Requirements: 9.1, 9.2, 9.3, 34.16, 34.17, 35.11, 35.12, 37.1, 37.2_
-  - [ ] 9.3 Implementar efectos de órdenes (Avanzar, Fuego, Granada, Cobertura, Explorar)
+  - [x] 9.3 Implementar efectos de órdenes (Avanzar, Fuego, Granada, Cobertura, Explorar)
     - Avanzar un Hexágono en Direcciones hacia delante, apilar británicas, revelar Incógnitas adyacentes, retirar Cobertura al avanzar; Explorar a distancia 2 solo escuadras; excluir Explorar para MG/Mortero/PIAT
     - _Requirements: 35.1, 35.2, 35.3, 35.4, 35.5, 35.6, 35.7, 35.9, 35.10, 35.13, 35.14, 35.15_
-  - [ ]* 9.4 Escribir prueba de propiedad de activación, órdenes y Moral
+  - [x]* 9.4 Escribir prueba de propiedad de activación, órdenes y Moral
     - **Property 9: Activación, órdenes y Moral**
     - **Validates: Requirements 8.2, 8.3, 8.4, 9.1, 9.2, 9.3, 34.2, 34.3, 34.6, 34.7, 34.8, 34.9, 34.10, 34.11, 34.12, 34.13, 34.14, 34.15, 34.16, 34.17, 34.18, 34.19, 35.9, 35.10, 35.11, 35.12, 37.1, 37.2**
 
-- [ ] 10. Submódulos de reglas: combate, cobertura, terreno y especiales
-  - [ ] 10.1 Implementar `CombatResolver` (suma algebraica, exclusiones, terreno)
+- [x] 10. Submódulos de reglas: combate, cobertura, terreno y especiales
+  - [x] 10.1 Implementar `CombatResolver` (suma algebraica, exclusiones, terreno)
     - Valor base + suma algebraica de fuentes compatibles independiente del orden; Granada/Mina excluyen modificadores; modificadores de bosque/edificio/colina/Río; PIAT limita objetivos y omite +2 de edificio
     - _Requirements: 11.1, 11.2, 11.3, 12.1, 12.2, 12.4, 14.3, 14.4, 15.1, 15.3, 16.4, 35.6, 35.7, 35.8, 36.1, 36.2, 36.3, 36.4, 36.5, 36.6, 36.7, 36.8, 36.9, 36.10, 36.11, 36.12, 36.13, 38.1, 38.2, 38.3, 38.4, 38.5, 38.6, 38.7, 38.9_
-  - [ ] 10.2 Implementar Semiorugas, PIAT, Minas y Artillería (req. 39)
+  - [x] 10.2 Implementar Semiorugas, PIAT, Minas y Artillería (req. 39)
     - Semioruga solo atacada por PIAT con Apoyo; pruebas de Mina 2d6 7+ sin modificadores (adyacencia desde M7 y fase alemana), Explorar sin prueba inmediata, Mina persistente; Artillería 10+ contra británicas sin bosque/edificio/Cobertura, sin Flanqueo, eliminable
     - _Requirements: 16.1, 16.2, 39.1, 39.2, 39.3, 39.4, 39.5, 39.6, 39.7, 39.8, 39.9, 39.10, 39.11, 39.12, 39.13, 39.14, 39.15, 39.16, 39.17, 39.18_
-  - [ ]* 10.3 Escribir prueba de propiedad de cálculo algebraico de combate
+  - [x]* 10.3 Escribir prueba de propiedad de cálculo algebraico de combate
     - **Property 10: Cálculo algebraico de combate y excepciones**
     - **Validates: Requirements 11.1, 11.2, 11.3, 12.1, 12.2, 12.3, 12.4, 12.5, 14.3, 14.4, 14.5, 15.1, 15.2, 15.3, 16.4, 35.5, 35.6, 35.7, 35.8, 36.1, 36.2, 36.3, 36.4, 36.5, 36.6, 36.10, 36.11, 36.12, 36.13, 38.1, 38.2, 38.3, 38.4, 38.5, 38.6, 38.7, 38.8, 38.9, 39.2, 39.3, 39.4, 39.5, 39.6, 39.14, 39.17**
-  - [ ]* 10.4 Escribir prueba de propiedad de persistencia y pruebas de Minas
+  - [x]* 10.4 Escribir prueba de propiedad de persistencia y pruebas de Minas
     - **Property 12: Persistencia y pruebas de Minas**
     - **Validates: Requirements 16.1, 35.8, 36.11, 37.10, 37.12, 37.13, 39.7, 39.8, 39.9, 39.10, 39.11, 39.12**
-  - [ ]* 10.5 Escribir prueba de propiedad de selección y resolución de Artillería
+  - [x]* 10.5 Escribir prueba de propiedad de selección y resolución de Artillería
     - **Property 13: Selección y resolución de Artillería**
     - **Validates: Requirements 16.2, 39.13, 39.14, 39.15, 39.16, 39.17, 39.18**
 
