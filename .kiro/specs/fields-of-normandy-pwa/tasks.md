@@ -157,14 +157,14 @@ Las 25 propiedades de corrección del diseño se implementan cada una con exacta
     - **Property 2: Catálogo y preparación exactos por Misión**
     - **Validates: Requirements 4.1, 4.4, 4.5, 4.6, 4.7, 4.8, 5.1, 5.2, 5.3, 5.6, 8.1, 17.8, 32.1, 32.2, 32.3, 32.4, 32.5, 32.8, 32.9, 32.10, 32.11, 33.1, 33.3, 33.6, 33.7**
 
-- [ ] 12. Checkpoint - Motor de reglas completo
+- [x] 12. Checkpoint - Motor de reglas completo
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 13. Registros estructurados y proyector es-ES
-  - [ ] 13.1 Implementar entradas de registro y proyector es-ES
+- [x] 13. Registros estructurados y proyector es-ES
+  - [x] 13.1 Implementar entradas de registro y proyector es-ES
     - Implementar `SimpleLogEntry`/`DetailedLogEntry` con secuencia por Partida; detallado con orden de cálculo, operandos, modificadores con signo, fórmula, resultado, `rulesVersion`, `sourceRefs` y Consumos; proyector `es-ES` con claves `messageKey`
     - _Requirements: 8.7, 12.3, 12.5, 14.5, 16.4, 20.1, 20.2, 20.3, 20.4, 20.6, 20.7, 38.8_
-  - [ ]* 13.2 Escribir prueba de propiedad de registros completos y aislados
+  - [x]* 13.2 Escribir prueba de propiedad de registros completos y aislados
     - **Property 17: Registros completos, ordenados y aislados**
     - **Validates: Requirements 8.7, 12.3, 12.5, 14.5, 16.4, 19.4, 20.1, 20.2, 20.3, 20.4, 20.5, 20.6, 20.7, 38.8**
 
