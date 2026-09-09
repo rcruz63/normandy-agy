@@ -136,7 +136,12 @@ function importBackupFor(
   codec: BackupCodec,
   adapter: IndexedDbStoreAdapter,
 ): ImportBackup {
-  return new ImportBackup({ codec, adapter, compatibility });
+  return new ImportBackup({
+    codec,
+    adapter,
+    compatibility,
+    compatibilityPolicy: policy,
+  });
 }
 
 // --- Origen: creación de Partidas y agregado exportable ---------------------

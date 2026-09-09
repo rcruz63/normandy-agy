@@ -12,9 +12,15 @@
  * `es-ES` por clave (nunca texto interpolado en el dominio) sin I/O, reloj ni
  * `Math.random`.
  */
+import type { GameId, SnapshotId } from "../../domain/identity/index.js";
 import type { DomainMessage } from "../../domain/engine/transition.js";
 import type { Diagnostic } from "../../domain/ports/index.js";
-import type { EnvelopeRejectionReason } from "../../domain/persistence/index.js";
+import type {
+  CompatibilityEvidence,
+  EnvelopeIncompatibilityReason,
+  EnvelopeRejectionReason,
+  RecoveryDiagnostic,
+} from "../../domain/persistence/index.js";
 
 /** Clave `es-ES` del diagnóstico de sobre corrupto aislado en cuarentena. */
 export const CORRUPT_SNAPSHOT_MESSAGE_KEY =
@@ -23,6 +29,14 @@ export const CORRUPT_SNAPSHOT_MESSAGE_KEY =
 /** Clave `es-ES` del diagnóstico de cuarentena no persistible (fallo de escritura). */
 export const QUARANTINE_WRITE_FAILURE_MESSAGE_KEY =
   "persistencia.recuperacion.cuarentenaNoPersistible";
+
+/** Clave `es-ES` para una reanudación bloqueada por versión incompatible. */
+export const INCOMPATIBLE_VERSION_MESSAGE_KEY =
+  "persistencia.recuperacion.versionIncompatible";
+
+/** Clave `es-ES` que explica la única recuperación tras perder almacenamiento. */
+export const PREVIOUS_BACKUP_REQUIRED_MESSAGE_KEY =
+  "persistencia.recuperacion.copiaPreviaRequerida";
 
 /**
  * Construye el {@link Diagnostic} de un sobre corrupto detectado al cargar. El
@@ -51,4 +65,59 @@ export function quarantineWriteFailureDiagnostic(detail: string): Diagnostic {
     params: Object.freeze({ detail }),
   });
   return Object.freeze({ category: "persistence-failure", message });
+}
+
+/** Entrada para el diagnóstico identificable de incompatibilidad. */
+export type IncompatibleVersionDiagnosticInput = Readonly<{
+  diagnosticId: string;
+  gameId: GameId;
+  snapshotId?: SnapshotId;
+  reason: EnvelopeIncompatibilityReason;
+  compatibility: CompatibilityEvidence;
+}>;
+
+/** Construye el bloqueo estructurado de reanudación por versión no soportada. */
+export function incompatibleVersionDiagnostic(
+  input: IncompatibleVersionDiagnosticInput,
+): RecoveryDiagnostic {
+  const message: DomainMessage = Object.freeze({
+    messageKey: INCOMPATIBLE_VERSION_MESSAGE_KEY,
+    params: Object.freeze({ reason: input.reason }),
+  });
+  const base = {
+    diagnosticId: input.diagnosticId,
+    category: "incompatible-version" as const,
+    phase: "resume" as const,
+    reason: input.reason,
+    gameId: input.gameId,
+    message,
+    compatibility: input.compatibility,
+  };
+  return Object.freeze(
+    input.snapshotId === undefined
+      ? base
+      : { ...base, snapshotId: input.snapshotId },
+  );
+}
+
+/**
+ * Explica que los datos locales ya no están y que no existe restauración
+ * automática: solo puede importarse un Paquete previamente exportado.
+ */
+export function previousBackupRequiredDiagnostic(
+  diagnosticId: string,
+  gameId: GameId,
+): RecoveryDiagnostic {
+  const message: DomainMessage = Object.freeze({
+    messageKey: PREVIOUS_BACKUP_REQUIRED_MESSAGE_KEY,
+    params: Object.freeze({ recovery: "previously-exported-backup" }),
+  });
+  return Object.freeze({
+    diagnosticId,
+    category: "storage-unavailable",
+    phase: "storage-read",
+    reason: "previous-backup-required",
+    gameId,
+    message,
+  });
 }

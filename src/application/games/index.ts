@@ -91,9 +91,22 @@ export type { QuarantineEntry } from "./quarantine-ledger.js";
 export {
   CORRUPT_SNAPSHOT_MESSAGE_KEY,
   QUARANTINE_WRITE_FAILURE_MESSAGE_KEY,
+  INCOMPATIBLE_VERSION_MESSAGE_KEY,
+  PREVIOUS_BACKUP_REQUIRED_MESSAGE_KEY,
   corruptSnapshotDiagnostic,
   quarantineWriteFailureDiagnostic,
+  incompatibleVersionDiagnostic,
+  previousBackupRequiredDiagnostic,
 } from "./recovery-diagnostics.js";
+export type {
+  IncompatibleVersionDiagnosticInput,
+} from "./recovery-diagnostics.js";
+
+export { RecoveryExporter } from "./recovery-export.js";
+export type {
+  RecoveryExporterDeps,
+  RecoveryExportRequest,
+} from "./recovery-export.js";
 
 export { CorruptionRecoveryService } from "./corruption-recovery.js";
 export type {
@@ -112,8 +125,11 @@ export {
 export type {
   ImportBackupDeps,
   ImportFailure,
+  ImportContentFailure,
+  ImportCompatibilityFailure,
   ImportRejection,
   ImportRejectionReason,
+  ImportContentRejectionReason,
   CollisionResolution,
   CollisionResolutions,
 } from "./import-backup.js";

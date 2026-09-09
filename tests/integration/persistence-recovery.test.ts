@@ -623,15 +623,21 @@ describe("Persistencia — eliminación externa falla-rápido sin perder otras P
       GameNotFoundError,
     );
 
-    // El servicio de recuperación tampoco la envía a cuarentena: propaga el
-    // error de ausencia (fail-fast), no lo captura como corrupción de sobre.
+    // El servicio de recuperación no la confunde con corrupción: proyecta de
+    // forma estructurada que solo una copia previamente exportada permite
+    // recuperar los datos locales eliminados.
     const service = new CorruptionRecoveryService({
       repository,
       archive: adapter,
       idGenerator: counterIdGenerator("detected"),
       pendingDiagnostics: new PendingDiagnosticRegistry(),
     });
-    await expect(service.resume(victim)).rejects.toBeInstanceOf(GameNotFoundError);
+    const missing = await service.resume(victim);
+    expect(missing.kind).toBe("backup-required");
+    if (missing.kind !== "backup-required") {
+      throw new Error("se esperaba requerir una copia previa");
+    }
+    expect(missing.diagnostic.reason).toBe("previous-backup-required");
 
     // La otra Partida sigue intacta y reanudable.
     const survivorResumed = await resumeGame.execute(survivor);

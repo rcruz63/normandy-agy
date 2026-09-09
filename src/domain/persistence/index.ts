@@ -11,6 +11,7 @@ export {
   CURRENT_ENVELOPE_VERSION,
   INTEGRITY_ALGORITHM,
   EnvelopeValidationError,
+  isEnvelopeIncompatibilityReason,
   canonicalize,
   computeIntegrity,
   sealEnvelope,
@@ -21,6 +22,7 @@ export type {
   VersionedEnvelope,
   SealEnvelopeInput,
   EnvelopeRejectionReason,
+  EnvelopeIncompatibilityReason,
   CompatibilityPolicy,
   EnvelopeReadContext,
 } from "./versioned-envelope.js";
@@ -56,3 +58,27 @@ export {
   createMigrationRegistry,
   DuplicateMigratorError,
 } from "./migration-registry.js";
+
+export {
+  RECOVERY_EXPORT_FORMAT,
+  CURRENT_RECOVERY_EXPORT_VERSION,
+  RECOVERY_INTEGRITY_PURPOSE,
+  supportedCompatibilityVersions,
+  compatibilityEvidence,
+  envelopeCompatibilityEvidence,
+  createRecoveryExport,
+} from "./recovery-export.js";
+export type {
+  RecoveryFailurePhase,
+  RecoveryDiagnosticCategory,
+  RecoveryDiagnosticReason,
+  FoundCompatibilityVersions,
+  SupportedCompatibilityVersions,
+  CompatibilityEvidence,
+  RecoveryDiagnostic,
+  RecoveryArtifact,
+  ExportedPendingDiagnostic,
+  RecoveryExportBody,
+  RecoveryExportPackage,
+  RecoveryExportInput,
+} from "./recovery-export.js";

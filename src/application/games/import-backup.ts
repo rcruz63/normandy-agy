@@ -41,7 +41,14 @@ import type {
   GameAggregate,
   ValidatedBackup,
 } from "../../domain/persistence/index.js";
-import type { EnvelopeCompatibility } from "../../domain/persistence/index.js";
+import {
+  CURRENT_ENVELOPE_VERSION,
+  compatibilityEvidence,
+  type CompatibilityEvidence,
+  type CompatibilityPolicy,
+  type EnvelopeCompatibility,
+  type EnvelopeIncompatibilityReason,
+} from "../../domain/persistence/index.js";
 import {
   IndexedDbStoreAdapter,
   type GameKey,
@@ -73,31 +80,64 @@ import {
  * - `duplicate-game-id`: el paquete contiene dos agregados con el mismo `gameId`.
  * - `exported-ids-mismatch`: `exportedGameIds` no corresponde con los agregados.
  */
-export type ImportRejectionReason =
+export type ImportContentRejectionReason =
   | "invariant-violation"
   | "snapshot-mismatch"
   | "duplicate-game-id"
   | "exported-ids-mismatch";
 
-/**
- * Rechazo tipado de la importación. Fail-fast: nunca se devuelve un agregado
- * parcialmente validado ni se escribe la generación activa. `detail` aporta
- * contexto `es-ES` para diagnóstico; `reason` clasifica sin analizar cadenas.
- */
-export type ImportFailure = Readonly<{
+/** Todos los motivos propios del flujo posterior a validar el archivo. */
+export type ImportRejectionReason =
+  | ImportContentRejectionReason
+  | EnvelopeIncompatibilityReason;
+
+/** Rechazo por contenido incoherente aunque sus versiones sean soportadas. */
+export type ImportContentFailure = Readonly<{
   ok: false;
-  reason: ImportRejectionReason;
+  category: "invalid-content";
+  reason: ImportContentRejectionReason;
   detail: string;
 }>;
+
+/** Rechazo estructurado de compatibilidad, siempre anterior al staging. */
+export type ImportCompatibilityFailure = Readonly<{
+  ok: false;
+  category: "incompatible-version";
+  phase: "import";
+  reason: EnvelopeIncompatibilityReason;
+  compatibility: CompatibilityEvidence;
+}>;
+
+/** Rechazo profundo o de compatibilidad de la importación. */
+export type ImportFailure = ImportContentFailure | ImportCompatibilityFailure;
 
 /** Cualquier rechazo de importación: del códec (16.1) o de la validación profunda. */
 export type ImportRejection = BackupFailure | ImportFailure;
 
 function importFailure(
-  reason: ImportRejectionReason,
+  reason: ImportContentRejectionReason,
   detail: string,
-): ImportFailure {
-  return Object.freeze({ ok: false, reason, detail });
+): ImportContentFailure {
+  return Object.freeze({
+    ok: false,
+    category: "invalid-content",
+    reason,
+    detail,
+  });
+}
+
+function incompatibilityFailure(
+  reason: EnvelopeIncompatibilityReason,
+  found: Parameters<typeof compatibilityEvidence>[0],
+  policy: CompatibilityPolicy,
+): ImportCompatibilityFailure {
+  return Object.freeze({
+    ok: false,
+    category: "incompatible-version",
+    phase: "import",
+    reason,
+    compatibility: compatibilityEvidence(found, policy),
+  });
 }
 
 // ---------------------------------------------------------------------------
@@ -235,6 +275,8 @@ export type ImportBackupDeps = Readonly<{
   adapter: IndexedDbStoreAdapter;
   /** Compatibilidad base del Entorno para sellar los sobres importados. */
   compatibility: EnvelopeCompatibility;
+  /** Política completa que debe superarse antes de escribir staging. */
+  compatibilityPolicy: CompatibilityPolicy;
   /** Generación activa; por defecto {@link DEFAULT_GENERATION_ID}. */
   activeGenerationId?: GenerationId;
   /** Generación de staging; por defecto {@link IMPORT_STAGING_GENERATION_ID}. */
@@ -250,6 +292,7 @@ export class ImportBackup {
   private readonly codec: BackupCodec;
   private readonly adapter: IndexedDbStoreAdapter;
   private readonly compatibility: EnvelopeCompatibility;
+  private readonly compatibilityPolicy: CompatibilityPolicy;
   private readonly activeGenerationId: GenerationId;
   private readonly stagingGenerationId: GenerationId;
 
@@ -257,6 +300,7 @@ export class ImportBackup {
     this.codec = deps.codec;
     this.adapter = deps.adapter;
     this.compatibility = deps.compatibility;
+    this.compatibilityPolicy = deps.compatibilityPolicy;
     this.activeGenerationId = deps.activeGenerationId ?? DEFAULT_GENERATION_ID;
     this.stagingGenerationId =
       deps.stagingGenerationId ?? IMPORT_STAGING_GENERATION_ID;
@@ -274,7 +318,13 @@ export class ImportBackup {
       return validated;
     }
 
-    // Paso 2 (profundo): identificadores, Versión de guardado e invariantes.
+    // Paso 2a: compatibilidad completa ANTES de cualquier staging/escritura.
+    const incompatibility = this.validateCompatibility(validated);
+    if (incompatibility !== undefined) {
+      return incompatibility;
+    }
+
+    // Paso 2b (profundo): identificadores, Versión de guardado e invariantes.
     const deepFailure = this.validateDeeply(validated);
     if (deepFailure !== undefined) {
       return deepFailure;
@@ -293,6 +343,13 @@ export class ImportBackup {
       consolidate: (resolutions) =>
         this.consolidate(validated.games, resolutions),
     });
+  }
+
+  /** Comprueba todas las versiones antes del primer `put` de staging. */
+  private validateCompatibility(
+    validated: ValidatedBackup,
+  ): ImportCompatibilityFailure | undefined {
+    return findImportIncompatibility(validated, this.compatibilityPolicy);
   }
 
   /**
@@ -469,6 +526,68 @@ export class ImportBackup {
       algorithmVersion: aggregate.snapshot.randomState.algorithmVersion,
     };
   }
+}
+
+/**
+ * Devuelve la primera incompatibilidad del paquete o de sus agregados. Incluye
+ * la versión de sobre que el importador va a sellar, aunque el archivo no
+ * transporte sobres IndexedDB.
+ */
+function findImportIncompatibility(
+  validated: ValidatedBackup,
+  policy: CompatibilityPolicy,
+): ImportCompatibilityFailure | undefined {
+  const packageVersions = {
+    envelopeVersion: CURRENT_ENVELOPE_VERSION,
+    saveVersion: validated.saveVersion,
+  };
+  if (!policy.supportedEnvelopeVersions.includes(CURRENT_ENVELOPE_VERSION)) {
+    return incompatibilityFailure(
+      "unsupported-envelope-version",
+      packageVersions,
+      policy,
+    );
+  }
+  if (!policy.supportedSaveVersions.includes(validated.saveVersion)) {
+    return incompatibilityFailure(
+      "unsupported-save-version",
+      packageVersions,
+      policy,
+    );
+  }
+  for (const aggregate of validated.games) {
+    const failure = aggregateIncompatibility(aggregate, policy);
+    if (failure !== undefined) {
+      return failure;
+    }
+  }
+  return undefined;
+}
+
+function aggregateIncompatibility(
+  aggregate: GameAggregate,
+  policy: CompatibilityPolicy,
+): ImportCompatibilityFailure | undefined {
+  const found = {
+    envelopeVersion: CURRENT_ENVELOPE_VERSION,
+    saveVersion: aggregate.saveVersion,
+    rulesVersion: aggregate.snapshot.state.rulesVersion,
+    algorithmVersion: aggregate.snapshot.randomState.algorithmVersion,
+  };
+  if (!policy.supportedSaveVersions.includes(aggregate.saveVersion)) {
+    return incompatibilityFailure("unsupported-save-version", found, policy);
+  }
+  if (!policy.supportedRulesVersions.includes(found.rulesVersion)) {
+    return incompatibilityFailure("unsupported-rules-version", found, policy);
+  }
+  if (!policy.supportedAlgorithmVersions.includes(found.algorithmVersion)) {
+    return incompatibilityFailure(
+      "unsupported-algorithm-version",
+      found,
+      policy,
+    );
+  }
+  return undefined;
 }
 
 /**

@@ -26,6 +26,7 @@ import type {
   GameId,
   RulesVersion,
   SaveVersion,
+  SnapshotId,
 } from "../identity/index.js";
 import type { IntegrityDescriptor } from "../engine/state.js";
 
@@ -106,20 +107,55 @@ export type EnvelopeRejectionReason =
   | "integrity-mismatch"
   | "malformed-envelope";
 
+/** Subconjunto que bloquea por incompatibilidad y nunca implica corrupción. */
+export type EnvelopeIncompatibilityReason = Extract<
+  EnvelopeRejectionReason,
+  | "unsupported-envelope-version"
+  | "unsupported-save-version"
+  | "unsupported-rules-version"
+  | "unsupported-algorithm-version"
+>;
+
+/** Distingue incompatibilidad soportable de corrupción persistente real. */
+export function isEnvelopeIncompatibilityReason(
+  reason: EnvelopeRejectionReason,
+): reason is EnvelopeIncompatibilityReason {
+  return (
+    reason === "unsupported-envelope-version" ||
+    reason === "unsupported-save-version" ||
+    reason === "unsupported-rules-version" ||
+    reason === "unsupported-algorithm-version"
+  );
+}
+
 /**
- * Error tipado de validación de sobre. Fail-fast: nada de `catch` vacíos ni de
- * datos corruptos silenciosos. `reason` permite a la capa superior decidir
- * (p. ej. cuarentena en 15.4).
+ * Error tipado de validación de sobre. Conserva el sobre estructural recibido y
+ * la política que lo rechazó para poder exportarlo localmente sin volver a
+ * leerlo ni relajar la validación. Un sobre malformado puede no estar disponible.
  */
 export class EnvelopeValidationError extends Error {
   public readonly reason: EnvelopeRejectionReason;
   public readonly detail: string;
+  public readonly envelope: VersionedEnvelope<unknown> | undefined;
+  public readonly policy: CompatibilityPolicy | undefined;
+  public readonly context: EnvelopeReadContext;
 
-  public constructor(reason: EnvelopeRejectionReason, detail: string) {
+  public constructor(
+    reason: EnvelopeRejectionReason,
+    detail: string,
+    options: Readonly<{
+      envelope?: VersionedEnvelope<unknown>;
+      policy?: CompatibilityPolicy;
+      context?: EnvelopeReadContext;
+    }> = {},
+  ) {
     super(`Sobre versionado inválido (${reason}): ${detail}.`);
     this.name = "EnvelopeValidationError";
     this.reason = reason;
     this.detail = detail;
+    this.envelope = options.envelope;
+    this.policy = options.policy;
+    this.context = options.context ?? Object.freeze({});
   }
 }
 
@@ -207,60 +243,134 @@ export type CompatibilityPolicy = Readonly<{
   supportedAlgorithmVersions: readonly string[];
 }>;
 
-/** Contexto opcional de validación: `gameId` esperado según la clave leída. */
+/** Contexto opcional de validación según la clave física leída. */
 export type EnvelopeReadContext = Readonly<{
   expectedGameId?: GameId;
+  expectedSnapshotId?: SnapshotId;
 }>;
 
-function assertEnvelopeShape(candidate: unknown): asserts candidate is VersionedEnvelope<unknown> {
-  if (candidate === null || typeof candidate !== "object") {
-    throw new EnvelopeValidationError("malformed-envelope", "no es un objeto");
+function isRecord(value: unknown): value is Readonly<Record<string, unknown>> {
+  return value !== null && typeof value === "object" && !Array.isArray(value);
+}
+
+function hasOwn(record: Readonly<Record<string, unknown>>, key: string): boolean {
+  return Object.prototype.hasOwnProperty.call(record, key);
+}
+
+function assertEnvelopeShape(
+  candidate: unknown,
+  policy: CompatibilityPolicy,
+  context: EnvelopeReadContext,
+): asserts candidate is VersionedEnvelope<unknown> {
+  const options = { policy, context };
+  if (!isRecord(candidate)) {
+    throw new EnvelopeValidationError(
+      "malformed-envelope",
+      "no es un objeto",
+      options,
+    );
   }
-  const record = candidate as Readonly<Record<string, unknown>>;
-  if (typeof record["envelopeVersion"] !== "number") {
-    throw new EnvelopeValidationError("malformed-envelope", "falta envelopeVersion");
+  if (typeof candidate["envelopeVersion"] !== "number") {
+    throw new EnvelopeValidationError(
+      "malformed-envelope",
+      "falta envelopeVersion",
+      options,
+    );
   }
-  if (record["compatibility"] === null || typeof record["compatibility"] !== "object") {
-    throw new EnvelopeValidationError("malformed-envelope", "falta compatibility");
+  const compatibility = candidate["compatibility"];
+  if (!isRecord(compatibility)) {
+    throw new EnvelopeValidationError(
+      "malformed-envelope",
+      "falta compatibility",
+      options,
+    );
   }
-  if (record["integrity"] === null || typeof record["integrity"] !== "object") {
-    throw new EnvelopeValidationError("malformed-envelope", "falta integrity");
+  if (
+    typeof compatibility["saveVersion"] !== "string" ||
+    typeof compatibility["rulesVersion"] !== "string" ||
+    typeof compatibility["algorithmVersion"] !== "string"
+  ) {
+    throw new EnvelopeValidationError(
+      "malformed-envelope",
+      "compatibility no declara saveVersion, rulesVersion y algorithmVersion",
+      options,
+    );
+  }
+  const integrity = candidate["integrity"];
+  if (
+    !isRecord(integrity) ||
+    typeof integrity["algorithm"] !== "string" ||
+    typeof integrity["value"] !== "string"
+  ) {
+    throw new EnvelopeValidationError(
+      "malformed-envelope",
+      "integrity no declara algorithm y value",
+      options,
+    );
+  }
+  if (!hasOwn(candidate, "payload")) {
+    throw new EnvelopeValidationError(
+      "malformed-envelope",
+      "falta payload",
+      options,
+    );
+  }
+  if (hasOwn(candidate, "gameId") && typeof candidate["gameId"] !== "string") {
+    throw new EnvelopeValidationError(
+      "malformed-envelope",
+      "gameId debe ser una cadena cuando está presente",
+      options,
+    );
   }
 }
 
-function assertVersionsSupported(
+function assertEnvelopeVersionSupported(
   envelope: VersionedEnvelope<unknown>,
   policy: CompatibilityPolicy,
+  context: EnvelopeReadContext,
 ): void {
   if (!policy.supportedEnvelopeVersions.includes(envelope.envelopeVersion)) {
     throw new EnvelopeValidationError(
       "unsupported-envelope-version",
       `versión de sobre ${envelope.envelopeVersion} no soportada`,
+      { envelope, policy, context },
     );
   }
+}
+
+function assertCompatibilityVersionsSupported(
+  envelope: VersionedEnvelope<unknown>,
+  policy: CompatibilityPolicy,
+  context: EnvelopeReadContext,
+): void {
+  const options = { envelope, policy, context };
   const { saveVersion, rulesVersion, algorithmVersion } = envelope.compatibility;
   if (!policy.supportedSaveVersions.includes(saveVersion)) {
     throw new EnvelopeValidationError(
       "unsupported-save-version",
       `Versión de guardado «${saveVersion}» no soportada`,
+      options,
     );
   }
   if (!policy.supportedRulesVersions.includes(rulesVersion)) {
     throw new EnvelopeValidationError(
       "unsupported-rules-version",
       `Versión de reglas «${rulesVersion}» no soportada`,
+      options,
     );
   }
   if (!policy.supportedAlgorithmVersions.includes(algorithmVersion)) {
     throw new EnvelopeValidationError(
       "unsupported-algorithm-version",
       `Versión de algoritmo «${algorithmVersion}» no soportada`,
+      options,
     );
   }
 }
 
 function assertGameIdMatches(
   envelope: VersionedEnvelope<unknown>,
+  policy: CompatibilityPolicy,
   context: EnvelopeReadContext,
 ): void {
   if (context.expectedGameId === undefined) {
@@ -270,11 +380,16 @@ function assertGameIdMatches(
     throw new EnvelopeValidationError(
       "game-id-mismatch",
       `gameId interno «${String(envelope.gameId)}» distinto del esperado «${context.expectedGameId}»`,
+      { envelope, policy, context },
     );
   }
 }
 
-function assertIntegrityMatches(envelope: VersionedEnvelope<unknown>): void {
+function assertIntegrityMatches(
+  envelope: VersionedEnvelope<unknown>,
+  policy: CompatibilityPolicy,
+  context: EnvelopeReadContext,
+): void {
   const recomputed = computeIntegrity(envelope.payload);
   if (
     recomputed.algorithm !== envelope.integrity.algorithm ||
@@ -283,14 +398,18 @@ function assertIntegrityMatches(envelope: VersionedEnvelope<unknown>): void {
     throw new EnvelopeValidationError(
       "integrity-mismatch",
       "la suma de integridad recalculada no coincide con la almacenada",
+      { envelope, policy, context },
     );
   }
 }
 
 /**
  * Valida un sobre recién leído y devuelve su `payload` tipado. Comprueba, en
- * este orden y con fail-fast: forma del sobre, versiones (esquema, guardado,
- * reglas, algoritmo), `gameId` interno frente al esperado y suma de integridad.
+ * este orden y con fail-fast: forma mínima completa del sobre; versión de
+ * esquema; para esquemas conocidos, `gameId` e integridad; y por último
+ * compatibilidad de guardado, reglas y algoritmo. Así una corrupción de un
+ * sobre actual no se reclasifica como incompatibilidad, mientras una versión
+ * futura se rechaza sin interpretar su payload bajo reglas desconocidas.
  *
  * NO castea a ciegas el `payload`: el llamante conoce el tipo `T` que espera de
  * ese object store. La verificación estructural profunda del contenido (p. ej.
@@ -302,10 +421,15 @@ export function openEnvelope<T>(
   policy: CompatibilityPolicy,
   context: EnvelopeReadContext = {},
 ): T {
-  assertEnvelopeShape(candidate);
+  assertEnvelopeShape(candidate, policy, context);
   const envelope = candidate as VersionedEnvelope<T>;
-  assertVersionsSupported(envelope, policy);
-  assertGameIdMatches(envelope, context);
-  assertIntegrityMatches(envelope);
+
+  // Una versión futura se rechaza sin interpretar su payload bajo el esquema
+  // actual. Para sobres conocidos, identidad e integridad prevalecen sobre la
+  // compatibilidad: una corrupción no se reclasifica como versión incompatible.
+  assertEnvelopeVersionSupported(envelope, policy, context);
+  assertGameIdMatches(envelope, policy, context);
+  assertIntegrityMatches(envelope, policy, context);
+  assertCompatibilityVersionsSupported(envelope, policy, context);
   return envelope.payload;
 }

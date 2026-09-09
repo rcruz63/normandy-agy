@@ -16,9 +16,10 @@
  * de bytes del archivo original.
  *
  * ALCANCE (16.1): envoltorio + canonicalización + suma + identificadores +
- * forma del paquete a nivel de bytes. La validación profunda de
- * Instantáneas/registros/aleatorio e invariantes y el staging/escritura
- * corresponden a la Tarea 16.2.
+ * forma runtime segura del paquete a nivel de bytes. La guarda estructural
+ * impide exponer agregados parciales que harían fallar accesos posteriores; la
+ * validación semántica profunda de Instantáneas/registros/aleatorio e
+ * invariantes y el staging/escritura corresponden a la Tarea 16.2.
  *
  * FRONTERA DE CAPAS Y PUREZA: este módulo vive en `domain/` y es determinista.
  * No importa DOM, IndexedDB, red, reloj ni SDK de AWS; no usa `Math.random` ni
@@ -166,23 +167,156 @@ function isRecord(value: unknown): value is Readonly<Record<string, unknown>> {
   return value !== null && typeof value === "object" && !Array.isArray(value);
 }
 
+function isIntegrityDescriptorShape(
+  value: unknown,
+): value is IntegrityDescriptor {
+  return (
+    isRecord(value) &&
+    typeof value["algorithm"] === "string" &&
+    typeof value["value"] === "string"
+  );
+}
+
+function isStringArray(value: unknown): value is readonly string[] {
+  return Array.isArray(value) && value.every((item) => typeof item === "string");
+}
+
+function isLogShape(value: unknown): boolean {
+  return (
+    Array.isArray(value) &&
+    value.every(
+      (entry) => isRecord(entry) && typeof entry["sequence"] === "number",
+    )
+  );
+}
+
+function isRecordWithValues(
+  value: unknown,
+  predicate: (item: unknown) => boolean,
+): boolean {
+  return isRecord(value) && Object.values(value).every(predicate);
+}
+
 /**
- * Valida forma superficial del documento: objeto con envoltorio, arrays de
- * identificadores y agregados, y objeto de integridad. No inspecciona el
- * interior de cada Instantánea (eso es 16.2).
+ * Comprueba la forma operativa mínima del Estado antes de delegar sus
+ * invariantes. Además de las versiones leídas por compatibilidad, protege las
+ * colecciones y objetos que `validateSnapshot` recorre para que ningún JSON
+ * parcial pueda provocar accesos sobre `undefined`.
+ */
+function isGameStateShape(value: unknown): boolean {
+  if (!isRecord(value)) {
+    return false;
+  }
+  const difficulty = value["difficulty"];
+  const duration = value["duration"];
+  const activation = value["activation"];
+  if (
+    !isRecord(difficulty) ||
+    typeof difficulty["id"] !== "string" ||
+    !isRecord(duration) ||
+    typeof duration["turns"] !== "number" ||
+    !isRecord(activation)
+  ) {
+    return false;
+  }
+  const activePieceId = activation["activePieceId"];
+  if (activePieceId !== undefined && typeof activePieceId !== "string") {
+    return false;
+  }
+  const outcome = value["outcome"];
+  const hasOutcome =
+    outcome === "in-progress" ||
+    outcome === "victory" ||
+    outcome === "defeat" ||
+    outcome === "suspended";
+  return (
+    typeof value["gameId"] === "string" &&
+    typeof value["missionId"] === "string" &&
+    typeof value["rulesVersion"] === "string" &&
+    typeof value["saveVersion"] === "string" &&
+    typeof value["turn"] === "number" &&
+    typeof value["phase"] === "string" &&
+    isRecordWithValues(
+      value["pieces"],
+      (piece) => isRecord(piece) && typeof piece["pieceId"] === "string",
+    ) &&
+    isRecordWithValues(
+      value["unknowns"],
+      (unknown) => isRecord(unknown) && typeof unknown["hidden"] === "boolean",
+    ) &&
+    isRecordWithValues(
+      value["objectives"],
+      (objective) =>
+        isRecord(objective) && typeof objective["met"] === "boolean",
+    ) &&
+    Array.isArray(value["effects"]) &&
+    value["effects"].every(
+      (effect) => isRecord(effect) && typeof effect["kind"] === "string",
+    ) &&
+    hasOutcome
+  );
+}
+
+function isRandomStateShape(value: unknown): boolean {
+  return (
+    isRecord(value) &&
+    typeof value["seed"] === "string" &&
+    typeof value["position"] === "number" &&
+    typeof value["algorithmVersion"] === "string"
+  );
+}
+
+function isSnapshotShape(
+  value: unknown,
+): value is GameAggregate["snapshot"] {
+  if (!isRecord(value)) {
+    return false;
+  }
+  const previousSnapshotId = value["previousSnapshotId"];
+  return (
+    typeof value["id"] === "string" &&
+    typeof value["gameId"] === "string" &&
+    (previousSnapshotId === undefined ||
+      typeof previousSnapshotId === "string") &&
+    typeof value["confirmedAt"] === "string" &&
+    isGameStateShape(value["state"]) &&
+    isRandomStateShape(value["randomState"]) &&
+    isLogShape(value["simpleLog"]) &&
+    isLogShape(value["detailedLog"]) &&
+    isIntegrityDescriptorShape(value["integrity"])
+  );
+}
+
+function isGameAggregateShape(value: unknown): value is GameAggregate {
+  return (
+    isRecord(value) &&
+    typeof value["gameId"] === "string" &&
+    typeof value["saveVersion"] === "string" &&
+    isSnapshotShape(value["snapshot"])
+  );
+}
+
+/**
+ * Valida la forma runtime del documento y de cada agregado antes de exponerlos
+ * como tipos de dominio. Esta frontera sigue sin decidir invariantes: solo
+ * garantiza que compatibilidad y `validateSnapshot` puedan leer su estructura
+ * sin lanzar excepciones no tipadas.
  */
 function assertDocumentShape(value: unknown): value is BackupDocument {
   if (!isRecord(value)) {
     return false;
   }
-  const hasStrings =
+  const games = value["games"];
+  return (
     typeof value["format"] === "string" &&
     typeof value["canonicalizationVersion"] === "string" &&
     typeof value["integrityAlgorithm"] === "string" &&
-    typeof value["saveVersion"] === "string";
-  const hasCollections =
-    Array.isArray(value["exportedGameIds"]) && Array.isArray(value["games"]);
-  return hasStrings && hasCollections && isRecord(value["integrity"]);
+    typeof value["saveVersion"] === "string" &&
+    isStringArray(value["exportedGameIds"]) &&
+    Array.isArray(games) &&
+    games.every(isGameAggregateShape) &&
+    isIntegrityDescriptorShape(value["integrity"])
+  );
 }
 
 function recomputedMatches(document: BackupDocument): boolean {

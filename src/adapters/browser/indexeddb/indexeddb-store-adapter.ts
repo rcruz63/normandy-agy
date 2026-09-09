@@ -21,6 +21,7 @@ import {
   sealEnvelope,
   type CompatibilityPolicy,
   type EnvelopeCompatibility,
+  type EnvelopeReadContext,
   type VersionedEnvelope,
 } from "../../../domain/persistence/index.js";
 import { OBJECT_STORES, type ObjectStoreName } from "./schema.js";
@@ -185,7 +186,7 @@ export class IndexedDbStoreAdapter {
     return this.getValidatedPayload<T>(
       OBJECT_STORES.snapshots,
       [key.generationId, key.gameId, key.snapshotId],
-      key.gameId,
+      { expectedGameId: key.gameId, expectedSnapshotId: key.snapshotId },
     );
   }
 
@@ -202,7 +203,7 @@ export class IndexedDbStoreAdapter {
     return this.getValidatedPayload<T>(
       OBJECT_STORES.games,
       [key.generationId, key.gameId],
-      key.gameId,
+      { expectedGameId: key.gameId },
     );
   }
 
@@ -445,7 +446,7 @@ export class IndexedDbStoreAdapter {
   private async getValidatedPayload<T>(
     storeName: ObjectStoreName,
     key: IDBValidKey,
-    expectedGameId?: GameId,
+    context: EnvelopeReadContext = {},
   ): Promise<T | undefined> {
     const database = this.requireDatabase();
     return runTransaction(database, [storeName], "readonly", async (transaction) => {
@@ -455,10 +456,7 @@ export class IndexedDbStoreAdapter {
         return undefined;
       }
       const envelope = (raw as Readonly<{ envelope: unknown }>).envelope;
-      if (expectedGameId !== undefined) {
-        return openEnvelope<T>(envelope, this.compatibilityPolicy, { expectedGameId });
-      }
-      return openEnvelope<T>(envelope, this.compatibilityPolicy);
+      return openEnvelope<T>(envelope, this.compatibilityPolicy, context);
     });
   }
 

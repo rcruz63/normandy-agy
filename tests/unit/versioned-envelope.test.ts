@@ -29,6 +29,24 @@ const policy: CompatibilityPolicy = {
   supportedAlgorithmVersions: ["rav-1"],
 };
 
+const unsupportedCompatibilityCases: readonly Readonly<{
+  label: string;
+  value: EnvelopeCompatibility;
+}>[] = [
+  {
+    label: "saveVersion",
+    value: { ...compatibility, saveVersion: saveVersion("sv-unsupported") },
+  },
+  {
+    label: "rulesVersion",
+    value: { ...compatibility, rulesVersion: rulesVersion("rv-unsupported") },
+  },
+  {
+    label: "algorithmVersion",
+    value: { ...compatibility, algorithmVersion: "rav-unsupported" },
+  },
+];
+
 type Payload = Readonly<{ a: number; b: string }>;
 
 describe("versioned-envelope — canonicalización e integridad", () => {
@@ -75,6 +93,24 @@ describe("versioned-envelope — sellado y apertura", () => {
       EnvelopeValidationError,
     );
   });
+
+  it("clasifica compatibility incompleta como sobre malformado", () => {
+    const envelope = sealEnvelope({ compatibility, payload: { a: 1 } });
+    const malformed = {
+      ...envelope,
+      compatibility: { saveVersion: compatibility.saveVersion },
+    };
+    expect(() => openEnvelope(malformed, policy)).toThrow(/malformed-envelope/u);
+  });
+
+  it.each(unsupportedCompatibilityCases)(
+    "prioriza integridad alterada sobre $label no soportada",
+    ({ value }) => {
+      const envelope = sealEnvelope({ compatibility: value, payload: { a: 1 } });
+      const tampered = { ...envelope, payload: { a: 2 } };
+      expect(() => openEnvelope(tampered, policy)).toThrow(/integrity-mismatch/u);
+    },
+  );
 
   it("rechaza un gameId interno que no coincide con el esperado", () => {
     const envelope = sealEnvelope({ compatibility, gameId: gameId("g-1"), payload: { a: 1 } });

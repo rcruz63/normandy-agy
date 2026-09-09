@@ -26,14 +26,25 @@
 import type { GameId, SnapshotId } from "../../domain/identity/index.js";
 import type { GameSnapshot } from "../../domain/engine/state.js";
 import type { GameRepository, GameSummary } from "../../domain/ports/index.js";
-import { EnvelopeValidationError } from "../../domain/persistence/index.js";
+import {
+  EnvelopeValidationError,
+  envelopeCompatibilityEvidence,
+  isEnvelopeIncompatibilityReason,
+  type EnvelopeIncompatibilityReason,
+  type RecoveryArtifact,
+  type RecoveryExportPackage,
+} from "../../domain/persistence/index.js";
 import type { QuarantineRecord } from "../../adapters/browser/indexeddb/index.js";
 import type { IdGenerator } from "./indexeddb-game-repository.js";
+import { GameNotFoundError } from "./indexeddb-game-repository.js";
 import { ResumeGame } from "./resume-game.js";
 import { PendingDiagnosticRegistry } from "./pending-diagnostic.js";
+import { RecoveryExporter } from "./recovery-export.js";
 import { QuarantineLedger } from "./quarantine-ledger.js";
 import {
   corruptSnapshotDiagnostic,
+  incompatibleVersionDiagnostic,
+  previousBackupRequiredDiagnostic,
   quarantineWriteFailureDiagnostic,
 } from "./recovery-diagnostics.js";
 
@@ -63,7 +74,7 @@ export type RestoredSnapshotNotice = Readonly<{
   confirmedAt: string;
 }>;
 
-/** Resultado de una reanudación segura: restaurada o aislada en cuarentena. */
+/** Resultado de una reanudación segura y fail-closed. */
 export type SafeResumeResult =
   | Readonly<{
       kind: "restored";
@@ -77,6 +88,18 @@ export type SafeResumeResult =
       reasonKey: string;
       /** `true` si el aislamiento se persistió; `false` si solo quedó pendiente. */
       isolated: boolean;
+    }>
+  | Readonly<{
+      kind: "incompatible";
+      gameId: GameId;
+      diagnostic: ReturnType<typeof incompatibleVersionDiagnostic>;
+      recoveryExport: RecoveryExportPackage;
+    }>
+  | Readonly<{
+      kind: "backup-required";
+      gameId: GameId;
+      diagnostic: ReturnType<typeof previousBackupRequiredDiagnostic>;
+      recoveryExport: RecoveryExportPackage;
     }>;
 
 /** Dependencias inyectadas del servicio de cuarentena y recuperación. */
@@ -99,6 +122,7 @@ export class CorruptionRecoveryService {
   private readonly archive: QuarantineArchive;
   private readonly idGenerator: IdGenerator;
   private readonly pendingDiagnostics: PendingDiagnosticRegistry;
+  private readonly recoveryExporter: RecoveryExporter;
   private readonly ledger: QuarantineLedger;
   private readonly resumeGame: ResumeGame;
 
@@ -107,6 +131,9 @@ export class CorruptionRecoveryService {
     this.archive = deps.archive;
     this.idGenerator = deps.idGenerator;
     this.pendingDiagnostics = deps.pendingDiagnostics;
+    this.recoveryExporter = new RecoveryExporter({
+      pendingDiagnostics: deps.pendingDiagnostics,
+    });
     this.ledger = deps.ledger ?? new QuarantineLedger();
     this.resumeGame = deps.resumeGame ?? new ResumeGame({ repository: deps.repository });
   }
@@ -142,7 +169,13 @@ export class CorruptionRecoveryService {
       });
     } catch (error) {
       if (error instanceof EnvelopeValidationError) {
+        if (isEnvelopeIncompatibilityReason(error.reason)) {
+          return this.blockIncompatible(gameId, error, error.reason);
+        }
         return this.quarantineCorrupt(gameId, error);
+      }
+      if (error instanceof GameNotFoundError) {
+        return this.requirePreviousBackup(gameId);
       }
       throw error;
     }
@@ -157,6 +190,81 @@ export class CorruptionRecoveryService {
     const summaries = await this.repository.list();
     return Object.freeze(
       summaries.filter((summary) => !this.ledger.isQuarantined(summary.gameId)),
+    );
+  }
+
+  /**
+   * Bloquea una versión no soportada sin cuarentena ni escritura y entrega el
+   * sobre original en una exportación local, junto con versiones encontradas y
+   * soportadas. La Instantánea compatible anterior permanece sin tocar.
+   */
+  private blockIncompatible(
+    gameId: GameId,
+    error: EnvelopeValidationError,
+    reason: EnvelopeIncompatibilityReason,
+  ): SafeResumeResult {
+    if (error.envelope === undefined || error.policy === undefined) {
+      throw new Error(
+        "La incompatibilidad no conserva el sobre y la política que la rechazaron.",
+      );
+    }
+    const diagnosticId = this.idGenerator.next();
+    const compatibility = envelopeCompatibilityEvidence(
+      error.envelope,
+      error.policy,
+    );
+    const snapshotId = error.context.expectedSnapshotId;
+    const diagnostic = incompatibleVersionDiagnostic(
+      snapshotId === undefined
+        ? { diagnosticId, gameId, reason, compatibility }
+        : {
+            diagnosticId,
+            gameId,
+            snapshotId,
+            reason,
+            compatibility,
+          },
+    );
+    const artifact = this.incompatibleArtifact(gameId, error, snapshotId);
+    const recoveryExport = this.recoveryExporter.export({ diagnostic, artifact });
+    return Object.freeze({
+      kind: "incompatible",
+      gameId,
+      diagnostic,
+      recoveryExport,
+    });
+  }
+
+  /** Proyecta la pérdida local sin convertirla en corrupción ni restaurar sola. */
+  private requirePreviousBackup(gameId: GameId): SafeResumeResult {
+    const diagnostic = previousBackupRequiredDiagnostic(
+      this.idGenerator.next(),
+      gameId,
+    );
+    const recoveryExport = this.recoveryExporter.export({ diagnostic });
+    return Object.freeze({
+      kind: "backup-required",
+      gameId,
+      diagnostic,
+      recoveryExport,
+    });
+  }
+
+  private incompatibleArtifact(
+    gameId: GameId,
+    error: EnvelopeValidationError,
+    snapshotId: SnapshotId | undefined,
+  ): RecoveryArtifact {
+    if (error.envelope === undefined) {
+      throw new Error("El sobre incompatible no está disponible para exportar.");
+    }
+    const base = {
+      kind: "versioned-envelope" as const,
+      gameId,
+      envelope: error.envelope,
+    };
+    return Object.freeze(
+      snapshotId === undefined ? base : { ...base, snapshotId },
     );
   }
 
@@ -178,7 +286,11 @@ export class CorruptionRecoveryService {
       isolatedPayload: { gameId, reason: error.reason, detail: error.detail },
     };
 
-    const isolated = await this.tryIsolate(gameId, record);
+    const isolated = await this.tryIsolate(
+      gameId,
+      record,
+      error.context.expectedSnapshotId,
+    );
     this.ledger.record({ gameId, detectedAtId, reasonKey });
 
     return Object.freeze({
@@ -199,6 +311,7 @@ export class CorruptionRecoveryService {
   private async tryIsolate(
     gameId: GameId,
     record: QuarantineRecord,
+    snapshotId: SnapshotId | undefined,
   ): Promise<boolean> {
     try {
       await this.archive.isolateCorrupt(record);
@@ -206,10 +319,17 @@ export class CorruptionRecoveryService {
     } catch (writeError) {
       const detail =
         writeError instanceof Error ? writeError.message : String(writeError);
-      this.pendingDiagnostics.record({
+      const pending = {
+        diagnosticId: record.detectedAtId,
         gameId,
+        phase: "quarantine-write" as const,
         diagnostic: quarantineWriteFailureDiagnostic(detail),
-      });
+      };
+      this.pendingDiagnostics.record(
+        snapshotId === undefined
+          ? pending
+          : { ...pending, lastConfirmedSnapshotId: snapshotId },
+      );
       return false;
     }
   }

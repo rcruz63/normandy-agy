@@ -15,6 +15,7 @@
  */
 import type { GameId, SnapshotId } from "../../domain/identity/index.js";
 import type { Diagnostic } from "../../domain/ports/index.js";
+import type { RecoveryFailurePhase } from "../../domain/persistence/index.js";
 
 /**
  * Entrada de diagnóstico pendiente conservada en memoria.
@@ -25,7 +26,9 @@ import type { Diagnostic } from "../../domain/ports/index.js";
  * inmutable: se congela al registrarla.
  */
 export type PendingDiagnostic = Readonly<{
+  diagnosticId: string;
   gameId: GameId;
+  phase: RecoveryFailurePhase;
   diagnostic: Diagnostic;
   lastConfirmedSnapshotId?: SnapshotId;
   lastConfirmedAt?: string;
@@ -33,7 +36,9 @@ export type PendingDiagnostic = Readonly<{
 
 /** Entrada para {@link PendingDiagnosticRegistry.record}. */
 export type PendingDiagnosticInput = Readonly<{
+  diagnosticId: string;
   gameId: GameId;
+  phase: RecoveryFailurePhase;
   diagnostic: Diagnostic;
   lastConfirmedSnapshotId?: SnapshotId;
   lastConfirmedAt?: string;
@@ -51,11 +56,24 @@ export class PendingDiagnosticRegistry {
   private readonly entries: PendingDiagnostic[] = [];
 
   /**
-   * Conserva un diagnóstico pendiente. Devuelve la entrada inmutable registrada
-   * para que el llamante la propague sin volver a consultarla.
+   * Conserva un diagnóstico pendiente. `diagnosticId` es idempotente: repetir
+   * la preparación del mismo reintento devuelve la entrada existente sin crear
+   * un duplicado en la exportación de recuperación.
    */
   public record(input: PendingDiagnosticInput): PendingDiagnostic {
-    const base = { gameId: input.gameId, diagnostic: input.diagnostic };
+    const existing = this.entries.find((entry) =>
+      isSamePendingOperation(entry, input),
+    );
+    if (existing !== undefined) {
+      return existing;
+    }
+
+    const base = {
+      diagnosticId: input.diagnosticId,
+      gameId: input.gameId,
+      phase: input.phase,
+      diagnostic: input.diagnostic,
+    };
     const withSnapshot =
       input.lastConfirmedSnapshotId === undefined
         ? base
@@ -93,4 +111,22 @@ export class PendingDiagnosticRegistry {
     this.entries.length = 0;
     return drained;
   }
+}
+
+/** Identifica el mismo fallo pendiente aunque un reintento proponga otro id. */
+function isSamePendingOperation(
+  existing: PendingDiagnostic,
+  candidate: PendingDiagnosticInput,
+): boolean {
+  if (existing.diagnosticId === candidate.diagnosticId) {
+    return true;
+  }
+  return (
+    existing.gameId === candidate.gameId &&
+    existing.phase === candidate.phase &&
+    existing.lastConfirmedSnapshotId === candidate.lastConfirmedSnapshotId &&
+    existing.diagnostic.category === candidate.diagnostic.category &&
+    existing.diagnostic.message.messageKey ===
+      candidate.diagnostic.message.messageKey
+  );
 }
