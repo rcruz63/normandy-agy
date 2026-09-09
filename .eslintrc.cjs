@@ -16,6 +16,18 @@ module.exports = {
     "eslint:recommended",
     "plugin:@typescript-eslint/recommended",
   ],
+  rules: {
+    // Convenio estándar del proyecto: los parámetros/variables con prefijo `_`
+    // marcan la intención de "intencionadamente sin usar" y no deben reportarse.
+    "@typescript-eslint/no-unused-vars": [
+      "error",
+      {
+        argsIgnorePattern: "^_",
+        varsIgnorePattern: "^_",
+        caughtErrorsIgnorePattern: "^_",
+      },
+    ],
+  },
   env: {
     es2022: true,
   },
