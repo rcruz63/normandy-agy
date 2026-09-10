@@ -244,7 +244,7 @@ Las 26 propiedades de corrección del diseño se implementan cada una con exacta
     - Resolver Automático mediante `VersionedRandom.next`; en Manual validar cada cara ordenada, reservar exactamente el mismo paso, descartar las caras programáticas y persistir `source="manual"`, caras efectivas y resultado interpretado con el mismo siguiente Estado aleatorio
     - Canalizar por el contrato único todas las tiradas actuales y futuras con `RandomDomain.kind === "dice"`, incluidas activación/órdenes, combate, Revelado, Minas y Artillería, sin generación ad hoc en UI o submódulos
     - _Requirements: 19.3, 19.4, 19.5, 19.6, 19.8, 19.12, 19.13, 19.14, 20.2, 41.1, 41.2, 41.3, 41.4, 41.8, 41.9, 41.10, 41.11, 41.12, 41.13, 41.14, 41.15, 41.23, 41.24, 41.31, 41.33, 41.34_
-  - [-] 20.2 Implementar adaptadores de entrada e `IntentTranslator`
+  - [x] 20.2 Implementar adaptadores de entrada e `IntentTranslator`
     - Producir `InteractionIntent` idéntico por dispositivo; eliminar `source` antes de `GameCommand`; alternativa visible a gesto/hover/secundario/rueda/arrastre; Acción irreversible con `selected`→`confirmed`
     - _Requirements: 24.1, 24.2, 24.3, 24.5, 24.10, 24.11, 24.12_
   - [-] 20.3 Implementar `ViewState` independiente y renderizado SVG del mapa
