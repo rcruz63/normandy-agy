@@ -776,6 +776,18 @@
         "chatSessionId": "sess_f8e70fb2-3179-444a-86fc-6c7a8626f0c9",
         "timestamp": 1789039829825
       }
+    ],
+    "23.3 Escribir pruebas de acceso y ausencia de secretos": [
+      {
+        "executionId": "5ed917bf-90d5-4df4-89c1-a0cfc3e1e74f",
+        "chatSessionId": "sess_64244ebe-f647-4675-bdfc-82d3a09d77e6",
+        "timestamp": 1789040349597
+      },
+      {
+        "executionId": "5ed917bf-90d5-4df4-89c1-a0cfc3e1e74f",
+        "chatSessionId": "sess_64244ebe-f647-4675-bdfc-82d3a09d77e6",
+        "timestamp": 1789040529723
+      }
     ]
   }
 }

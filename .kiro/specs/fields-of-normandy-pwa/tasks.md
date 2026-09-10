@@ -293,13 +293,13 @@ Las 26 propiedades de corrección del diseño se implementan cada una con exacta
   - Ensure all tests pass, ask the user if questions arise.
 
 - [x] 23. Control de acceso y Bloqueo local
-  - [~] 23.1 Implementar `AccessVerifierRenderer` y CloudFront Function viewer-request
+  - [x] 23.1 Implementar `AccessVerifierRenderer` y CloudFront Function viewer-request
     - Generar función con material verificador versionado inyectado en despliegue (compatible runtime 2.0); exigir HTTP Basic; devolver 401 + `WWW-Authenticate` + `Cache-Control: no-store` sin origen; eliminar cabecera sensible; sin logs ni secretos en repo/S3/bundle
     - _Requirements: 26.1, 26.2, 26.3, 26.4, 26.5, 26.6, 26.7, 26.8, 26.9_
-  - [~] 23.2 Implementar `LocalLock` con verificador local independiente
+  - [x] 23.2 Implementar `LocalLock` con verificador local independiente
     - Verificador local con `algorithmVersion`/parámetros/sal/material sin guardar clave recuperable; bloquear al iniciar offline ocultando reglas/Partidas; informar que no cifra IndexedDB/Cache ni revoca copias descargadas
     - _Requirements: 26.10, 26.11, 26.12, 26.13, 26.14_
-  - [ ]* 23.3 Escribir pruebas de acceso y ausencia de secretos
+  - [x] 23.3 Escribir pruebas de acceso y ausencia de secretos
     - Auth válida entrega recurso, ausente/incorrecta devuelve 401 sin origen; escaneo de artefactos confirma ausencia de credenciales/cabecera
     - _Requirements: 26.4, 26.6, 26.7_
 
