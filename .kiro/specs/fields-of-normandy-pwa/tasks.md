@@ -289,10 +289,10 @@ Las 26 propiedades de corrección del diseño se implementan cada una con exacta
     - Contraste 4,5:1 / 3:1, foco, nombres accesibles, reflow a 200% sin pérdida, objetivos 44×44, snapshots visuales propios en orientaciones sin capturas del PDF
     - _Requirements: 24.7, 24.8, 25.2, 25.3_
 
-- [~] 22. Checkpoint - PWA, interfaz y accesibilidad
+- [x] 22. Checkpoint - PWA, interfaz y accesibilidad
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 23. Control de acceso y Bloqueo local
+- [x] 23. Control de acceso y Bloqueo local
   - [~] 23.1 Implementar `AccessVerifierRenderer` y CloudFront Function viewer-request
     - Generar función con material verificador versionado inyectado en despliegue (compatible runtime 2.0); exigir HTTP Basic; devolver 401 + `WWW-Authenticate` + `Cache-Control: no-store` sin origen; eliminar cabecera sensible; sin logs ni secretos en repo/S3/bundle
     - _Requirements: 26.1, 26.2, 26.3, 26.4, 26.5, 26.6, 26.7, 26.8, 26.9_

@@ -764,6 +764,18 @@
         "chatSessionId": "sess_7dbfb6e2-ee61-468a-ae6f-296dab79b412",
         "timestamp": 1789023339078
       }
+    ],
+    "23. Control de acceso y Bloqueo local": [
+      {
+        "executionId": "96f2602d-a159-4453-a71e-95d51fd498f7",
+        "chatSessionId": "sess_f8e70fb2-3179-444a-86fc-6c7a8626f0c9",
+        "timestamp": 1789039192542
+      },
+      {
+        "executionId": "96f2602d-a159-4453-a71e-95d51fd498f7",
+        "chatSessionId": "sess_f8e70fb2-3179-444a-86fc-6c7a8626f0c9",
+        "timestamp": 1789039829825
+      }
     ]
   }
 }

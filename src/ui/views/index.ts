@@ -19,4 +19,5 @@ export * from "./view-state.js";
 export * from "./map-view.js";
 export * from "./action-projection.js";
 export * from "./mission-selector.js";
+export * from "./local-lock-panel.js";
 export * as LogView from "./log-view.js";

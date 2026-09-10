@@ -137,4 +137,18 @@ export const MESSAGES_ES_ES: MessageCatalog = Object.freeze({
   "a11y.result.hit": "Resultado: impacto",
   "a11y.result.miss": "Resultado: fallo",
   "a11y.result.blocked": "Resultado: acción bloqueada",
+
+  // --- Bloqueo local (Tarea 23.2, requisitos 26.11, 26.13, 26.14) ---
+  "ui.local-lock.title": "Bloqueo local",
+  "ui.local-lock.locked.description":
+    "Introduce el mismo usuario y clave del acceso en línea para mostrar tus Partidas y las reglas.",
+  "ui.local-lock.username.label": "Usuario",
+  "ui.local-lock.key.label": "Clave",
+  "ui.local-lock.action.unlock": "Desbloquear",
+  "ui.local-lock.error.invalid":
+    "El usuario o la clave no coinciden. Inténtalo de nuevo.",
+  "ui.local-lock.notice.interface-only":
+    "El Bloqueo local solo oculta la Interfaz: no cifra los datos guardados en el dispositivo (IndexedDB ni Cache Storage) ni ofrece confidencialidad frente a quien controla el dispositivo.",
+  "ui.local-lock.notice.no-revocation":
+    "La autenticación en línea no puede revocar el acceso a las copias ya descargadas ni volverlas inaccesibles en este dispositivo.",
 });
