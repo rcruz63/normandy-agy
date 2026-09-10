@@ -1,0 +1,15 @@
+{
+  "extends": "../tsconfig.base.json",
+  "compilerOptions": {
+    "lib": ["ES2022"],
+    "types": ["node"],
+    "noEmit": true,
+    // aws-cdk-lib expone propiedades opcionales (IPrincipal, Environment, ...)
+    // sin incluir `undefined` explícitamente. Relajamos SOLO esta comprobación
+    // en el código de infraestructura para consumir el SDK de CDK sin castings;
+    // el resto de la severidad estricta del proyecto se mantiene.
+    "exactOptionalPropertyTypes": false
+  },
+  "include": ["."],
+  "exclude": ["../node_modules", "../dist", "../cdk.out"]
+}

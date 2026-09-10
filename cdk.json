@@ -1,0 +1,12 @@
+{
+  "app": "node --experimental-strip-types infrastructure/app.ts",
+  "watch": {
+    "include": ["infrastructure/**"],
+    "exclude": ["node_modules", "dist", "cdk.out"]
+  },
+  "context": {
+    "@aws-cdk/aws-s3:createDefaultLoggingPolicy": true,
+    "@aws-cdk/aws-cloudfront:defaultSecurityPolicyTLSv1.2_2021": true,
+    "@aws-cdk/core:newStyleStackSynthesis": true
+  }
+}

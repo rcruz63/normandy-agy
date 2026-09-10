@@ -53,7 +53,7 @@ Las 26 propiedades de corrección del diseño se implementan cada una con exacta
     - Verificar filas exactas de req. 32-34/36 contra fixtures, conjunto exacto M01..M15 y páginas de referencia
     - _Requirements: 32.1, 33.1, 34.18, 36.1_
 
-- [~] 4. Checkpoint - Catálogo y publicación
+- [ ] 4. Checkpoint - Catálogo y publicación
   - Ensure all tests pass, ask the user if questions arise.
 
 - [x] 5. Geometría hexagonal y modelos de mapa/ficha
@@ -217,7 +217,7 @@ Las 26 propiedades de corrección del diseño se implementan cada una con exacta
     - _Requirements: 22.10, 22.11_
 
 - [ ] 17. Incompatibilidad de versiones y diagnósticos de recuperación
-  - [~] 17.1 Implementar detección de versiones incompatibles y diagnóstico exportable
+  - [ ] 17.1 Implementar detección de versiones incompatibles y diagnóstico exportable
     - Impedir reanudar/importar con reglas/algoritmo/guardado no soportado sin sustituir versión compatible; permitir exportar Instantánea/diagnóstico; incluir diagnóstico pendiente en exportación de recuperación cuando IndexedDB no acepte escritura
     - _Requirements: 19.9, 19.10, 21.10, 23.10_
 
@@ -303,22 +303,22 @@ Las 26 propiedades de corrección del diseño se implementan cada una con exacta
     - Auth válida entrega recurso, ausente/incorrecta devuelve 401 sin origen; escaneo de artefactos confirma ausencia de credenciales/cabecera
     - _Requirements: 26.4, 26.6, 26.7_
 
-- [ ] 24. Infraestructura como código (CDK) y hosting seguro
-  - [~] 24.1 Implementar stack CDK de S3 privado, OAC y CloudFront
+- [x] 24. Infraestructura como código (CDK) y hosting seguro
+  - [x] 24.1 Implementar stack CDK de S3 privado, OAC y CloudFront
     - Bucket S3 Standard con bloqueo público, propiedad sin ACL, política limitada a distribución/OAC; distribución solo HTTPS con dominio `*.cloudfront.net`; función asociada a `viewer-request`; roles separados síntesis/despliegue vs lectura de origen con permisos mínimos
     - _Requirements: 27.1, 27.2, 27.3, 27.4, 27.5, 27.6, 27.7, 27.8, 27.12_
-  - [~] 24.2 Implementar plan FREE, presupuesto y exclusiones de coste
+  - [x] 24.2 Implementar plan FREE, presupuesto y exclusiones de coste
     - Declarar suscripción `PricingPlanManager` `CloudFront/FREE` y WAF incluido; Zero spend budget por correo y Avisos de franquicia 50/80/100%; excluir pay-as-you-go, dominio registrado, Lambda@Edge, KMS, DNSSEC, logs facturables, Firehose y canales de pago
     - _Requirements: 28.1, 28.2, 28.3, 28.4, 28.16, 29.1, 29.2, 29.3, 29.4, 29.5, 29.6, 29.7, 29.8_
   - [ ]* 24.3 Escribir pruebas de IaC deterministas (sin desplegar)
     - Snapshot semántico de recursos permitidos, bucket sin acceso público/ACL, OAC y policy limitada, viewer HTTPS sin alias propio, mínimo privilegio y denylist de servicios excluidos, rollback conserva versión válida anterior
     - _Requirements: 27.3, 27.5, 27.7, 27.12, 28.3_
 
-- [ ] 25. Bloqueo de producción fail-closed y observabilidad
-  - [~] 25.1 Implementar `ProductionEvidence` y preflight fail-closed
+- [~] 25. Bloqueo de producción fail-closed y observabilidad
+  - [x] 25.1 Implementar `ProductionEvidence` y preflight fail-closed
     - Derivar del plan de IaC todas las categorías de operación S3 (admin y lecturas de origen); exigir evidencia vigente de coste 0 € por categoría y 100% del almacenamiento; verificar elegibilidad FREE, sin pay-as-you-go/migración, volumen S3 en crédito, HTTPS, dominio, bloqueo público, OAC, permisos mínimos, recursos excluidos y auth sin exponer secretos; `unknown`=`fail`; regenerar por cambio de IaC/cuenta/precio/condiciones
     - _Requirements: 27.9, 27.10, 27.11, 28.9, 28.10, 28.11, 28.12, 28.13, 28.14, 28.15, 29.9, 29.10, 29.11, 29.12_
-  - [~] 25.2 Implementar pipeline por fases y promoción condicionada
+  - [ ] 25.2 Implementar pipeline por fases y promoción condicionada
     - Fases `build-content`/`test`/`synth`/`preflight`/`deploy-staging`/`verify-staging`/`promote`; solo `promote` crea/actualiza producción con `ProductionEvidence=allow` de la misma ejecución; alertas/franquicia/budget nunca cambian `deny` a `allow`
     - _Requirements: 27.9, 28.12, 28.13, 29.11_
   - [ ]* 25.3 Escribir prueba de propiedad del gate de producción fail-closed
@@ -329,7 +329,7 @@ Las 26 propiedades de corrección del diseño se implementan cada una con exacta
     - _Requirements: 29.9, 29.10, 29.11, 29.12_
 
 - [ ] 26. Matriz de conformidad y segunda revisión visual
-  - [~] 26.1 Implementar generación de Matriz de conformidad y gate de aceptación
+  - [ ] 26.1 Implementar generación de Matriz de conformidad y gate de aceptación
     - `CatalogCompiler` genera la Matriz y falla ante elementos huérfanos/faltantes/fallidos/no verificados; registrar segunda revisión visual (revisor, fecha, resultado, Referencia de misión) sin guardar páginas/capturas del PDF; asociar cada partida de aceptación con Versión de reglas, Semilla y Versión de guardado
     - _Requirements: 2.1, 2.3, 2.6, 30.9, 30.10, 31.8, 40.4, 40.5_
   - [ ]* 26.2 Escribir pruebas de conformidad y matriz de Entorno probado
@@ -337,14 +337,14 @@ Las 26 propiedades de corrección del diseño se implementan cada una con exacta
     - _Requirements: 31.2, 31.5, 31.6, 31.9_
 
 - [ ] 27. Cableado final y verificación de versión candidata
-  - [~] 27.1 Integrar UI, aplicación, dominio, persistencia, offline y acceso
+  - [ ] 27.1 Integrar UI, aplicación, dominio, persistencia, offline y acceso
     - Conectar `GameCommandDispatcher` → `GameUnitOfWork` → Motor → Invariantes → IndexedDB y proyecciones a UI; verificar que ningún valor lúdico vive en UI ni ramas ad hoc; contenido no publicable permanece bloqueado extremo a extremo
     - _Requirements: 5.1, 20.1, 24.11, 30.1, 30.3, 30.12, 40.12_
   - [ ]* 27.2 Escribir pruebas E2E/contract de flujo completo
     - Contract tests tacto=ratón mismo `GameCommand`; E2E de todas las acciones con un puntero táctil y solo ratón; verificar ausencia de contenido del PDF en el paquete
     - _Requirements: 24.1, 24.2, 24.11, 30.12, 40.12_
 
-- [~] 28. Checkpoint final - Ensure all tests pass
+- [ ] 28. Checkpoint final - Ensure all tests pass
   - Ensure all tests pass, ask the user if questions arise.
 
 - [ ] 29. Refactor de conformidad con las normas de desarrollo
@@ -354,10 +354,10 @@ Las 26 propiedades de corrección del diseño se implementan cada una con exacta
   - Sustituir los alias provisionales `TODO(n.x)` en `src/domain/engine/state.ts` y `src/domain/engine/transition.ts` por los tipos reales donde ya existan (Tareas 5/6/13) o, si aún no hay tipo real, convertir el `TODO` en una nota rastreable conforme a las normas; eliminar cualquier stub/`TODO` fantasma no solicitado
   - Verificar la ausencia de `any`/tipos comodín, de valores mágicos (usar constantes con nombre en inglés) y de errores silenciados
   - Confirmar que es un refactor no funcional: no cambia comportamiento, mantiene verdes `typecheck`, `typecheck:domain` y las pruebas existentes
-  - [~] 29.1 Refactor de conformidad del dominio
+  - [ ] 29.1 Refactor de conformidad del dominio
     - Revisar `src/domain/invariants/invariant-validator.ts`, `src/domain/geometry/map.ts`, `src/domain/geometry/hex-geometry.ts`, `src/domain/engine/rules-engine.ts` y dividirlos SOLO cuando mezclen más de una abstracción o su tamaño perjudique la comprensión/mantenibilidad; limpiar los alias `TODO` de `src/domain/engine/state.ts` y `src/domain/engine/transition.ts`
     - _Requirements: N/A (conformidad con docs/normas.md)_
-  - [~] 29.2 Refactor de conformidad del catálogo
+  - [ ] 29.2 Refactor de conformidad del catálogo
     - Revisar `src/catalog/compiler/catalog-validator.ts` y `src/catalog/publication/publication-gate.ts` y dividirlos SOLO cuando mezclen más de una abstracción o su tamaño perjudique la comprensión/mantenibilidad, preservando la excepción de esquemas/tipos y fixtures
     - _Requirements: N/A (conformidad con docs/normas.md)_
   - _Requirements: N/A (conformidad con docs/normas.md)_
