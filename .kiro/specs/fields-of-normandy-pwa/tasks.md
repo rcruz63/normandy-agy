@@ -238,7 +238,7 @@ Las 26 propiedades de corrección del diseño se implementan cada una con exacta
     - Descarga completa e instalable; ciclo completo con red bloqueada; ausencia de requests de juego; reconexión sin mutar Partidas; fallo por recurso/fase; confirmación con Partida abierta; rollback y limpieza tras health check
     - _Requirements: 23.1, 23.3, 23.5, 23.6, 23.8, 23.9_
 
-- [~] 20. Interfaz, tiradas visuales, entrada normalizada y estado de vista
+- [x] 20. Interfaz, tiradas visuales, entrada normalizada y estado de vista
   - [x] 20.1 Implementar contrato de tirada en dos fases y `DiceRollCoordinator`
     - Añadir `DiceRollRequest`, `DiceRollResolution`, `DiceOutcomeProjection` y la rama `awaiting-roll` sin mutación; reanudar el Motor solo con una resolución de uso único ligada a solicitud, Partida, Instantánea y contexto
     - Resolver Automático mediante `VersionedRandom.next`; en Manual validar cada cara ordenada, reservar exactamente el mismo paso, descartar las caras programáticas y persistir `source="manual"`, caras efectivas y resultado interpretado con el mismo siguiente Estado aleatorio
@@ -250,7 +250,7 @@ Las 26 propiedades de corrección del diseño se implementan cada una con exacta
   - [x] 20.3 Implementar `ViewState` independiente y renderizado SVG del mapa
     - Zoom/paneo/orientación/tamaño/lectura como `ViewState` sin tocar `GameState`; mapa SVG responsive con capa semántica sincronizada; conservar selección y estado ante adaptación/orientación
     - _Requirements: 20.8, 24.6, 24.7, 24.8, 24.9, 30.8, 40.10, 40.11_
-  - [~] 20.4 Implementar `DiceRollDialog` visual y accesible
+  - [x] 20.4 Implementar `DiceRollDialog` visual y accesible
     - Renderizar cantidad variable de dados en orden, selector Automático/Manual en cada aparición y última preferencia local fuera de `GameState`; recoger una cara entera por dado en Manual
     - Mostrar `DiceOutcomeProjection` con tabla canónica y fila/columna/intervalo destacados o, sin tabla, objetivo/bases/modificadores/fórmula/comparación, y el efecto obtenido
     - Representar dados propios con rotación hasta cada cara efectiva; hacer commit independiente de `animationend`, soportar `prefers-reduced-motion`, texto/`aria-live`, tacto/ratón/teclado, 44×44, 200 %, vertical/horizontal y funcionamiento offline

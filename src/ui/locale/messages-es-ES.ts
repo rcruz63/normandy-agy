@@ -50,4 +50,43 @@ export const MESSAGES_ES_ES: MessageCatalog = Object.freeze({
   // --- Resultados comunes (requisito 3.3) ---
   "log.result.hit": "impacto",
   "log.result.miss": "fallo",
+
+  // --- Interfaz: Componente de tirada (Tarea 20.4, requisito 41, 25) ---
+  "ui.dice.title": "Tirada de dados: {context}",
+  "ui.dice.mode.legend": "Modo de tirada",
+  "ui.dice.mode.automatic": "Automático",
+  "ui.dice.mode.manual": "Manual",
+  "ui.dice.mode.automatic.hint":
+    "La Aplicación obtiene las caras por ti.",
+  "ui.dice.mode.manual.hint":
+    "Introduce la cara de cada dado físico en orden.",
+  "ui.dice.die.label": "Dado {position} de {count}, {sides} caras",
+  "ui.dice.die.pending": "Dado {position}: sin cara asignada",
+  "ui.dice.die.face": "Dado {position}: cara {face}",
+  "ui.dice.manual.input.label":
+    "Cara del dado {position} (de 1 a {sides})",
+  "ui.dice.manual.invalid":
+    "El dado {position} debe tener una cara entera de 1 a {sides}.",
+  "ui.dice.manual.count":
+    "Debes introducir una cara por cada uno de los {count} dados.",
+  "ui.dice.action.resolve": "Resolver tirada",
+  "ui.dice.action.cancel": "Cancelar tirada",
+  "ui.dice.action.close": "Cerrar",
+  "ui.dice.resolving": "Resolviendo la tirada…",
+  "ui.dice.result.faces": "Caras obtenidas: {faces}.",
+  "ui.dice.result.effect": "Efecto: {effect}.",
+  "ui.dice.result.table.title": "Tabla aplicada",
+  "ui.dice.result.table.applied":
+    "Fila destacada: {row}{column}{interval}.",
+  "ui.dice.result.table.column": ", columna {column}",
+  "ui.dice.result.table.interval": ", intervalo {interval}",
+  "ui.dice.result.calc.target": "Objetivo: {target}.",
+  "ui.dice.result.calc.bases": "Bases: {bases}.",
+  "ui.dice.result.calc.modifiers": "Modificadores: {modifiers}.",
+  "ui.dice.result.calc.formula": "Fórmula: {formula}.",
+  "ui.dice.result.calc.comparison": "Comparación: {comparison}.",
+  "ui.dice.result.announcement":
+    "Tirada resuelta. Caras: {faces}. Efecto: {effect}.",
+  "ui.dice.stale":
+    "La tirada ha quedado obsoleta porque la partida cambió; ciérrala y vuelve a intentarlo.",
 });

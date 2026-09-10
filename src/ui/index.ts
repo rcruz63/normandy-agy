@@ -9,3 +9,4 @@
  */
 export * from "./views/index.js";
 export * from "./locale/index.js";
+export * from "./components/index.js";
