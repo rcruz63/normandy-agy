@@ -314,11 +314,11 @@ Las 26 propiedades de corrección del diseño se implementan cada una con exacta
     - Snapshot semántico de recursos permitidos, bucket sin acceso público/ACL, OAC y policy limitada, viewer HTTPS sin alias propio, mínimo privilegio y denylist de servicios excluidos, rollback conserva versión válida anterior
     - _Requirements: 27.3, 27.5, 27.7, 27.12, 28.3_
 
-- [~] 25. Bloqueo de producción fail-closed y observabilidad
+- [x] 25. Bloqueo de producción fail-closed y observabilidad
   - [x] 25.1 Implementar `ProductionEvidence` y preflight fail-closed
     - Derivar del plan de IaC todas las categorías de operación S3 (admin y lecturas de origen); exigir evidencia vigente de coste 0 € por categoría y 100% del almacenamiento; verificar elegibilidad FREE, sin pay-as-you-go/migración, volumen S3 en crédito, HTTPS, dominio, bloqueo público, OAC, permisos mínimos, recursos excluidos y auth sin exponer secretos; `unknown`=`fail`; regenerar por cambio de IaC/cuenta/precio/condiciones
     - _Requirements: 27.9, 27.10, 27.11, 28.9, 28.10, 28.11, 28.12, 28.13, 28.14, 28.15, 29.9, 29.10, 29.11, 29.12_
-  - [ ] 25.2 Implementar pipeline por fases y promoción condicionada
+  - [x] 25.2 Implementar pipeline por fases y promoción condicionada
     - Fases `build-content`/`test`/`synth`/`preflight`/`deploy-staging`/`verify-staging`/`promote`; solo `promote` crea/actualiza producción con `ProductionEvidence=allow` de la misma ejecución; alertas/franquicia/budget nunca cambian `deny` a `allow`
     - _Requirements: 27.9, 28.12, 28.13, 29.11_
   - [ ]* 25.3 Escribir prueba de propiedad del gate de producción fail-closed
