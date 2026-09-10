@@ -11,6 +11,7 @@
  * `Math.random`). No interpreta reglas: solo compone diagnósticos `es-ES`.
  */
 import type { GameSnapshot } from "../../domain/engine/state.js";
+import type { DiceRollRequest } from "../../domain/engine/dice-roll.js";
 import type {
   DomainMessage,
   TransitionDecision,
@@ -65,6 +66,19 @@ export function blockedOutcome(
   return Object.freeze({ kind: "blocked", diagnostic, current });
 }
 
+/**
+ * Construye un desenlace `awaiting-roll` a partir de la Tirada pendiente
+ * declarada por el Motor (diseño §3, req. 41.1, 41.3). No confirma nada: la UI
+ * muestra el Componente de tirada y el Coordinador de Tiradas la resuelve. Se
+ * conserva la última confirmada (`current`) mientras la Tirada esté pendiente.
+ */
+export function awaitingRollOutcome(
+  current: GameSnapshot,
+  request: DiceRollRequest,
+): CommandOutcome {
+  return Object.freeze({ kind: "awaiting-roll", request, current });
+}
+
 /** Construye un desenlace `invalid` cuando la propuesta rompe una Invariante. */
 export function invalidOutcome(
   current: GameSnapshot,
@@ -102,13 +116,26 @@ export function failedOutcome(
 }
 
 /**
- * Traduce una decisión que NO es `accepted` a su desenlace conservador. Solo
- * cubre `rejected`/`blocked`: la rama `accepted` la trata la unidad de trabajo
- * porque requiere validar Invariantes y confirmar.
+ * Decisión conservadora sin confirmación: `rejected` o `blocked`.
+ *
+ * Excluye tanto `accepted` (la trata la unidad de trabajo: valida Invariantes y
+ * confirma) como `awaiting-roll` (la canaliza el Coordinador de Tiradas: declara
+ * una Tirada pendiente sin producir desenlace conservador; diseño §3, req. 41).
+ */
+export type ConservativeDecision = Extract<
+  TransitionDecision,
+  { kind: "rejected" } | { kind: "blocked" }
+>;
+
+/**
+ * Traduce una decisión conservadora a su desenlace. Solo cubre
+ * `rejected`/`blocked`. La rama `accepted` la trata la unidad de trabajo y la
+ * rama `awaiting-roll` la deriva al Coordinador de Tiradas: NINGUNA de ellas
+ * produce un desenlace conservador y por eso quedan fuera de esta función.
  */
 export function nonAcceptedOutcome(
   current: GameSnapshot,
-  decision: Exclude<TransitionDecision, { kind: "accepted" }>,
+  decision: ConservativeDecision,
 ): CommandOutcome {
   if (decision.kind === "rejected") {
     return rejectedOutcome(current, decision.reason);

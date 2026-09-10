@@ -77,6 +77,21 @@ function assertDomain(domain: RandomDomain): void {
   }
 }
 
+/**
+ * Contrato estructural de la máquina de aleatoriedad versionada con los tipos
+ * CONCRETOS del submódulo (`RandomState`/`RandomRequest`/`RandomStep`).
+ *
+ * El puerto `domain/ports/versioned-random.ts` declara `VersionedRandom` con
+ * marcas opacas provisionales (Tarea 1); mientras ese cableado no sustituya los
+ * marcadores por estos tipos concretos, los consumidores de la capa de
+ * aplicación que necesitan los datos reales (p. ej. el Coordinador de Tiradas,
+ * Tarea 20.1) dependen de ESTA interfaz. {@link PureVersionedRandom} la cumple.
+ */
+export interface VersionedRandomMachine {
+  next(state: RandomState, request: RandomRequest): RandomStep;
+  supports(algorithmVersion: RandomAlgorithmVersion): boolean;
+}
+
 /** Procedimiento de la versión de referencia `splitmix64-v1`. */
 const SPLITMIX64_V1: AlgorithmProcedure = Object.freeze({
   version: ALGORITHM_SPLITMIX64_V1,
@@ -142,7 +157,7 @@ function consumptionId(
  * Implementación pura de {@link VersionedRandom} respaldada por el registro
  * inmutable de algoritmos.
  */
-export class PureVersionedRandom {
+export class PureVersionedRandom implements VersionedRandomMachine {
   public supports(algorithmVersion: RandomAlgorithmVersion): boolean {
     return REGISTRY.has(algorithmVersion as string);
   }

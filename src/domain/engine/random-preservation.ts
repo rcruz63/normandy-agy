@@ -44,16 +44,26 @@ export function preservedRandomState(snapshot: GameSnapshot): RandomState {
 /**
  * ¿La decisión conserva el Estado aleatorio sin tocar la aleatoriedad?
  *
- * Es cierto para `rejected` y para `blocked`: ambos desenlaces se detectan
- * ANTES de cualquier resolución aleatoria (el Motor de la Tarea 8.1 no consume
- * azar en esas ramas). Una decisión `accepted` NO garantiza conservación: su
- * propuesta puede haber avanzado el Estado aleatorio (`complete` con azar o
+ * Es cierto para `rejected`, `blocked` y `awaiting-roll`:
+ * - `rejected`/`blocked` se detectan ANTES de cualquier resolución aleatoria
+ *   (el Motor de la Tarea 8.1 no consume azar en esas ramas).
+ * - `awaiting-roll` (diseño §3, req. 41.3) declara una Tirada pendiente y
+ *   devuelve el control a la capa de aplicación SIN mutar el Estado de partida,
+ *   los registros ni la posición de secuencia aleatoria; la reserva la efectúa
+ *   el Coordinador de Tiradas más tarde, no esta decisión.
+ *
+ * Una decisión `accepted` NO garantiza conservación: su propuesta puede haber
+ * avanzado el Estado aleatorio (`complete` con azar o
  * `stopped-after-consumption`), por lo que se excluye aquí.
  */
 export function preservesRandomState(
   decision: TransitionDecision,
 ): boolean {
-  return decision.kind === "rejected" || decision.kind === "blocked";
+  return (
+    decision.kind === "rejected" ||
+    decision.kind === "blocked" ||
+    decision.kind === "awaiting-roll"
+  );
 }
 
 /** ¿Dos Estados aleatorios son estructuralmente idénticos (sin avance)? */

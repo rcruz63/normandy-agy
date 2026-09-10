@@ -660,6 +660,51 @@
         "chatSessionId": "sess_5d7a8b5c-1fde-4d1d-b2ce-930dae256ade",
         "timestamp": 1788995638344
       }
+    ],
+    "20.1 Implementar contrato de tirada en dos fases y `DiceRollCoordinator`": [
+      {
+        "executionId": "434ebaee-b07d-4462-a818-2e89578509d2",
+        "chatSessionId": "sess_2d021798-953a-4d15-91a9-7548a53632d8",
+        "timestamp": 1788997721601
+      },
+      {
+        "executionId": "434ebaee-b07d-4462-a818-2e89578509d2",
+        "chatSessionId": "sess_2d021798-953a-4d15-91a9-7548a53632d8",
+        "timestamp": 1788997733273
+      },
+      {
+        "executionId": "aaaf4d30-edd1-41d7-87c9-ae95d8b1c69d",
+        "chatSessionId": "sess_2d021798-953a-4d15-91a9-7548a53632d8",
+        "timestamp": 1789021641589
+      }
+    ],
+    "20.4 Implementar `DiceRollDialog` visual y accesible": [
+      {
+        "executionId": "434ebaee-b07d-4462-a818-2e89578509d2",
+        "chatSessionId": "sess_2d021798-953a-4d15-91a9-7548a53632d8",
+        "timestamp": 1788997721660
+      }
+    ],
+    "20.2 Implementar adaptadores de entrada e `IntentTranslator`": [
+      {
+        "executionId": "434ebaee-b07d-4462-a818-2e89578509d2",
+        "chatSessionId": "sess_2d021798-953a-4d15-91a9-7548a53632d8",
+        "timestamp": 1788997734167
+      }
+    ],
+    "20.3 Implementar `ViewState` independiente y renderizado SVG del mapa": [
+      {
+        "executionId": "434ebaee-b07d-4462-a818-2e89578509d2",
+        "chatSessionId": "sess_2d021798-953a-4d15-91a9-7548a53632d8",
+        "timestamp": 1788997735680
+      }
+    ],
+    "20.5 Implementar proyecciones de acciones, registros y selectores es-ES": [
+      {
+        "executionId": "434ebaee-b07d-4462-a818-2e89578509d2",
+        "chatSessionId": "sess_2d021798-953a-4d15-91a9-7548a53632d8",
+        "timestamp": 1788997736604
+      }
     ]
   }
 }

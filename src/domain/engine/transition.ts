@@ -20,6 +20,7 @@
  */
 import type { DecisionRef, GameId, SnapshotId } from "../identity/index.js";
 import type { GameSnapshot } from "./state.js";
+import type { DiceRollRequest } from "./dice-roll.js";
 
 /**
  * Mensaje de dominio localizable en `es-ES`.
@@ -77,6 +78,11 @@ export type TransitionProposal = Readonly<{
  * Estructura IDÉNTICA a la del puerto `RulesEngine.TransitionDecision`:
  * - `accepted`: se propone una transición (modo `complete` o
  *   `stopped-after-consumption`).
+ * - `awaiting-roll`: la resolución necesita dados; el Motor declara una Tirada
+ *   pendiente (`DiceRollRequest`) SIN mutar el Estado de partida, los registros
+ *   ni el Estado aleatorio, y devuelve el control a la capa de aplicación
+ *   (diseño §3, requisitos 41.1, 41.3). La segunda fase (`resumeRoll`) produce
+ *   una decisión `accepted` a partir de la resolución validada.
  * - `rejected`: comando no permitido por estado/secuencia; identidad, sin
  *   consumo nuevo.
  * - `blocked`: dato, prioridad, revisión o DP pendiente; enlaza a la decisión
@@ -84,6 +90,7 @@ export type TransitionProposal = Readonly<{
  */
 export type TransitionDecision =
   | Readonly<{ kind: "accepted"; proposal: TransitionProposal }>
+  | Readonly<{ kind: "awaiting-roll"; request: DiceRollRequest }>
   | Readonly<{ kind: "rejected"; reason: DomainMessage }>
   | Readonly<{
       kind: "blocked";
@@ -177,6 +184,15 @@ export function transitionProposal(
 /** Construye una decisión `accepted` a partir de una propuesta. */
 export function accepted(proposal: TransitionProposal): TransitionDecision {
   return Object.freeze({ kind: "accepted", proposal });
+}
+
+/**
+ * Construye una decisión `awaiting-roll` a partir de una Tirada pendiente. No
+ * muta nada: solo transporta la solicitud declarativa hacia la capa de
+ * aplicación (diseño §3, requisitos 41.1, 41.3).
+ */
+export function awaitingRoll(request: DiceRollRequest): TransitionDecision {
+  return Object.freeze({ kind: "awaiting-roll", request });
 }
 
 /** Construye una decisión `rejected` con su motivo `es-ES`. */

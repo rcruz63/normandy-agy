@@ -238,25 +238,25 @@ Las 26 propiedades de corrección del diseño se implementan cada una con exacta
     - Descarga completa e instalable; ciclo completo con red bloqueada; ausencia de requests de juego; reconexión sin mutar Partidas; fallo por recurso/fase; confirmación con Partida abierta; rollback y limpieza tras health check
     - _Requirements: 23.1, 23.3, 23.5, 23.6, 23.8, 23.9_
 
-- [ ] 20. Interfaz, tiradas visuales, entrada normalizada y estado de vista
-  - [ ] 20.1 Implementar contrato de tirada en dos fases y `DiceRollCoordinator`
+- [~] 20. Interfaz, tiradas visuales, entrada normalizada y estado de vista
+  - [x] 20.1 Implementar contrato de tirada en dos fases y `DiceRollCoordinator`
     - Añadir `DiceRollRequest`, `DiceRollResolution`, `DiceOutcomeProjection` y la rama `awaiting-roll` sin mutación; reanudar el Motor solo con una resolución de uso único ligada a solicitud, Partida, Instantánea y contexto
     - Resolver Automático mediante `VersionedRandom.next`; en Manual validar cada cara ordenada, reservar exactamente el mismo paso, descartar las caras programáticas y persistir `source="manual"`, caras efectivas y resultado interpretado con el mismo siguiente Estado aleatorio
     - Canalizar por el contrato único todas las tiradas actuales y futuras con `RandomDomain.kind === "dice"`, incluidas activación/órdenes, combate, Revelado, Minas y Artillería, sin generación ad hoc en UI o submódulos
     - _Requirements: 19.3, 19.4, 19.5, 19.6, 19.8, 19.12, 19.13, 19.14, 20.2, 41.1, 41.2, 41.3, 41.4, 41.8, 41.9, 41.10, 41.11, 41.12, 41.13, 41.14, 41.15, 41.23, 41.24, 41.31, 41.33, 41.34_
-  - [~] 20.2 Implementar adaptadores de entrada e `IntentTranslator`
+  - [-] 20.2 Implementar adaptadores de entrada e `IntentTranslator`
     - Producir `InteractionIntent` idéntico por dispositivo; eliminar `source` antes de `GameCommand`; alternativa visible a gesto/hover/secundario/rueda/arrastre; Acción irreversible con `selected`→`confirmed`
     - _Requirements: 24.1, 24.2, 24.3, 24.5, 24.10, 24.11, 24.12_
-  - [~] 20.3 Implementar `ViewState` independiente y renderizado SVG del mapa
+  - [-] 20.3 Implementar `ViewState` independiente y renderizado SVG del mapa
     - Zoom/paneo/orientación/tamaño/lectura como `ViewState` sin tocar `GameState`; mapa SVG responsive con capa semántica sincronizada; conservar selección y estado ante adaptación/orientación
     - _Requirements: 20.8, 24.6, 24.7, 24.8, 24.9, 30.8, 40.10, 40.11_
-  - [ ] 20.4 Implementar `DiceRollDialog` visual y accesible
+  - [~] 20.4 Implementar `DiceRollDialog` visual y accesible
     - Renderizar cantidad variable de dados en orden, selector Automático/Manual en cada aparición y última preferencia local fuera de `GameState`; recoger una cara entera por dado en Manual
     - Mostrar `DiceOutcomeProjection` con tabla canónica y fila/columna/intervalo destacados o, sin tabla, objetivo/bases/modificadores/fórmula/comparación, y el efecto obtenido
     - Representar dados propios con rotación hasta cada cara efectiva; hacer commit independiente de `animationend`, soportar `prefers-reduced-motion`, texto/`aria-live`, tacto/ratón/teclado, 44×44, 200 %, vertical/horizontal y funcionamiento offline
     - Cerrar antes de resolver cancela la solicitud sin commit/consumo; cerrar después solo oculta el diálogo sin deshacer el efecto
     - _Requirements: 20.10, 20.11, 20.12, 24.1, 24.2, 24.3, 24.4, 24.5, 24.7, 24.8, 24.12, 25.3, 25.4, 25.5, 25.6, 41.5, 41.6, 41.7, 41.9, 41.10, 41.16, 41.17, 41.18, 41.19, 41.20, 41.21, 41.22, 41.25, 41.26, 41.27, 41.28, 41.29, 41.30, 41.31, 41.32_
-  - [~] 20.5 Implementar proyecciones de acciones, registros y selectores es-ES
+  - [-] 20.5 Implementar proyecciones de acciones, registros y selectores es-ES
     - Selector de Misiones solo `published` con nombre propio; alternar registros conservando estado y posición de lectura; expandir/contraer entradas detalladas; `Intl` con locale `es-ES`
     - _Requirements: 3.1, 3.2, 3.3, 3.4, 20.9, 32.2, 32.12_
   - [ ]* 20.6 Escribir prueba de propiedad de continuidad y resolución íntegra de tiradas

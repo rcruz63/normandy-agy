@@ -15,6 +15,8 @@ export type {
   GameCommand,
   TransitionProposal,
   ActionDescriptor,
+  DiceRollRequest,
+  DiceRollResolution,
   DomainMessage,
   Diagnostic,
   RandomState,

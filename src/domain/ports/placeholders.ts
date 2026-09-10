@@ -43,6 +43,10 @@ export type {
   DomainMessage,
 } from "../engine/transition.js";
 export type { ActionDescriptor } from "../engine/rules-engine.js";
+export type {
+  DiceRollRequest,
+  DiceRollResolution,
+} from "../engine/dice-roll.js";
 
 // --- Persistencia y unidad de trabajo (Tarea 15.2: modelos reales) ---
 // Sustituidos por los modelos reales de `game-persistence.ts`.

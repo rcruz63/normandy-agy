@@ -15,6 +15,7 @@ export type {
   RandomStep,
 } from "./model.js";
 export { RandomError } from "./model.js";
+export type { VersionedRandomMachine } from "./versioned-random.js";
 export {
   ALGORITHM_SPLITMIX64_V1,
   PureVersionedRandom,

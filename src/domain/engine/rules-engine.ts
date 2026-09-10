@@ -47,6 +47,7 @@ import { decisionRef as makeDecisionRef } from "../identity/index.js";
 import type { GameSnapshot, GameState } from "./state.js";
 import {
   accepted,
+  awaitingRoll,
   blocked,
   rejected,
   type DomainMessage,
@@ -54,6 +55,11 @@ import {
   type TransitionDecision,
   type TransitionProposal,
 } from "./transition.js";
+import {
+  resolutionMatchesRequest,
+  type DiceRollRequest,
+  type DiceRollResolution,
+} from "./dice-roll.js";
 
 /**
  * Descriptor de una Acción disponible en un Estado (forma de dominio de
@@ -103,6 +109,30 @@ export type CatalogRuleView = Readonly<{
   commandType: string;
   matches: (state: GameState, command: GameCommand) => boolean;
   apply: (snapshot: GameSnapshot, command: GameCommand) => TransitionProposal;
+  /**
+   * Capacidad OPCIONAL de Tirada de dados en dos fases (diseño §3, req. 41).
+   *
+   * Cuando una regla necesita dados, declara este objeto. `requestRoll`
+   * construye la {@link DiceRollRequest} declarativa que el Motor devuelve como
+   * decisión `awaiting-roll` (fase 1), SIN mutar estado ni consumir azar.
+   * `interpret` recibe la {@link DiceRollResolution} validada por el Coordinador
+   * y produce la {@link TransitionProposal} confirmable interpretando las caras
+   * efectivas mediante las reglas canónicas (fase 2). Ambas funciones son puras.
+   *
+   * Una regla sin esta capacidad resuelve de forma determinista mediante
+   * `apply` (sin dados). Este es el ÚNICO punto por el que una regla canaliza
+   * una Tirada; la Interfaz y los submódulos no generan caras (req. 41.4, 41.34).
+   */
+  roll?: Readonly<{
+    requestRoll: (
+      snapshot: GameSnapshot,
+      command: GameCommand,
+    ) => DiceRollRequest;
+    interpret: (
+      snapshot: GameSnapshot,
+      resolution: DiceRollResolution,
+    ) => TransitionProposal;
+  }>;
 }>;
 
 /**
@@ -251,10 +281,30 @@ export interface RulesEngineView {
     catalog: RulesCatalogView,
   ): TransitionDecision;
 
+  resumeRoll(
+    snapshot: GameSnapshot,
+    request: DiceRollRequest,
+    resolution: DiceRollResolution,
+    catalog: RulesCatalogView,
+  ): TransitionDecision;
+
   availableActions(
     state: GameState,
     catalog: RulesCatalogView,
   ): readonly ActionDescriptor[];
+}
+
+/** `DecisionRef`/mensaje `es-ES` de una resolución de Tirada cruzada o reutilizada. */
+function mismatchedResolutionMessage(): DomainMessage {
+  return Object.freeze({ messageKey: "rules.roll.resolutionMismatch" });
+}
+
+/** Mensaje `es-ES` cuando ninguna regla con capacidad de Tirada resuelve el contexto. */
+function noRollRuleMessage(context: string): DomainMessage {
+  return Object.freeze({
+    messageKey: "rules.roll.noApplicableRule",
+    params: Object.freeze({ context }),
+  });
 }
 
 /**
@@ -314,11 +364,57 @@ export function createRulesEngine(): RulesEngineView {
       return blocked(resolution.reason, resolution.decisionRef);
     }
 
-    // `winner`: la regla ganadora produce la propuesta. `apply` es puro y no
-    // muta sus argumentos (contrato de los submódulos). La propuesta puede venir
-    // en modo `complete` o `stopped-after-consumption` (Tarea 8.3); el Motor la
-    // transporta sin tratamiento especial: `mode` la distingue aguas abajo.
+    // `winner`: la regla ganadora produce la decisión. Si declara una capacidad
+    // de Tirada de dados (diseño §3, req. 41), el Motor devuelve `awaiting-roll`
+    // con la solicitud declarativa SIN mutar estado ni consumir azar (fase 1);
+    // la resolución llega después por `resumeRoll` (fase 2). En otro caso, `apply`
+    // es puro y produce la propuesta (`complete` o `stopped-after-consumption`);
+    // el Motor la transporta sin tratamiento especial.
+    if (resolution.rule.roll !== undefined) {
+      const request = resolution.rule.roll.requestRoll(snapshot, command);
+      return awaitingRoll(request);
+    }
     const proposal = resolution.rule.apply(snapshot, command);
+    return accepted(proposal);
+  }
+
+  /**
+   * Segunda fase de una Tirada de dados (diseño §3, req. 41.5, 41.23, 41.24).
+   *
+   * 1. Verifica que la resolución corresponde EXACTAMENTE a la solicitud
+   *    (identidad, Partida, Instantánea esperada y contexto). Una resolución
+   *    obsoleta, cruzada o reutilizada => `rejected` sin efectos ni azar nuevo.
+   * 2. Comprueba que la Instantánea recibida sigue siendo la esperada por la
+   *    solicitud (control optimista de concurrencia, req. 41.23).
+   * 3. Localiza la regla con capacidad de Tirada que cubre el contexto y delega
+   *    la interpretación de las caras efectivas en su `interpret` puro. El paso
+   *    aleatorio ya está reservado en la resolución: `resumeRoll` NO consume
+   *    otra vez (uso único, req. 41.24). Devuelve `accepted` con la propuesta.
+   *
+   * NO muta sus argumentos. La capa de aplicación confirma conjuntamente el
+   * efecto, los registros y el Estado aleatorio reservado en la resolución.
+   */
+  function resumeRoll(
+    snapshot: GameSnapshot,
+    request: DiceRollRequest,
+    resolution: DiceRollResolution,
+    catalog: RulesCatalogView,
+  ): TransitionDecision {
+    if (!resolutionMatchesRequest(request, resolution)) {
+      return rejected(mismatchedResolutionMessage());
+    }
+    if (snapshot.id !== request.expectedSnapshotId) {
+      return rejected(mismatchedResolutionMessage());
+    }
+
+    const rule = catalog.rules.find(
+      (candidate) => candidate.roll !== undefined,
+    );
+    if (rule === undefined || rule.roll === undefined) {
+      return rejected(noRollRuleMessage(request.context.label));
+    }
+
+    const proposal = rule.roll.interpret(snapshot, resolution);
     return accepted(proposal);
   }
 
@@ -345,7 +441,7 @@ export function createRulesEngine(): RulesEngineView {
     return Object.freeze(descriptors);
   }
 
-  return Object.freeze({ decide, availableActions });
+  return Object.freeze({ decide, resumeRoll, availableActions });
 }
 
 /** DecisionRef canónica usada al bloquear por prioridad ausente (DP-002). */

@@ -28,6 +28,7 @@ import type {
   DomainMessage,
   TransitionMode,
 } from "../engine/transition.js";
+import type { DiceRollRequest } from "../engine/dice-roll.js";
 import type { InvariantViolation } from "../invariants/invariant-validator.js";
 
 /**
@@ -110,6 +111,13 @@ export type GameSummary = Readonly<{
  *   SIN evaluar reglas ni consumir aleatoriedad; se conserva la última
  *   confirmada.
  *
+ * - `awaiting-roll`: la resolución necesita dados; el Motor declaró una Tirada
+ *   pendiente (`request`) SIN mutar el Estado de partida, los registros ni la
+ *   posición de secuencia aleatoria (diseño §3, req. 41.1, 41.3). La capa de
+ *   interfaz muestra el Componente de tirada y el Coordinador de Tiradas la
+ *   resuelve en una segunda fase; se conserva la última confirmada mientras
+ *   tanto.
+ *
  * - `failed`: el commit transaccional falló/abortó; IndexedDB revirtió todos
  *   los cambios (nada a medias) y la UI conserva la última confirmada; la capa
  *   superior puede reintentar o exportar (requisito 7.8, 21.10).
@@ -123,4 +131,9 @@ export type CommandOutcome =
   | Readonly<{ kind: "blocked"; diagnostic: Diagnostic; current: GameSnapshot }>
   | Readonly<{ kind: "invalid"; diagnostic: Diagnostic; current: GameSnapshot }>
   | Readonly<{ kind: "stale"; diagnostic: Diagnostic; current: GameSnapshot }>
+  | Readonly<{
+      kind: "awaiting-roll";
+      request: DiceRollRequest;
+      current: GameSnapshot;
+    }>
   | Readonly<{ kind: "failed"; diagnostic: Diagnostic; current: GameSnapshot }>;

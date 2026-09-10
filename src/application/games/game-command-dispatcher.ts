@@ -50,6 +50,7 @@ import type {
 } from "../../domain/ports/index.js";
 import { PerGameQueue } from "./per-game-queue.js";
 import {
+  awaitingRollOutcome,
   failedOutcome,
   invalidOutcome,
   nonAcceptedOutcome,
@@ -113,6 +114,16 @@ export class GameCommandDispatcher implements GameUnitOfWork {
     }
 
     const decision = this.engine.decide(current, command, this.catalog);
+
+    // `awaiting-roll`: el Motor declaró una Tirada pendiente sin mutar nada
+    // (diseño §3, req. 41.1, 41.3). NO produce desenlace conservador: se deriva
+    // al Coordinador de Tiradas a través del desenlace `awaiting-roll` con la
+    // solicitud declarativa. El Estado aleatorio se conserva (fail-fast si no).
+    if (decision.kind === "awaiting-roll") {
+      ensureRandomPreserved(decision);
+      return awaitingRollOutcome(current, decision.request);
+    }
+
     if (decision.kind !== "accepted") {
       // `rejected`/`blocked`: conservan el Estado aleatorio (fail-fast si no).
       ensureRandomPreserved(decision);

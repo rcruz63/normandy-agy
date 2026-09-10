@@ -28,10 +28,20 @@ export {
   staleOutcome,
   rejectedOutcome,
   blockedOutcome,
+  awaitingRollOutcome,
   invalidOutcome,
   failedOutcome,
   nonAcceptedOutcome,
 } from "./command-outcome-factory.js";
+export type { ConservativeDecision } from "./command-outcome-factory.js";
+
+export { DiceRollCoordinator } from "./dice-roll-coordinator.js";
+export type {
+  DiceRollCoordinatorDeps,
+  DiceRollCoordinationResult,
+  DiceRollCancellation,
+  InvalidRollInput,
+} from "./dice-roll-coordinator.js";
 
 export {
   IndexedDbGameRepository,

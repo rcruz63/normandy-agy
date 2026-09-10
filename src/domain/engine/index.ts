@@ -5,6 +5,7 @@
  * las tareas 8.x (Motor de reglas) y 15.x/16.x (persistencia) los cableen.
  */
 export * from "./state.js";
+export * from "./dice-roll.js";
 export * from "./transition.js";
 export * from "./rules-engine.js";
 export * from "./random-preservation.js";
