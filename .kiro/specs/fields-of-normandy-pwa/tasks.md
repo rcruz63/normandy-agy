@@ -247,7 +247,7 @@ Las 26 propiedades de corrección del diseño se implementan cada una con exacta
   - [x] 20.2 Implementar adaptadores de entrada e `IntentTranslator`
     - Producir `InteractionIntent` idéntico por dispositivo; eliminar `source` antes de `GameCommand`; alternativa visible a gesto/hover/secundario/rueda/arrastre; Acción irreversible con `selected`→`confirmed`
     - _Requirements: 24.1, 24.2, 24.3, 24.5, 24.10, 24.11, 24.12_
-  - [-] 20.3 Implementar `ViewState` independiente y renderizado SVG del mapa
+  - [x] 20.3 Implementar `ViewState` independiente y renderizado SVG del mapa
     - Zoom/paneo/orientación/tamaño/lectura como `ViewState` sin tocar `GameState`; mapa SVG responsive con capa semántica sincronizada; conservar selección y estado ante adaptación/orientación
     - _Requirements: 20.8, 24.6, 24.7, 24.8, 24.9, 30.8, 40.10, 40.11_
   - [~] 20.4 Implementar `DiceRollDialog` visual y accesible
