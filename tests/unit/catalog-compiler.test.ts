@@ -10,8 +10,10 @@ import {
 } from "../../src/catalog/schemas/catalog.js";
 import {
   blockedStatus,
+  conformanceEntry,
   publishedStatus,
 } from "../../src/catalog/schemas/publication.js";
+import type { ConformanceEntry } from "../../src/catalog/schemas/publication.js";
 import { sourceRef } from "../../src/catalog/schemas/source-ref.js";
 import type {
   MaintenanceCatalog,
@@ -136,6 +138,34 @@ function pieceItem(id: string): CatalogItem<PieceDefinition> {
   });
 }
 
+/** Entrada de conformidad `approved` con una prueba vinculada. */
+function approvedConformance(id: string): ConformanceEntry {
+  return conformanceEntry({
+    catalogId: catalogId(id),
+    testIds: [`test-${id}`],
+    status: "approved",
+  });
+}
+
+/**
+ * Matriz de conformidad completa para el catálogo válido: una entrada
+ * `approved` por cada elemento inventariado (Fichas, Tablas de órdenes, reglas
+ * generales, Misiones y sus tablas de revelado).
+ */
+function fullConformance(): ConformanceEntry[] {
+  const entries: ConformanceEntry[] = [
+    approvedConformance("piece-rifle-squad"),
+    approvedConformance("order-rifle-squad"),
+    approvedConformance("rule-turn-order"),
+  ];
+  for (let n = 1; n <= REQUIRED_MISSION_COUNT; n += 1) {
+    const nn = String(n).padStart(2, "0");
+    entries.push(approvedConformance(`FON-ML-2022-M${nn}`));
+    entries.push(approvedConformance(`FON-ML-2022-reveal-M${nn}`));
+  }
+  return entries;
+}
+
 /** Construye una MaintenanceCatalog válida con las quince Misiones. */
 function validCatalog(): MaintenanceCatalog {
   const missions = Array.from({ length: REQUIRED_MISSION_COUNT }, (_u, i) =>
@@ -147,6 +177,7 @@ function validCatalog(): MaintenanceCatalog {
     pieceTypes: { "rifle-squad": pieceItem("piece-rifle-squad") },
     orderTables: { "rifle-squad": orderTableItem("order-rifle-squad") },
     generalRules: [generalRule("rule-turn-order")],
+    conformance: fullConformance(),
   };
 }
 

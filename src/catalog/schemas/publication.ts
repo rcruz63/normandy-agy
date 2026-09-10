@@ -14,6 +14,8 @@ import type {
   CatalogId,
   DecisionRef,
   MissionId,
+  RulesVersion,
+  SaveVersion,
 } from "../../domain/identity/index.js";
 import type { SourceRef } from "./source-ref.js";
 
@@ -93,6 +95,34 @@ export type VisualReviewRecord = Readonly<{
   result?: "approved" | "failed";
   reviewerId?: string;
   reviewedAt?: string;
+}>;
+
+/** Resultado de una Partida de aceptación: victoria, derrota o pendiente. */
+export type AcceptanceOutcome = "victory" | "defeat" | "pending";
+
+/**
+ * Partida de aceptación (acceptance run) de una Misión.
+ *
+ * Traza que una Misión completa se jugó de extremo a extremo para verificar el
+ * comportamiento de la Aplicación frente a los Datos canónicos. Cada Partida de
+ * aceptación se asocia con la Versión de reglas, la Semilla y la Versión de
+ * guardado utilizadas, de modo que el resultado sea reproducible y auditable
+ * (requisito 31.8).
+ *
+ * `seed` es la Semilla opaca (una cadena no vacía, coherente con
+ * `RandomState.seed`); el diseño no fija su formato ni su longitud.
+ *
+ * No guarda páginas ni capturas del PDF: solo la trazabilidad reproducible del
+ * ensayo. Los campos opcionales se omiten por completo cuando no aplican
+ * (`exactOptionalPropertyTypes`).
+ */
+export type AcceptanceRun = Readonly<{
+  missionId: MissionId;
+  rulesVersion: RulesVersion;
+  seed: string;
+  saveVersion: SaveVersion;
+  outcome: AcceptanceOutcome;
+  runAt?: string;
 }>;
 
 /** Propiedad de un recurso: propio o licenciado (DP-003). */
@@ -332,4 +362,35 @@ export function visualReviewRecord(input: {
   if (input.reviewedAt !== undefined)
     result = { ...result, reviewedAt: input.reviewedAt };
   return Object.freeze(result) as unknown as VisualReviewRecord;
+}
+
+/**
+ * Construye una {@link AcceptanceRun} validando que la Semilla no esté vacía.
+ *
+ * La `missionId`, `rulesVersion` y `saveVersion` son identificadores opacos ya
+ * validados por sus constructores; aquí se comprueba únicamente que la Semilla
+ * (cadena opaca) no esté vacía, para conservar la asociación reproducible del
+ * ensayo (requisito 31.8). No se almacenan páginas ni capturas del PDF. El
+ * campo `runAt` se omite por completo cuando no se aporta.
+ */
+export function acceptanceRun(input: {
+  missionId: MissionId;
+  rulesVersion: RulesVersion;
+  seed: string;
+  saveVersion: SaveVersion;
+  outcome: AcceptanceOutcome;
+  runAt?: string;
+}): AcceptanceRun {
+  requireNonEmpty("seed", input.seed);
+
+  const base = {
+    missionId: input.missionId,
+    rulesVersion: input.rulesVersion,
+    seed: input.seed,
+    saveVersion: input.saveVersion,
+    outcome: input.outcome,
+  };
+  const withRunAt =
+    input.runAt !== undefined ? { ...base, runAt: input.runAt } : base;
+  return Object.freeze(withRunAt) as AcceptanceRun;
 }

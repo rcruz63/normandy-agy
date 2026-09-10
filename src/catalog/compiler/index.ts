@@ -13,3 +13,7 @@ export {
   createCatalogCompiler,
   type CatalogCompilerOptions,
 } from "./catalog-compiler.js";
+export {
+  generateConformanceMatrix,
+  type ConformanceMatrixResult,
+} from "./conformance-matrix.js";

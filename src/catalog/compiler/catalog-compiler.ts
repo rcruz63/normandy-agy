@@ -9,9 +9,16 @@
  * 2. ejecuta la validación global fail-closed (identificadores únicos,
  *    referencias, cobertura/no solapamiento de tablas, exactamente quince
  *    Misiones y relaciones de inventario) mediante {@link validateMaintenanceCatalog};
- * 3. solo si no hay ningún fallo, emite un catálogo inmutable estampado con la
- *    `rulesVersion` nueva; ante cualquier fallo devuelve `kind: "failed"` sin
- *    emitir catálogo.
+ * 3. genera la Matriz de conformidad (una entrada única por elemento
+ *    inventariado) y falla ante elementos huérfanos, faltantes, con prueba
+ *    fallida o no verificados necesarios para una Misión, mediante
+ *    {@link generateConformanceMatrix} (Tarea 26.1);
+ * 4. solo si no hay ningún fallo, emite un catálogo inmutable estampado con la
+ *    `rulesVersion` nueva, la Matriz de conformidad generada, la Segunda
+ *    revisión visual (revisor, fecha, resultado y Referencia de misión, sin
+ *    guardar páginas ni capturas del PDF) y las Partidas de aceptación
+ *    (asociadas con Versión de reglas, Semilla y Versión de guardado); ante
+ *    cualquier fallo devuelve `kind: "failed"` sin emitir catálogo.
  *
  * `compile` es puro y determinista: no lee el PDF, no accede a red/reloj y no
  * muta su entrada. Módulo puro: sin DOM, IndexedDB, red, reloj ni SDK de AWS.
@@ -25,6 +32,7 @@ import type {
   MaintenanceCatalog,
 } from "../schemas/build.js";
 import { validateMaintenanceCatalog } from "./catalog-validator.js";
+import { generateConformanceMatrix } from "./conformance-matrix.js";
 
 /** Opciones de construcción del compilador. */
 export type CatalogCompilerOptions = Readonly<{
@@ -87,7 +95,12 @@ export function createCatalogCompiler(
       // 2. Validación global fail-closed.
       errors.push(...validateMaintenanceCatalog(input));
 
-      // 3. Fail-closed: cualquier fallo impide emitir el catálogo.
+      // 3. Generación de la Matriz de conformidad y gate de aceptación
+      //    fail-closed (huérfanos/faltantes/fallidos/no verificados).
+      const conformance = generateConformanceMatrix(input);
+      errors.push(...conformance.errors);
+
+      // 4. Fail-closed: cualquier fallo impide emitir el catálogo.
       if (errors.length > 0) {
         return Object.freeze({
           kind: "failed",
@@ -98,16 +111,22 @@ export function createCatalogCompiler(
         });
       }
 
-      // Emitir catálogo inmutable estampado con la rulesVersion nueva.
+      // Emitir catálogo inmutable estampado con la rulesVersion nueva, la Matriz
+      // de conformidad generada, la Segunda revisión visual y las Partidas de
+      // aceptación (Versión de reglas, Semilla y Versión de guardado).
       const catalog = rulesCatalog({
         rulesVersion: input.rulesVersionCandidate,
         missions: input.missions,
         pieceTypes: input.pieceTypes,
         orderTables: input.orderTables,
         generalRules: input.generalRules,
+        conformance: conformance.matrix,
         ...(input.decisions !== undefined ? { decisions: input.decisions } : {}),
-        ...(input.conformance !== undefined
-          ? { conformance: input.conformance }
+        ...(input.visualReviews !== undefined
+          ? { visualReviews: input.visualReviews }
+          : {}),
+        ...(input.acceptanceRuns !== undefined
+          ? { acceptanceRuns: input.acceptanceRuns }
           : {}),
       });
 

@@ -31,6 +31,7 @@ import type {
   RulesCatalog,
 } from "./catalog.js";
 import type {
+  AcceptanceRun,
   ConformanceEntry,
   DecisionRecord,
   LicenseEntry,
@@ -48,11 +49,15 @@ import type { OrderTable, PieceDefinition } from "./placeholders.js";
  * - `generalRules`: reglas generales canónicas (páginas 5-14).
  * - `decisions` / `conformance`: trazabilidad de decisiones y Matriz de
  *   conformidad.
- * - `visualReviews`: Segunda revisión visual por Misión (DP-001). El compilador
- *   no la usa; la consume el {@link PublicationGate} (Tarea 2.3) para exigir la
- *   revisión aprobada de cada Mapa antes de publicar. El Mapa (`HexMapDefinition`)
- *   es aún una marca opaca (Tarea 5), por lo que la revisión se aporta aquí de
- *   forma explícita e indexada por Misión.
+ * - `visualReviews`: Segunda revisión visual por Misión (DP-001). Registra
+ *   revisor, fecha, resultado y Referencia de misión SIN guardar páginas ni
+ *   capturas del PDF. El compilador la incorpora a la salida y el
+ *   {@link PublicationGate} (Tarea 2.3) exige la revisión aprobada de cada Mapa
+ *   antes de publicar. El Mapa (`HexMapDefinition`) es aún una marca opaca
+ *   (Tarea 5), por lo que la revisión se aporta aquí de forma explícita e
+ *   indexada por Misión.
+ * - `acceptanceRuns`: Partidas de aceptación por Misión, cada una asociada con
+ *   Versión de reglas, Semilla y Versión de guardado (requisito 31.8).
  * - `licenses`: Inventario de licencias (DP-003) de los recursos distribuidos.
  */
 export type MaintenanceCatalog = Readonly<{
@@ -64,6 +69,7 @@ export type MaintenanceCatalog = Readonly<{
   decisions?: readonly DecisionRecord[];
   conformance?: readonly ConformanceEntry[];
   visualReviews?: readonly VisualReviewRecord[];
+  acceptanceRuns?: readonly AcceptanceRun[];
   licenses?: readonly LicenseEntry[];
 }>;
 
@@ -78,6 +84,12 @@ export type CatalogValidationCode =
   | "inventory-relation"
   | "source-authority"
   | "version-rewrite"
+  | "conformance-orphan"
+  | "conformance-missing"
+  | "conformance-failed"
+  | "conformance-unverified"
+  | "conformance-duplicate"
+  | "conformance-test-link"
   | "unknown-condition";
 
 /**

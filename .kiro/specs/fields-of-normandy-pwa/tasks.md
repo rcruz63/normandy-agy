@@ -328,8 +328,8 @@ Las 26 propiedades de corrección del diseño se implementan cada una con exacta
     - Cada categoría S3 sin evidencia, cobertura parcial, coste positivo, recurso prohibido, permiso excesivo, HTTP o `unknown` produce `deny`; franquicia y budget probados como información, no como prueba de coste
     - _Requirements: 29.9, 29.10, 29.11, 29.12_
 
-- [ ] 26. Matriz de conformidad y segunda revisión visual
-  - [ ] 26.1 Implementar generación de Matriz de conformidad y gate de aceptación
+- [x] 26. Matriz de conformidad y segunda revisión visual
+  - [x] 26.1 Implementar generación de Matriz de conformidad y gate de aceptación
     - `CatalogCompiler` genera la Matriz y falla ante elementos huérfanos/faltantes/fallidos/no verificados; registrar segunda revisión visual (revisor, fecha, resultado, Referencia de misión) sin guardar páginas/capturas del PDF; asociar cada partida de aceptación con Versión de reglas, Semilla y Versión de guardado
     - _Requirements: 2.1, 2.3, 2.6, 30.9, 30.10, 31.8, 40.4, 40.5_
   - [ ]* 26.2 Escribir pruebas de conformidad y matriz de Entorno probado

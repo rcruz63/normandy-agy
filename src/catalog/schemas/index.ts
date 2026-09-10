@@ -41,6 +41,8 @@ export type {
   ResourceOwnership,
   LicenseEntry,
   VisualReviewRecord,
+  AcceptanceOutcome,
+  AcceptanceRun,
 } from "./publication.js";
 export {
   InvalidPublicationDataError,
@@ -52,6 +54,7 @@ export {
   conformanceEntry,
   licenseEntry,
   visualReviewRecord,
+  acceptanceRun,
 } from "./publication.js";
 
 export type {

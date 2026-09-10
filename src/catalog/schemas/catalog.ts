@@ -30,9 +30,11 @@ import type {
   DeclarativeEffect,
 } from "./placeholders.js";
 import type {
+  AcceptanceRun,
   ConformanceEntry,
   DecisionRecord,
   PublicationStatus,
+  VisualReviewRecord,
 } from "./publication.js";
 import type { SourceRef, SourceVersion } from "./source-ref.js";
 import {
@@ -128,6 +130,8 @@ export type RulesCatalog = Readonly<{
   generalRules: readonly CatalogItem<CanonicalRule>[];
   decisions: readonly DecisionRecord[];
   conformance: readonly ConformanceEntry[];
+  visualReviews: readonly VisualReviewRecord[];
+  acceptanceRuns: readonly AcceptanceRun[];
 }>;
 
 /** Error de los constructores del esquema de catálogo ante un valor inválido. */
@@ -361,6 +365,8 @@ export function rulesCatalog(input: {
   generalRules: readonly CatalogItem<CanonicalRule>[];
   decisions?: readonly DecisionRecord[];
   conformance?: readonly ConformanceEntry[];
+  visualReviews?: readonly VisualReviewRecord[];
+  acceptanceRuns?: readonly AcceptanceRun[];
 }): RulesCatalog {
   return Object.freeze({
     sourceVersion: SOURCE_VERSION,
@@ -371,5 +377,7 @@ export function rulesCatalog(input: {
     generalRules: Object.freeze([...input.generalRules]),
     decisions: Object.freeze([...(input.decisions ?? [])]),
     conformance: Object.freeze([...(input.conformance ?? [])]),
+    visualReviews: Object.freeze([...(input.visualReviews ?? [])]),
+    acceptanceRuns: Object.freeze([...(input.acceptanceRuns ?? [])]),
   });
 }
