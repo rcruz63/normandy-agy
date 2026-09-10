@@ -256,7 +256,7 @@ Las 26 propiedades de corrección del diseño se implementan cada una con exacta
     - Representar dados propios con rotación hasta cada cara efectiva; hacer commit independiente de `animationend`, soportar `prefers-reduced-motion`, texto/`aria-live`, tacto/ratón/teclado, 44×44, 200 %, vertical/horizontal y funcionamiento offline
     - Cerrar antes de resolver cancela la solicitud sin commit/consumo; cerrar después solo oculta el diálogo sin deshacer el efecto
     - _Requirements: 20.10, 20.11, 20.12, 24.1, 24.2, 24.3, 24.4, 24.5, 24.7, 24.8, 24.12, 25.3, 25.4, 25.5, 25.6, 41.5, 41.6, 41.7, 41.9, 41.10, 41.16, 41.17, 41.18, 41.19, 41.20, 41.21, 41.22, 41.25, 41.26, 41.27, 41.28, 41.29, 41.30, 41.31, 41.32_
-  - [-] 20.5 Implementar proyecciones de acciones, registros y selectores es-ES
+  - [x] 20.5 Implementar proyecciones de acciones, registros y selectores es-ES
     - Selector de Misiones solo `published` con nombre propio; alternar registros conservando estado y posición de lectura; expandir/contraer entradas detalladas; `Intl` con locale `es-ES`
     - _Requirements: 3.1, 3.2, 3.3, 3.4, 20.9, 32.2, 32.12_
   - [ ]* 20.6 Escribir prueba de propiedad de continuidad y resolución íntegra de tiradas
