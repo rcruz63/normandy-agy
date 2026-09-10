@@ -278,11 +278,11 @@ Las 26 propiedades de corrección del diseño se implementan cada una con exacta
     - **Property 23: Proyección íntegra en español de España**
     - **Validates: Requirements 3.1, 3.2, 3.3, 3.4, 3.5, 3.6, 8.6, 21.3, 25.4, 25.7, 32.2, 32.3, 32.12**
 
-- [~] 21. Accesibilidad y detección de capacidades
+- [x] 21. Accesibilidad y detección de capacidades
   - [x] 21.1 Implementar codificación accesible y `CapabilityDetector`
     - Estado/bando/Orientación/terreno/selección/resultados mediante texto/forma/patrón/icono además de color; objetivos táctiles 44×44 px CSS; nombres accesibles es-ES; instrucciones textuales; comprobar instalación/IndexedDB/SW/tacto y bloquear inicio ante carencia obligatoria conservando exportación
     - _Requirements: 10.7, 24.4, 25.1, 25.4, 25.5, 25.7, 31.3, 31.4, 31.7_
-  - [~] 21.2 Implementar animaciones con equivalente persistente en Registro simple
+  - [x] 21.2 Implementar animaciones con equivalente persistente en Registro simple
     - Cada animación de cambio de estado tiene entrada persistente y ordenada en Registro simple
     - _Requirements: 25.6_
   - [ ]* 21.3 Escribir pruebas de accesibilidad (axe-core, contraste, 200%)
