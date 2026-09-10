@@ -89,4 +89,52 @@ export const MESSAGES_ES_ES: MessageCatalog = Object.freeze({
     "Tirada resuelta. Caras: {faces}. Efecto: {effect}.",
   "ui.dice.stale":
     "La tirada ha quedado obsoleta porque la partida cambió; ciérrala y vuelve a intentarlo.",
+
+  // --- Detección de capacidades (Tarea 21.1, requisitos 31.3, 31.4, 31.7) ---
+  "ui.capability.installability": "Instalación como aplicación (PWA)",
+  "ui.capability.indexeddb": "Almacenamiento local de partidas (IndexedDB)",
+  "ui.capability.offline": "Funcionamiento sin conexión (service worker y caché)",
+  "ui.capability.touch": "Interacción táctil de un solo puntero",
+  "ui.capability.blocked":
+    "No se puede iniciar una Partida porque faltan capacidades obligatorias. Revisa la lista de capacidades ausentes antes de continuar.",
+  "ui.capability.export-available":
+    "Puedes exportar las partidas ya almacenadas aunque el inicio esté bloqueado.",
+
+  // --- Nombres accesibles: bando (Tarea 21.1, requisito 25.1, 25.4) ---
+  "a11y.side.british": "Bando británico",
+  "a11y.side.german": "Bando alemán",
+  "a11y.side.neutral": "Elemento neutral",
+
+  // --- Nombres accesibles: estado de Ficha (25.1, 25.4) ---
+  "a11y.status.active": "Ficha activa",
+  "a11y.status.eliminated": "Ficha eliminada",
+
+  // --- Nombres accesibles: visibilidad (25.1, 25.4) ---
+  "a11y.visibility.hidden": "Ficha oculta (Incógnita)",
+  "a11y.visibility.revealed": "Ficha revelada",
+
+  // --- Nombres accesibles: Moral (25.1, 25.4) ---
+  "a11y.morale.normal": "Moral normal",
+  "a11y.morale.low": "Moral baja",
+
+  // --- Nombres accesibles: Orientación (requisitos 10.7, 25.1, 25.4) ---
+  "a11y.orientation.facing": "Orientada hacia {direction}",
+
+  // --- Nombres accesibles: terreno (requisitos 10.7, 25.1, 25.4) ---
+  "a11y.terrain.clear": "Terreno despejado",
+  "a11y.terrain.forest": "Bosque",
+  "a11y.terrain.building": "Edificio",
+  "a11y.terrain.hill": "Colina",
+  "a11y.terrain.river": "Río",
+  "a11y.terrain.unknown": "Terreno sin identificar",
+
+  // --- Nombres accesibles: selección (25.1, 25.5) ---
+  "a11y.selection.unselected": "Sin seleccionar",
+  "a11y.selection.selected": "Seleccionado, pendiente de confirmar",
+  "a11y.selection.confirmed": "Selección confirmada",
+
+  // --- Nombres accesibles: resultado (25.1, 25.7) ---
+  "a11y.result.hit": "Resultado: impacto",
+  "a11y.result.miss": "Resultado: fallo",
+  "a11y.result.blocked": "Resultado: acción bloqueada",
 });
