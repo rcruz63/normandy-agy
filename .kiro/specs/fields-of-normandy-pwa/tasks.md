@@ -336,8 +336,8 @@ Las 26 propiedades de corrección del diseño se implementan cada una con exacta
     - Cada dato canónico con pruebas contra fixtures aprobados; ocho categorías por Entorno probado (instalación, inicio, sin conexión, tacto, vertical, horizontal, guardado, reanudación) registradas con dispositivo/SO/navegador reales
     - _Requirements: 31.2, 31.5, 31.6, 31.9_
 
-- [ ] 27. Cableado final y verificación de versión candidata
-  - [ ] 27.1 Integrar UI, aplicación, dominio, persistencia, offline y acceso
+- [x] 27. Cableado final y verificación de versión candidata
+  - [x] 27.1 Integrar UI, aplicación, dominio, persistencia, offline y acceso
     - Conectar `GameCommandDispatcher` → `GameUnitOfWork` → Motor → Invariantes → IndexedDB y proyecciones a UI; verificar que ningún valor lúdico vive en UI ni ramas ad hoc; contenido no publicable permanece bloqueado extremo a extremo
     - _Requirements: 5.1, 20.1, 24.11, 30.1, 30.3, 30.12, 40.12_
   - [ ]* 27.2 Escribir pruebas E2E/contract de flujo completo

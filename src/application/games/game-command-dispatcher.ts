@@ -104,6 +104,39 @@ export class GameCommandDispatcher implements GameUnitOfWork {
     return this.queue.enqueue(command.gameId, () => this.runExecute(command));
   }
 
+  /**
+   * Confirma una propuesta `accepted` YA decidida por el Motor a través de la
+   * SEGUNDA fase de una Tirada de dados (Coordinador de Tiradas, diseño §3).
+   *
+   * El Coordinador de Tiradas reserva el paso aleatorio y obtiene del Motor
+   * (`resumeRoll`) una decisión `accepted` cuyo `next` ya incorpora el efecto,
+   * los registros y el Estado aleatorio reservado. Esta operación cierra el
+   * ciclo por la MISMA ruta que un comando aceptado directo: se serializa por
+   * `gameId`, revalida la concurrencia optimista contra la última confirmada,
+   * finaliza la Instantánea con marca de tiempo e identificador inyectados,
+   * valida las Invariantes y confirma en una transacción única.
+   *
+   * Si la última confirmada cambió desde que se calculó la propuesta, se rechaza
+   * como `stale` SIN confirmar (concurrencia optimista, req. 7.9, 21.10): la
+   * reserva aleatoria del Coordinador no llega a persistirse porque solo se
+   * escribe a través de este commit transaccional.
+   */
+  public confirmDecision(proposal: TransitionProposal): Promise<CommandOutcome> {
+    return this.queue.enqueue(proposal.next.gameId, () =>
+      this.runConfirmDecision(proposal),
+    );
+  }
+
+  private async runConfirmDecision(
+    proposal: TransitionProposal,
+  ): Promise<CommandOutcome> {
+    const current = await this.repository.loadLatest(proposal.next.gameId);
+    if (proposal.expectedSnapshotId !== current.id) {
+      return staleOutcome(current, proposal.expectedSnapshotId, current.id);
+    }
+    return this.confirmAccepted(current, proposal);
+  }
+
   private async runExecute(command: GameCommand): Promise<CommandOutcome> {
     const current = await this.repository.loadLatest(command.gameId);
 
