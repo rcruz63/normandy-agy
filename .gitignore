@@ -17,6 +17,7 @@ node_modules/
 
 # --- Builds y artefactos ---
 dist/
+dist-web/
 build/
 out/
 coverage/
