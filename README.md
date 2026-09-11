@@ -11,85 +11,106 @@ de 2022 «The Fields of Normandy: A Solitaire Wargame» (`FON-ML-2022`).
 > datos canónicos trazables a `FON-ML-2022`; los textos y recursos visuales
 > distribuidos son propios o disponen de licencia documentada.
 
-## Estado del proyecto
+## Qué es
 
-**Fase actual:** planificación completada; implementación en curso.
+Un juego de guerra en solitario, jugable en el navegador y sin conexión una vez
+instalado. Controlas fuerzas británicas contra unidades alemanas ocultas sobre
+un mapa hexagonal. Cada misión tiene su preparación, duración y objetivo. Toda
+tirada de dados y todo cálculo de reglas queda registrado y es auditable.
 
-Este README se mantiene vivo: refleja por dónde vamos entre sesiones. El
-desarrollo no se completará en una sola sesión.
+- **Un solo jugador**, contra un enemigo que se revela con tablas y dados.
+- **Quince misiones** independientes (`M01`–`M15`), sin campaña ni progresión.
+- **Determinista y auditable**: misma semilla y mismos comandos, mismo resultado.
+- **Local y privada**: cada partida vive en tu dispositivo; el traslado entre
+  dispositivos es manual (exportar/importar).
 
-- Especificación: **completa** (requisitos, diseño y plan de tareas aprobados).
-- Implementación: **18 de 28 tareas** completadas.
+Para aprender a jugar, ver [`docs/usuario.md`](docs/usuario.md).
 
-Última actualización: 9 de septiembre de 2026.
+## Qué hace (funcionalmente)
 
-### Progreso por tarea
+- Motor de reglas puro y determinista que resuelve turnos, órdenes, moral,
+  combate, cobertura, terreno, revelado, minas y artillería según `FON-ML-2022`.
+- Tiradas de dados en dos fases con modo Automático o Manual (introduces las
+  caras de tus dados físicos y el motor reserva el mismo paso aleatorio).
+- Persistencia local transaccional en IndexedDB, con varias partidas aisladas.
+- Exportación, importación y migración de partidas con verificación de integridad.
+- Paquete sin conexión con activación segura y rollback.
+- Interfaz accesible en `es-ES`, con equivalencia entre tacto, ratón y teclado.
+- Infraestructura como código (AWS CDK): S3 privado con OAC, CloudFront con
+  HTTP Basic y bloqueo de producción por coste cero verificado.
 
-Leyenda: ⬜ pendiente · 🟦 en curso · ✅ completada
+## Estado
 
-| # | Tarea | Estado |
-|---|-------|--------|
-| 1 | Estructura del proyecto, puertos y tipos base del dominio | ✅ |
-| 2 | Catálogo canónico, esquemas y Publication Gate (fail-closed) | ✅ |
-| 3 | Fixtures canónicos verificados de las quince misiones | ✅ |
-| 4 | Checkpoint - Catálogo y publicación | ✅ |
-| 5 | Geometría hexagonal y modelos de mapa/ficha | ✅ |
-| 6 | Aleatoriedad reproducible versionada | ✅ |
-| 7 | Estado de partida, transición y validador de invariantes | ✅ |
-| 8 | Motor de reglas: contrato de transición y precedencia canónica | ✅ |
-| 9 | Submódulos de reglas: turno, órdenes y Moral | ✅ |
-| 10 | Submódulos de reglas: combate, cobertura, terreno y especiales | ✅ |
-| 11 | Submódulos de reglas: Revelado, Misión y desenlace | ✅ |
-| 12 | Checkpoint - Motor de reglas completo | ✅ |
-| 13 | Registros estructurados y proyector es-ES | ✅ |
-| 14 | Determinismo del replay del Motor | ✅ |
-| 15 | Persistencia IndexedDB y atomicidad | ✅ |
-| 16 | Exportación, importación y migraciones | ✅ |
-| 17 | Incompatibilidad de versiones y diagnósticos de recuperación | ✅ |
-| 18 | Checkpoint - Persistencia, copia y migración | ✅ |
-| 19 | Paquete sin conexión y actualización segura | ⬜ |
-| 20 | Interfaz, entrada normalizada y estado de vista | ⬜ |
-| 21 | Accesibilidad y detección de capacidades | ⬜ |
-| 22 | Checkpoint - PWA, interfaz y accesibilidad | ⬜ |
-| 23 | Control de acceso y Bloqueo local | ⬜ |
-| 24 | Infraestructura como código (CDK) y hosting seguro | ⬜ |
-| 25 | Bloqueo de producción fail-closed y observabilidad | ⬜ |
-| 26 | Matriz de conformidad y segunda revisión visual | ⬜ |
-| 27 | Cableado final y verificación de versión candidata | ⬜ |
-| 28 | Checkpoint final - Ensure all tests pass | ⬜ |
+El **núcleo está completo y verde**: dominio, motor de reglas, catálogo canónico,
+persistencia, copia/migración, coordinación de tiradas, control de acceso e
+infraestructura declarativa. La verificación automática pasa en su totalidad
+(ver «Verificación»).
 
-## Arquitectura (resumen)
+Falta el **último kilómetro** para poder jugar en un navegador y desplegar:
 
-- **Dominio TypeScript puro**: motor de reglas determinista y data-driven, sin
-  dependencias de DOM, IndexedDB, red, reloj ni SDK de AWS.
-- **Aplicación**: casos de uso, exclusión mutua por partida, atomicidad y
-  puertos.
-- **Adaptadores de navegador**: IndexedDB, Cache API, ficheros, capacidades y
-  entradas de usuario.
-- **Catálogo canónico**: datos serializables trazables a `FON-ML-2022` con
-  bloqueo de publicación fail-closed.
-- **Interfaz** adaptable y accesible en `es-ES`, con equivalencia tacto/ratón.
-- **Infraestructura como código** (CDK): S3 privado con OAC, CloudFront con
-  HTTP Basic vía CloudFront Function, y bloqueo de producción sin evidencia de
-  coste cero.
+- No hay todavía empaquetado web (HTML de arranque, bundle, manifiesto PWA y
+  registro del service worker) que ensamble la UI en un sitio servible.
+- El proyecto **no está desplegado** en AWS; no existe el stack en la cuenta.
+- La ejecución de CDK (`cdk synth`/`deploy`) necesita ajustes de arranque
+  (ver [`docs/despliegue.md`](docs/despliegue.md)).
+
+Detalle de lo pendiente y cómo abordarlo en
+[`docs/estado.md`](docs/estado.md).
 
 ## Stack técnico
 
-- TypeScript (dominio puro)
-- Vitest + fast-check (pruebas unitarias y basadas en propiedades)
-- Playwright + axe-core (PWA, offline y accesibilidad)
-- AWS CDK (TypeScript) para la infraestructura
+- **TypeScript** estricto, dominio puro sin dependencias de navegador ni AWS.
+- **Vitest + fast-check** para pruebas unitarias y basadas en propiedades.
+- **Playwright + axe-core** para PWA, offline y accesibilidad (pruebas E2E aún
+  no escritas; son tareas opcionales del plan).
+- **AWS CDK (TypeScript)** para la infraestructura.
+
+## Estructura del repositorio
+
+```
+src/            Código de la PWA (dominio puro + aplicación + adaptadores + UI)
+  domain/       Motor de reglas, aleatoriedad, invariantes, persistencia (puro)
+  application/  Casos de uso, unidad de trabajo, coordinador de tiradas
+  adapters/     IndexedDB, Cache API, capacidades y entradas de usuario
+  catalog/      Datos canónicos FON-ML-2022 y Publication Gate (fail-closed)
+  ui/           Vistas, componentes, locale es-ES y accesibilidad
+  service-worker/  Service worker del paquete sin conexión
+infrastructure/ Infraestructura como código (AWS CDK)
+tests/          Pruebas unitarias, de propiedad e integración
+docs/           Documentación (este proyecto)
+.kiro/          Especificación (requisitos, diseño, tareas), steering y hooks
+```
+
+Mapa detallado archivo por archivo en
+[`docs/arquitectura.md`](docs/arquitectura.md).
+
+## Verificación
+
+```bash
+npm install
+npm run typecheck   # tsc del dominio y de la infraestructura
+npm run lint        # eslint
+npm test            # vitest (unit + property + integration)
+npm run build       # tsc a dist/
+```
+
+Estado actual: `typecheck`, `lint`, `build` y `test` (80 archivos, 751 pruebas)
+pasan. Las pruebas E2E de Playwright y de conformidad no están escritas todavía.
+
+## Documentación
+
+- [`docs/usuario.md`](docs/usuario.md) — objetivo del juego, mecánicas y misiones.
+- [`docs/despliegue.md`](docs/despliegue.md) — cómo desplegar en AWS y requisitos.
+- [`docs/arquitectura.md`](docs/arquitectura.md) — arquitectura, capas y archivos.
+- [`docs/estado.md`](docs/estado.md) — qué falta y cómo continuar el desarrollo.
+- `.kiro/specs/fields-of-normandy-pwa/` — requisitos, diseño y plan de tareas.
 
 ## Flujo de trabajo con Git
 
 Al completar cada tarea de la especificación se realiza automáticamente un
-commit y un push a `origin/main`. La identidad de autoría es la personal
+commit y un push a la rama actual (hook `PostTaskExec` →
+`scripts/commit-and-push.sh`). La identidad de autoría es la personal
 configurada en el repositorio local.
-
-## Documentación de la especificación
-
-La especificación vive en `.kiro/specs/fields-of-normandy-pwa/`
-(requisitos, diseño y plan de tareas).
 
 ## Licencia
 

@@ -2,26 +2,33 @@
 inclusion: auto
 ---
 
-# Mantener actualizado el estado del proyecto en el README
+# El README es un resumen ejecutivo del proyecto
 
-Este repositorio mantiene en `README.md` una sección de estado vivo del
-proyecto («Estado del proyecto») que refleja el progreso entre sesiones. Debe
-mantenerse actualizada para que cualquier sesión sepa por dónde va el trabajo.
+El plan de tareas de la especificación está completado, así que `README.md` deja
+de ser un tablero de progreso por tarea y pasa a ser un **resumen ejecutivo**
+estable del proyecto.
 
-## Qué actualizar al completar una tarea de la spec
+## Qué contiene el README
 
-Cuando se complete una tarea de la especificación, actualiza `README.md`:
+- Qué es la aplicación y qué hace, en pocas frases.
+- Stack técnico y estructura del repositorio.
+- Cómo verificar el proyecto (typecheck, lint, test, build).
+- Enlaces a la documentación de `docs/` (usuario, despliegue, arquitectura,
+  estado).
+- Una sección «Estado» breve: qué está completo y qué queda pendiente, sin
+  tabla de 28 tareas ni contador de progreso.
 
-- Cambia el estado de la fila correspondiente en la tabla «Progreso por tarea»
-  a ✅.
-- Actualiza el contador «Implementación: **N de 28 tareas** completadas».
-- Refresca la fecha de «Última actualización:».
+## Qué mantener actualizado
 
-## Leyenda de estados
+Ante un cambio funcional o técnico relevante, actualiza:
 
-⬜ pendiente · 🟦 en curso · ✅ completada
+- El README si cambia el resumen, el stack, la estructura o el estado general.
+- `docs/estado.md` si cambia lo que falta o el orden de trabajo recomendado.
+- El documento de `docs/` correspondiente (usuario, despliegue o arquitectura)
+  cuando el cambio afecte a su contenido.
 
-## Cuándo hacerlo
+## Estilo
 
-Esta actualización del README forma parte de completar cada tarea, junto con el
-hook automático de commit y push. Mantén el contenido conciso y factual.
+Directo y factual, en español de España. Sin florituras, párrafos cortos,
+frases sin palabras de más. No inventar estado que no se pueda verificar en el
+código o con una comprobación.
