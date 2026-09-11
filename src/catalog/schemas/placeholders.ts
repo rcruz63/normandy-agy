@@ -26,9 +26,64 @@ import type { CanonicalTable } from "./catalog.js";
 export type HexMapDefinition = Brand<unknown, "HexMapDefinition">;
 export type PieceDefinition = Brand<unknown, "PieceDefinition">;
 
-// --- Objetivo y preparación de Misión (Tareas 9-11) ---
-export type ObjectiveDefinition = Brand<unknown, "ObjectiveDefinition">;
-export type SetupDefinition = Brand<unknown, "SetupDefinition">;
+// --- Objetivo y preparación de Misión ---
+// Concretados por la spec del JUEGO (fields-of-normandy-game, tarea 15). Antes
+// eran marcas opacas `Brand<unknown>` (Tareas 9-11 sin cerrar). Ahora tienen
+// forma real y evaluable para poder ensamblar el bucle jugable.
+//
+// FRONTERA: el esquema NO importa `domain/rules` (evita invertir la dirección
+// esquema→dominio). Reproduce aquí la forma del objetivo tipado que el dominio
+// evalúa en `mission-outcome.ts` (`MissionObjective`), y la generaliza
+// `occupy-hex` (superconjunto de `occupy-church-hex`). La capa de aplicación
+// adapta entre ambas representaciones cuando invoca al dominio.
+
+/** Identificador de Hexágono en el esquema (cadena; el dominio la marca como `HexId`). */
+export type ObjectiveHexRef = string;
+
+/**
+ * Objetivo de victoria de una Misión, estructurado y evaluable. Espeja
+ * `MissionObjective` del dominio y generaliza la ocupación a un Hexágono
+ * cualquiera (`occupy-hex`), del que `occupy-church-hex` es un caso concreto.
+ */
+export type ObjectiveDefinition =
+  | Readonly<{ kind: "eliminate-all-germans" }>
+  | Readonly<{ kind: "eliminate-single-revealed-german" }>
+  | Readonly<{ kind: "destroy-artillery" }>
+  | Readonly<{ kind: "occupy-hex"; hexId: ObjectiveHexRef }>;
+
+/** Orientación de una Ficha en la colocación inicial (cadena; el dominio usa `DirectionId`). */
+export type SetupOrientation = string;
+
+/** Colocación inicial de una Ficha propia sobre un Hexágono de salida. */
+export type StartingPlacement = Readonly<{
+  /** Identificador de la Ficha colocada. */
+  pieceId: string;
+  /** Identificador de la definición de contador (catálogo). */
+  definitionId: string;
+  /** Hexágono de salida (triángulo negro para las británicas). */
+  hexId: ObjectiveHexRef;
+  /** Orientación inicial, si la preparación la fija. */
+  orientation?: SetupOrientation;
+}>;
+
+/** Colocación inicial de una Incógnita alemana sobre un Hexágono. */
+export type UnknownPlacement = Readonly<{
+  unknownId: string;
+  hexId: ObjectiveHexRef;
+}>;
+
+/**
+ * Preparación (colocación inicial) de una Misión: dónde empiezan las fuerzas
+ * británicas, las unidades alemanas fijas y las Incógnitas. Es lo que hoy falta
+ * para que el estado inicial no sea `pieces: {}`. La elección de entrada
+ * (`entryChoice`) ofrece solo las opciones definidas por la Misión.
+ */
+export type SetupDefinition = Readonly<{
+  britishStart: readonly StartingPlacement[];
+  fixedGermanStart: readonly StartingPlacement[];
+  unknowns: readonly UnknownPlacement[];
+  entryChoice?: Readonly<{ options: readonly string[] }>;
+}>;
 
 // --- Reglas declarativas (Tarea 8) ---
 export type DeclarativePredicate = Brand<unknown, "DeclarativePredicate">;

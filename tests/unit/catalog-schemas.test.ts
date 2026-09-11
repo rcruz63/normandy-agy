@@ -286,8 +286,12 @@ describe("catalogItem y canonicalTable", () => {
 });
 
 // Marcadores mínimos de tipos que definen otras tareas, solo para tipar.
-const stubObjective = {} as ObjectiveDefinition;
-const stubSetup = {} as SetupDefinition;
+const stubObjective: ObjectiveDefinition = { kind: "eliminate-all-germans" };
+const stubSetup: SetupDefinition = {
+  britishStart: [],
+  fixedGermanStart: [],
+  unknowns: [],
+};
 const stubMap = {} as HexMapDefinition;
 const stubPredicate = {} as DeclarativePredicate;
 const stubEffect = {} as DeclarativeEffect;

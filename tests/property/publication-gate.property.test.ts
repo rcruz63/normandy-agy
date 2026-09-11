@@ -45,8 +45,12 @@ import {
  */
 
 const RV = rulesVersion("FON-ML-2022-r1");
-const stubObjective = {} as ObjectiveDefinition;
-const stubSetup = {} as SetupDefinition;
+const stubObjective: ObjectiveDefinition = { kind: "eliminate-all-germans" };
+const stubSetup: SetupDefinition = {
+  britishStart: [],
+  fixedGermanStart: [],
+  unknowns: [],
+};
 const stubMap = {} as HexMapDefinition;
 
 function refOf(n: number): `FON-ML-2022-M${string}` {

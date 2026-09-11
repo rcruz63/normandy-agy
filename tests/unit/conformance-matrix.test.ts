@@ -59,8 +59,12 @@ import {
 const RV = rulesVersion("FON-ML-2022-r1");
 const SAVE = saveVersion("save-1");
 
-const stubObjective = {} as ObjectiveDefinition;
-const stubSetup = {} as SetupDefinition;
+const stubObjective: ObjectiveDefinition = { kind: "eliminate-all-germans" };
+const stubSetup: SetupDefinition = {
+  britishStart: [],
+  fixedGermanStart: [],
+  unknowns: [],
+};
 const stubMap = {} as HexMapDefinition;
 const stubPredicate = {} as DeclarativePredicate;
 const stubEffect = {} as DeclarativeEffect;

@@ -112,6 +112,8 @@ export type MissionDefinition = Readonly<{
   baseTurns: number;
   durationOptions: DurationOptions;
   objective: ObjectiveDefinition;
+  /** Briefing narrativo propio en es-ES. OPCIONAL: su ausencia no impide jugar. */
+  briefingEs?: string;
   setup: SetupDefinition;
   map: HexMapDefinition;
   britishForces: readonly ForceEntry[];
@@ -287,6 +289,7 @@ export function missionDefinition(input: {
   publicationStatus: PublicationStatus;
   baseTurns: number;
   objective: ObjectiveDefinition;
+  briefingEs?: string;
   setup: SetupDefinition;
   map: HexMapDefinition;
   britishForces?: readonly ForceEntry[];
@@ -340,6 +343,9 @@ export function missionDefinition(input: {
     baseTurns: input.baseTurns,
     durationOptions: DURATION_OPTIONS,
     objective: input.objective,
+    // Briefing opcional (es-ES): solo se incluye si se aporta, para respetar
+    // `exactOptionalPropertyTypes`. Su ausencia no impide jugar la Misión.
+    ...(input.briefingEs !== undefined ? { briefingEs: input.briefingEs } : {}),
     setup: input.setup,
     map: input.map,
     britishForces: Object.freeze([...(input.britishForces ?? [])]),
