@@ -1,0 +1,13 @@
+{
+  "version": "v1",
+  "hooks": [
+    {
+      "name": "Recordatorio de actualizar ESTADO.md del juego",
+      "trigger": "PostTaskExec",
+      "action": {
+        "type": "agent",
+        "prompt": "Acabas de completar una tarea. Antes de continuar, actualiza el registro de estado vivo en .kiro/specs/fields-of-normandy-game/ESTADO.md: qué se ha hecho, qué queda y dónde retomar exactamente. El estado debe quedar siempre suficiente para continuar sin dudas tras una pausa. No omitas este paso."
+      }
+    }
+  ]
+}
