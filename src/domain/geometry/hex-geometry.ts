@@ -41,6 +41,12 @@
 import type { HexId, DirectionId } from "./identifiers.js";
 import type { HexMapDefinition } from "./map.js";
 import { canonicalEdgeKey } from "./map.js";
+import {
+  boundedFireZone,
+  breadthFirstSearch,
+  reconstructPath,
+  type NeighborIndex,
+} from "./hex-graph-traversal.js";
 
 /** Error lanzado cuando se consulta la geometría con un Hexágono ajeno al mapa. */
 export class UnknownHexError extends Error {
@@ -52,6 +58,16 @@ export class UnknownHexError extends Error {
     this.hexId = hexId;
   }
 }
+
+/** Distancia de un Hexágono a sí mismo (origen de todo recorrido). */
+const ORIGIN_DISTANCE = 0;
+
+/** Alcance que no cubre ningún Hexágono: la Zona de fuego es vacía. */
+const EMPTY_RANGE = 0;
+
+/** Mensaje del error técnico ante un alcance de Zona de fuego inválido. */
+const FIRE_ZONE_RANGE_ERROR =
+  "El alcance de la Zona de fuego debe ser un entero ≥ 0.";
 
 /**
  * Restricción de arco para la Zona de fuego.
@@ -134,6 +150,7 @@ export function buildHexGeometry(map: HexMapDefinition): HexGeometry {
     const sorted = [...set].sort((x, y) => String(x).localeCompare(String(y)));
     neighborLists.set(id, Object.freeze(sorted));
   }
+  const index: NeighborIndex = neighborLists;
 
   function assertKnown(hex: HexId): void {
     if (!hexIds.has(hex)) {
@@ -156,41 +173,11 @@ export function buildHexGeometry(map: HexMapDefinition): HexGeometry {
     return adjacency.get(a)?.has(b) ?? false;
   }
 
-  /**
-   * BFS sobre el grafo canónico. Devuelve el árbol de predecesores y la
-   * distancia a cada Hexágono alcanzable desde `from`. La frontera se procesa
-   * en orden estable, de modo que el árbol de rutas más cortas es determinista.
-   */
-  function bfs(from: HexId): {
-    dist: Map<HexId, number>;
-    prev: Map<HexId, HexId>;
-  } {
-    const dist = new Map<HexId, number>([[from, 0]]);
-    const prev = new Map<HexId, HexId>();
-    let frontier: HexId[] = [from];
-    while (frontier.length > 0) {
-      const next: HexId[] = [];
-      for (const current of frontier) {
-        const currentDist = dist.get(current) ?? 0;
-        for (const neighbor of neighborLists.get(current) ?? []) {
-          if (dist.has(neighbor)) continue;
-          dist.set(neighbor, currentDist + 1);
-          prev.set(neighbor, current);
-          next.push(neighbor);
-        }
-      }
-      // Orden estable de la siguiente frontera.
-      next.sort((x, y) => String(x).localeCompare(String(y)));
-      frontier = next;
-    }
-    return { dist, prev };
-  }
-
   function distance(from: HexId, to: HexId): number {
     assertKnown(from);
     assertKnown(to);
-    if (from === to) return 0;
-    const { dist } = bfs(from);
+    if (from === to) return ORIGIN_DISTANCE;
+    const { dist } = breadthFirstSearch(index, from);
     return dist.get(to) ?? Number.POSITIVE_INFINITY;
   }
 
@@ -198,66 +185,19 @@ export function buildHexGeometry(map: HexMapDefinition): HexGeometry {
     assertKnown(from);
     assertKnown(to);
     if (from === to) return Object.freeze([from]);
-    const { dist, prev } = bfs(from);
-    if (!dist.has(to)) return undefined;
-    const reversed: HexId[] = [to];
-    let cursor: HexId | undefined = to;
-    while (cursor !== undefined && cursor !== from) {
-      cursor = prev.get(cursor);
-      if (cursor === undefined) return undefined;
-      reversed.push(cursor);
-    }
-    reversed.reverse();
-    return Object.freeze(reversed);
+    const { dist, prev } = breadthFirstSearch(index, from);
+    const reachable = new Set<HexId>(dist.keys());
+    return reconstructPath(prev, reachable, from, to);
   }
 
   function fireZone(origin: HexId, options: FireZoneOptions): readonly HexId[] {
     assertKnown(origin);
     const { range, arc } = options;
     if (!Number.isInteger(range) || range < 0) {
-      throw new RangeError("El alcance de la Zona de fuego debe ser un entero ≥ 0.");
+      throw new RangeError(FIRE_ZONE_RANGE_ERROR);
     }
-    if (range === 0) return Object.freeze([]);
-
-    // Vecinos de primer salto permitidos por la Orientación (si se aporta arco).
-    let allowedFirstStep: Set<HexId> | undefined;
-    if (arc !== undefined) {
-      const forward = new Set<DirectionId>(arc.forwardDirections);
-      allowedFirstStep = new Set<HexId>();
-      for (const neighbor of neighborLists.get(origin) ?? []) {
-        const dir = arc.directionOf[neighbor];
-        if (dir !== undefined && forward.has(dir)) {
-          allowedFirstStep.add(neighbor);
-        }
-      }
-    }
-
-    // BFS acotado a `range`, restringiendo el primer salto al arco frontal.
-    const dist = new Map<HexId, number>([[origin, 0]]);
-    const zone = new Set<HexId>();
-    let frontier: HexId[] = [origin];
-    while (frontier.length > 0) {
-      const next: HexId[] = [];
-      for (const current of frontier) {
-        const currentDist = dist.get(current) ?? 0;
-        if (currentDist >= range) continue;
-        for (const neighbor of neighborLists.get(current) ?? []) {
-          if (dist.has(neighbor)) continue;
-          if (currentDist === 0 && allowedFirstStep && !allowedFirstStep.has(neighbor)) {
-            continue;
-          }
-          dist.set(neighbor, currentDist + 1);
-          zone.add(neighbor);
-          next.push(neighbor);
-        }
-      }
-      next.sort((x, y) => String(x).localeCompare(String(y)));
-      frontier = next;
-    }
-
-    return Object.freeze(
-      [...zone].sort((x, y) => String(x).localeCompare(String(y))),
-    );
+    if (range === EMPTY_RANGE) return Object.freeze([]);
+    return boundedFireZone(index, origin, range, arc);
   }
 
   return Object.freeze({

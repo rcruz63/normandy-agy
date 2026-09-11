@@ -24,54 +24,27 @@
  * El Gate NO resuelve decisiones ni fabrica contenido: solo comprueba estados y
  * bloquea. Módulo puro: no importa DOM, IndexedDB, red, reloj ni SDK de AWS.
  */
-import type { CatalogId, MissionId } from "../../domain/identity/index.js";
+import type { MissionId } from "../../domain/identity/index.js";
 import type { MaintenanceCatalog } from "../schemas/build.js";
 import type {
   ConformanceEntry,
   DecisionRecord,
   LicenseEntry,
-  PublicationBlockerKind,
   VisualReviewRecord,
 } from "../schemas/publication.js";
+import type {
+  PublicationBlocker,
+  PublicationGate,
+  PublicationReport,
+} from "./publication-gate-types.js";
 
-/**
- * Causa estructurada por la que un elemento o Misión no es publicable.
- *
- * - `kind`: clase de bloqueo, reutilizando {@link PublicationBlockerKind}.
- * - `missionId`: Misión afectada, cuando el bloqueo es atribuible a una.
- * - `catalogId`: Dato canónico o recurso concreto implicado, cuando aplica.
- * - `decisionId` / `resourceId`: referencia a la decisión o al recurso.
- * - `detailEs`: descripción en es-ES para trazabilidad.
- */
-export type PublicationBlocker = Readonly<{
-  kind: PublicationBlockerKind;
-  detailEs: string;
-  missionId?: MissionId;
-  catalogId?: CatalogId;
-  decisionId?: string;
-  resourceId?: string;
-}>;
-
-/**
- * Informe de publicación emitido por el Gate.
- *
- * - `rulesVersionCandidate`: Versión de reglas evaluada.
- * - `publishableMissionIds`: Misiones que SÍ pueden entregarse al selector
- *   (todas sus comprobaciones pasan). Vacío si ninguna es publicable.
- * - `blockers`: todas las causas de bloqueo encontradas (globales y por Misión).
- * - `inventoryCoverage`: la Matriz de conformidad considerada al evaluar.
- */
-export type PublicationReport = Readonly<{
-  rulesVersionCandidate: string;
-  publishableMissionIds: readonly MissionId[];
-  blockers: readonly PublicationBlocker[];
-  inventoryCoverage: readonly ConformanceEntry[];
-}>;
-
-/** Contrato concreto del Gate (refina el puerto del dominio). */
-export interface PublicationGate {
-  evaluate(catalog: MaintenanceCatalog): PublicationReport;
-}
+// La superficie de tipos pública del Gate se define en `publication-gate-types`
+// y se reexporta aquí para preservar el punto de entrada histórico del módulo.
+export type {
+  PublicationBlocker,
+  PublicationGate,
+  PublicationReport,
+} from "./publication-gate-types.js";
 
 /**
  * Referencias DP canónicas. El Gate identifica las decisiones DP-001/DP-002/

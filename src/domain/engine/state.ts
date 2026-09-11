@@ -11,16 +11,23 @@
  * (`ViewState`, Tarea 20) y no participa en resultados de juego. Este archivo
  * modela exclusivamente estado de dominio.
  *
- * Nota de frontera de tareas: varios tipos referenciados por el diseño
- * (`DifficultySelection`, `DurationSelection`, `PhaseId`, `ActivationState`,
- * `PieceState`, `UnknownState`, `ObjectiveState`, `ActiveEffect`,
- * `RandomState`, `IntegrityDescriptor`) los definen tareas paralelas o
- * posteriores (5.x geometría/ficha, 6.x aleatoriedad, 15.x/16.x persistencia).
- * Para no colisionar con esas tareas se declaran aquí como alias mínimos y
- * opacos, y el cableado real se hará en tareas 8.x/15.x. Cada alias lleva su
- * TODO. Los registros (`SimpleLogEntry`, `DetailedLogEntry`) ya los aporta el
- * submódulo `../logging` (Tarea 13.1): se importan y reexportan desde aquí para
- * que `GameSnapshot` use los tipos reales sin cambiar su forma pública.
+ * Frontera de tareas: varios campos de `GameState`/`GameSnapshot` se tipan aquí
+ * con formas mínimas y estables del dominio del Motor (`DifficultySelection`,
+ * `DurationSelection`, `PhaseId`, `ActivationState`, `PieceState`,
+ * `UnknownState`, `ObjectiveState`, `ActiveEffect`). Son deliberadamente
+ * opacas: el Estado de partida solo necesita referenciar estos conceptos, no
+ * conocer su estructura interna, que modelan submódulos especializados
+ * (geometría/ficha, aleatoriedad, reglas de Revelado/Misión). Mantenerlas aquí,
+ * desacopladas de esos submódulos, preserva la jerarquía unidireccional del
+ * dominio (`state` no depende de `rules`, `random` ni `geometry`) y evita
+ * dependencias circulares. Los registros (`SimpleLogEntry`, `DetailedLogEntry`)
+ * ya los aporta el submódulo `../logging`: se importan y reexportan desde aquí
+ * para que `GameSnapshot` use los tipos reales sin cambiar su forma pública.
+ *
+ * Trazabilidad: el cableado de estas formas con los tipos concretos de otros
+ * submódulos, si en el futuro conviene unificarlos, corresponde a las tareas de
+ * cada dominio (5.x geometría/ficha, 6.x aleatoriedad, 11.x Revelado/Misión) y
+ * debe hacerse preservando la forma pública de este módulo.
  */
 import type {
   GameId,
@@ -38,24 +45,39 @@ import type {
 // los importaban desde aquí (13.1: sustituye los antiguos alias mínimos).
 export type { SimpleLogEntry, DetailedLogEntry } from "../logging/index.js";
 
-// --- Alias mínimos hacia modelos de tareas paralelas/posteriores ---
-// TODO(8.x): sustituir por el modelo de dificultad del catálogo/motor.
+// --- Formas de dominio referenciadas por el Estado de partida ---
+// El Estado de partida referencia estos conceptos por su forma pública mínima;
+// los submódulos especializados los modelan en detalle sin acoplar `state`.
+
+/** Dificultad elegida para la Partida (su estructura la fija el catálogo/Motor). */
 export type DifficultySelection = Readonly<{ id: string }>;
-// TODO(11.x): sustituir por la selección de duración (base−1/base/base+1).
+/** Duración elegida (variante base−1/base/base+1) expresada en turnos totales. */
 export type DurationSelection = Readonly<{ turns: number }>;
-// TODO(8.x/9.x): sustituir por el identificador de fase canónico.
+/** Identificador de la Fase vigente del turno (p. ej. británica/alemana). */
 export type PhaseId = string;
-// TODO(9.x): sustituir por el estado de activación real (unidad activa, etc.).
+/** Estado de activación: la Ficha activa del jugador en curso, si la hay. */
 export type ActivationState = Readonly<{ activePieceId?: string }>;
-// TODO(5.1): identificador de ficha; lo define el modelo de mapa/ficha.
+/**
+ * Identificador de Ficha usado por el Estado del Motor.
+ *
+ * Es intencionadamente una cadena opaca local a este submódulo. El modelo de
+ * geometría define su propio `PieceId` marcado ({@link module:geometry}); el
+ * Motor no necesita esa marca para indexar fichas por clave, y mantenerlos
+ * independientes evita que `state` dependa de `geometry`.
+ */
 export type PieceId = string;
-// TODO(5.1): sustituir por `PieceState` real del modelo de ficha (Tarea 5.1).
+/**
+ * Vista mínima del estado de una Ficha desde el Estado del Motor: basta con que
+ * cada Ficha se identifique por su clave. El modelo funcional completo de la
+ * Ficha (bando, Hexágono, Orientación, Moral, Cobertura…) vive en
+ * {@link module:geometry} y no lo necesita el contrato de `GameState`.
+ */
 export type PieceState = Readonly<{ pieceId: PieceId }>;
-// TODO(11.1): sustituir por `UnknownState` del resolutor de Revelado.
+/** Estado de un elemento oculto pendiente de Revelado (visible u oculto). */
 export type UnknownState = Readonly<{ hidden: boolean }>;
-// TODO(11.2): sustituir por `ObjectiveState` del resolutor de Misión.
+/** Estado de un objetivo de Misión: cumplido o no. */
 export type ObjectiveState = Readonly<{ met: boolean }>;
-// TODO(8.x/10.x): sustituir por `ActiveEffect` de los submódulos de reglas.
+/** Efecto activo en la Partida, discriminado por su `kind` canónico. */
 export type ActiveEffect = Readonly<{ kind: string }>;
 
 /**
@@ -89,14 +111,32 @@ export type GameState = Readonly<{
   outcome: GameOutcome;
 }>;
 
-// --- Alias mínimos de aleatoriedad y registros ---
-// TODO(6.1): sustituir por `RandomState` de `src/domain/random/` (Tarea 6.1).
+// --- Aleatoriedad e integridad embebidas en la Instantánea ---
+
+/**
+ * Estado aleatorio embebido en una {@link GameSnapshot}: Semilla opaca, posición
+ * de secuencia y Versión del algoritmo aleatorio (requisito 19.2).
+ *
+ * `algorithmVersion` se tipa aquí como `string` para no acoplar el Estado de
+ * partida al identificador marcado `RandomAlgorithmVersion` de
+ * {@link module:random}; la máquina de aleatoriedad produce ese valor marcado y
+ * es asignable a esta forma sin conversión. Mantener la forma aquí conserva la
+ * jerarquía unidireccional (`state` no depende de `random`).
+ */
 export type RandomState = Readonly<{
   seed: string;
   position: number;
   algorithmVersion: string;
 }>;
-// TODO(16.1): sustituir por `IntegrityDescriptor` del `BackupCodec` (Tarea 16.1).
+
+/**
+ * Descriptor de integridad (algoritmo + valor) de un artefacto serializado.
+ *
+ * Este módulo es el hogar canónico del tipo: la persistencia (sobre versionado,
+ * `BackupCodec`, exportación de recuperación) y el paquete offline lo reutilizan
+ * importándolo desde aquí, sin duplicarlo. Detecta alteración accidental
+ * (requisito 22); no es firma ni cifrado.
+ */
 export type IntegrityDescriptor = Readonly<{ algorithm: string; value: string }>;
 
 /**

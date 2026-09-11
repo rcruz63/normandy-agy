@@ -21,18 +21,18 @@
  * 6. Autoridad de la fuente: todo elemento se asocia a `FON-ML-2022`.
  * 7. `unknown`: cualquier estado indeterminado se trata como fallo (fail-closed).
  *
- * Módulo puro: no importa DOM, IndexedDB, red, reloj ni SDK de AWS.
+ * Las primitivas genéricas de validación (acumulador de fallos, identificadores
+ * únicos, Referencias de fuente y cobertura de tablas) viven en
+ * `catalog-validation-primitives.ts`; este fichero orquesta qué se valida en un
+ * catálogo completo. Módulo puro: no importa DOM, IndexedDB, red, reloj ni SDK
+ * de AWS.
  */
-import type { CatalogId, MissionId } from "../../domain/identity/index.js";
-import { SOURCE_VERSION } from "../schemas/source-ref.js";
 import {
   MAX_MISSION_NUMBER,
   MIN_MISSION_NUMBER,
 } from "../schemas/source-ref.js";
-import type { SourceRef } from "../schemas/source-ref.js";
 import type {
   CanonicalRule,
-  CanonicalTable,
   CatalogItem,
   MissionDefinition,
 } from "../schemas/catalog.js";
@@ -40,137 +40,16 @@ import type {
   CatalogValidationError,
   MaintenanceCatalog,
 } from "../schemas/build.js";
+import {
+  ErrorSink,
+  registerId,
+  validateSourceRefs,
+  validateTableCoverage,
+} from "./catalog-validation-primitives.js";
 
 /** Número exacto de Misiones inventariadas (requisito 4.1). */
 export const REQUIRED_MISSION_COUNT =
   MAX_MISSION_NUMBER - MIN_MISSION_NUMBER + 1;
-
-/** Acumulador mutable interno de fallos; la salida pública es inmutable. */
-class ErrorSink {
-  private readonly errors: CatalogValidationError[] = [];
-
-  public add(error: CatalogValidationError): void {
-    this.errors.push(Object.freeze(error));
-  }
-
-  public snapshot(): readonly CatalogValidationError[] {
-    return Object.freeze([...this.errors]);
-  }
-}
-
-/** Comprueba que una Referencia de fuente tiene autoridad `FON-ML-2022`. */
-function isAuthoritative(ref: SourceRef): boolean {
-  return ref.sourceVersion === SOURCE_VERSION;
-}
-
-/**
- * Registra un identificador en el conjunto global, marcando duplicados. Devuelve
- * `true` si el identificador es nuevo.
- */
-function registerId(
-  seen: Map<string, string>,
-  id: CatalogId | MissionId,
-  scope: string,
-  sink: ErrorSink,
-): void {
-  const key = id as unknown as string;
-  const previous = seen.get(key);
-  if (previous !== undefined) {
-    sink.add({
-      code: "duplicate-id",
-      messageEs: `El identificador «${key}» se repite en «${scope}» y «${previous}»; cada elemento inventariado debe tener un identificador único.`,
-      catalogIds: [id as unknown as CatalogId],
-    });
-    return;
-  }
-  seen.set(key, scope);
-}
-
-/**
- * Valida la cobertura y el no solapamiento de una tabla canónica: cada entrada
- * del dominio aparece exactamente una vez y no hay filas fuera del dominio.
- * (El constructor `canonicalTable` ya lo garantiza al construir; aquí se
- * revalida por si la tabla llega ensamblada por otra vía.)
- */
-function validateTableCoverage<I, O>(
-  table: CanonicalTable<I, O>,
-  scope: string,
-  sink: ErrorSink,
-): void {
-  const domain = table.inputDomain;
-  const domainSet = new Set<I>(domain);
-
-  if (domainSet.size !== domain.length) {
-    sink.add({
-      code: "table-overlap",
-      messageEs: `La tabla «${scope}» declara un dominio de entrada con valores repetidos.`,
-      catalogIds: [table.id],
-    });
-  }
-
-  const seen = new Set<I>();
-  for (const row of table.rows) {
-    if (!domainSet.has(row.input)) {
-      sink.add({
-        code: "table-overlap",
-        messageEs: `La tabla «${scope}» tiene una fila fuera del dominio declarado.`,
-        catalogIds: [table.id],
-      });
-      continue;
-    }
-    if (seen.has(row.input)) {
-      sink.add({
-        code: "table-overlap",
-        messageEs: `La tabla «${scope}» asigna más de una salida a la misma entrada (solapamiento).`,
-        catalogIds: [table.id],
-      });
-      continue;
-    }
-    seen.add(row.input);
-  }
-
-  if (seen.size !== domainSet.size) {
-    sink.add({
-      code: "table-coverage",
-      messageEs: `La tabla «${scope}» no cubre todo su dominio de entrada: cada entrada debe tener exactamente una fila.`,
-      catalogIds: [table.id],
-    });
-  }
-
-  if (table.sourceRefs.length === 0) {
-    sink.add({
-      code: "missing-reference",
-      messageEs: `La tabla «${scope}» carece de Referencia de fuente.`,
-      catalogIds: [table.id],
-    });
-  }
-}
-
-/** Valida trazabilidad y autoridad de una lista de Referencias de fuente. */
-function validateSourceRefs(
-  refs: readonly SourceRef[],
-  scope: string,
-  sink: ErrorSink,
-  id?: CatalogId,
-): void {
-  if (refs.length === 0) {
-    sink.add({
-      code: "missing-reference",
-      messageEs: `«${scope}» debe conservar al menos una Referencia de fuente.`,
-      ...(id !== undefined ? { catalogIds: [id] } : {}),
-    });
-    return;
-  }
-  for (const ref of refs) {
-    if (!isAuthoritative(ref)) {
-      sink.add({
-        code: "source-authority",
-        messageEs: `«${scope}» referencia una fuente distinta de ${SOURCE_VERSION}; se excluye de los Datos canónicos.`,
-        ...(id !== undefined ? { catalogIds: [id] } : {}),
-      });
-    }
-  }
-}
 
 /** Valida las reglas generales: identificadores únicos y prioridad determinada. */
 function validateGeneralRules(
@@ -212,6 +91,92 @@ function validateInventoryItems<T>(
   }
 }
 
+/** Valida el número de una Misión: entero dentro de 1..15 y sin repetición. */
+function validateMissionNumber(
+  mission: MissionDefinition,
+  scope: string,
+  numbers: Set<number>,
+  sink: ErrorSink,
+): void {
+  const isOutOfRange =
+    !Number.isInteger(mission.number) ||
+    mission.number < MIN_MISSION_NUMBER ||
+    mission.number > MAX_MISSION_NUMBER;
+  if (isOutOfRange) {
+    sink.add({
+      code: "mission-number",
+      messageEs: `La ${scope} tiene un número fuera de ${MIN_MISSION_NUMBER}..${MAX_MISSION_NUMBER}.`,
+      missionIds: [mission.id],
+    });
+    return;
+  }
+  if (numbers.has(mission.number)) {
+    sink.add({
+      code: "mission-number",
+      messageEs: `El número de Misión ${mission.number} está repetido.`,
+      missionIds: [mission.id],
+    });
+    return;
+  }
+  numbers.add(mission.number);
+}
+
+/** Comprueba que cada regla especial referenciada por la Misión existe. */
+function validateMissionSpecialRules(
+  mission: MissionDefinition,
+  scope: string,
+  ruleIdSet: ReadonlySet<string>,
+  sink: ErrorSink,
+): void {
+  for (const ruleId of mission.specialRules) {
+    if (ruleIdSet.has(ruleId as unknown as string)) continue;
+    sink.add({
+      code: "inventory-relation",
+      messageEs: `La ${scope} referencia la regla especial «${ruleId as unknown as string}», que no existe en las reglas generales del catálogo.`,
+      missionIds: [mission.id],
+      catalogIds: [ruleId],
+    });
+  }
+}
+
+/** Valida una Misión concreta: identidad, número, trazabilidad y relaciones. */
+function validateMission(
+  mission: MissionDefinition,
+  ids: Map<string, string>,
+  ruleIdSet: ReadonlySet<string>,
+  numbers: Set<number>,
+  sink: ErrorSink,
+): void {
+  const scope = `Misión ${mission.number}`;
+  registerId(ids, mission.id, scope, sink);
+  validateMissionNumber(mission, scope, numbers, sink);
+  validateSourceRefs(mission.sourceRefs, scope, sink);
+  validateTableCoverage(
+    mission.revealTable,
+    `tabla de revelado de la ${scope}`,
+    sink,
+  );
+  validateMissionSpecialRules(mission, scope, ruleIdSet, sink);
+}
+
+/**
+ * Comprueba que el conjunto de números de Misión cubre 1..15 sin huecos. Solo
+ * se ejecuta cuando el recuento total es correcto, para no duplicar el fallo de
+ * recuento con fallos de hueco.
+ */
+function validateMissionSetCoverage(
+  numbers: ReadonlySet<number>,
+  sink: ErrorSink,
+): void {
+  for (let n = MIN_MISSION_NUMBER; n <= MAX_MISSION_NUMBER; n += 1) {
+    if (numbers.has(n)) continue;
+    sink.add({
+      code: "mission-count",
+      messageEs: `Falta la Misión número ${n}; el inventario debe cubrir 1..${MAX_MISSION_NUMBER} sin huecos.`,
+    });
+  }
+}
+
 /**
  * Valida las Misiones: exactamente quince, numeradas 1..15 sin repetir, con
  * trazabilidad, tabla de revelado cubierta y reglas especiales resueltas.
@@ -231,62 +196,12 @@ function validateMissions(
 
   const numbers = new Set<number>();
   for (const mission of missions) {
-    const scope = `Misión ${mission.number}`;
-
-    registerId(ids, mission.id, scope, sink);
-
-    if (
-      !Number.isInteger(mission.number) ||
-      mission.number < MIN_MISSION_NUMBER ||
-      mission.number > MAX_MISSION_NUMBER
-    ) {
-      sink.add({
-        code: "mission-number",
-        messageEs: `La ${scope} tiene un número fuera de ${MIN_MISSION_NUMBER}..${MAX_MISSION_NUMBER}.`,
-        missionIds: [mission.id],
-      });
-    } else if (numbers.has(mission.number)) {
-      sink.add({
-        code: "mission-number",
-        messageEs: `El número de Misión ${mission.number} está repetido.`,
-        missionIds: [mission.id],
-      });
-    } else {
-      numbers.add(mission.number);
-    }
-
-    validateSourceRefs(mission.sourceRefs, scope, sink);
-
-    // Cobertura de la Tabla de revelado de la Misión.
-    validateTableCoverage(
-      mission.revealTable,
-      `tabla de revelado de la ${scope}`,
-      sink,
-    );
-
-    // Relación de inventario: cada regla especial referenciada debe existir.
-    for (const ruleId of mission.specialRules) {
-      if (!ruleIdSet.has(ruleId as unknown as string)) {
-        sink.add({
-          code: "inventory-relation",
-          messageEs: `La ${scope} referencia la regla especial «${ruleId as unknown as string}», que no existe en las reglas generales del catálogo.`,
-          missionIds: [mission.id],
-          catalogIds: [ruleId],
-        });
-      }
-    }
+    validateMission(mission, ids, ruleIdSet, numbers, sink);
   }
 
   // Cobertura del conjunto 1..15 (detecta huecos aunque el recuento sea 15).
   if (missions.length === REQUIRED_MISSION_COUNT) {
-    for (let n = MIN_MISSION_NUMBER; n <= MAX_MISSION_NUMBER; n += 1) {
-      if (!numbers.has(n)) {
-        sink.add({
-          code: "mission-count",
-          messageEs: `Falta la Misión número ${n}; el inventario debe cubrir 1..${MAX_MISSION_NUMBER} sin huecos.`,
-        });
-      }
-    }
+    validateMissionSetCoverage(numbers, sink);
   }
 }
 

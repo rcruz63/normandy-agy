@@ -347,17 +347,17 @@ Las 26 propiedades de corrección del diseño se implementan cada una con exacta
 - [x] 28. Checkpoint final - Ensure all tests pass
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 29. Refactor de conformidad con las normas de desarrollo
+- [~] 29. Refactor de conformidad con las normas de desarrollo
   - Aplicar las normas de desarrollo (`docs/normas.md`) al código ya escrito en Tareas 1-8 como refactor no funcional que preserva el comportamiento público
   - Revisar los ficheros más extensos y dividirlos SOLO cuando mezclen más de una abstracción o su tamaño perjudique la comprensión/mantenibilidad; la referencia de ~200-250 líneas es orientativa, no un límite rígido, y un fichero de dominio claro y contenido puede superarla sin dividirse (candidatos a revisar: `src/domain/invariants/invariant-validator.ts`, `src/catalog/compiler/catalog-validator.ts`, `src/catalog/publication/publication-gate.ts`, `src/domain/geometry/map.ts`, `src/domain/geometry/hex-geometry.ts`, `src/domain/engine/rules-engine.ts`), respetando la excepción de ficheros de esquemas/tipos y fixtures de datos (p. ej. `src/catalog/FON-ML-2022/*.ts`, `src/catalog/schemas/catalog.ts`, `src/catalog/schemas/publication.ts`), que no se dividen solo por longitud
   - Mantener las funciones atómicas con cláusulas de guarda y un máximo de 2 niveles de indentación (la guía de ~25-30 líneas es orientativa, no rígida); auditar y refactorizar las que perjudiquen la comprensión
   - Sustituir los alias provisionales `TODO(n.x)` en `src/domain/engine/state.ts` y `src/domain/engine/transition.ts` por los tipos reales donde ya existan (Tareas 5/6/13) o, si aún no hay tipo real, convertir el `TODO` en una nota rastreable conforme a las normas; eliminar cualquier stub/`TODO` fantasma no solicitado
   - Verificar la ausencia de `any`/tipos comodín, de valores mágicos (usar constantes con nombre en inglés) y de errores silenciados
   - Confirmar que es un refactor no funcional: no cambia comportamiento, mantiene verdes `typecheck`, `typecheck:domain` y las pruebas existentes
-  - [ ] 29.1 Refactor de conformidad del dominio
+  - [x] 29.1 Refactor de conformidad del dominio
     - Revisar `src/domain/invariants/invariant-validator.ts`, `src/domain/geometry/map.ts`, `src/domain/geometry/hex-geometry.ts`, `src/domain/engine/rules-engine.ts` y dividirlos SOLO cuando mezclen más de una abstracción o su tamaño perjudique la comprensión/mantenibilidad; limpiar los alias `TODO` de `src/domain/engine/state.ts` y `src/domain/engine/transition.ts`
     - _Requirements: N/A (conformidad con docs/normas.md)_
-  - [ ] 29.2 Refactor de conformidad del catálogo
+  - [-] 29.2 Refactor de conformidad del catálogo
     - Revisar `src/catalog/compiler/catalog-validator.ts` y `src/catalog/publication/publication-gate.ts` y dividirlos SOLO cuando mezclen más de una abstracción o su tamaño perjudique la comprensión/mantenibilidad, preservando la excepción de esquemas/tipos y fixtures
     - _Requirements: N/A (conformidad con docs/normas.md)_
   - _Requirements: N/A (conformidad con docs/normas.md)_
