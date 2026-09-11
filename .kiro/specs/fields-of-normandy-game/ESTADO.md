@@ -42,6 +42,62 @@ En `src/catalog/schemas/placeholders.ts` se concretaron los tipos antes opacos:
   y `tests/property/publication-gate.property.test.ts`. `stubMap` sigue opaco.
 - Verificado: typecheck + lint + 751 tests en verde.
 
+### HALLAZGO CRÍTICO (tarea 16, bloqueante) — decisión de arquitectura pendiente
+
+Al empezar la tarea 16 se descubrió que **hay dos modelos de «pieza»
+incompatibles** y sin puente entre ellos:
+
+- `GameState` del Motor (`src/domain/engine/state.ts`) modela las piezas de
+  forma MÍNIMA y opaca: `PieceState = { pieceId: string }`. No tiene bando,
+  hexágono, orientación, moral, cobertura ni visibilidad. Su docblock dice que
+  el modelo rico «vive en geometry y no lo necesita el contrato de GameState».
+- Las políticas de reglas (`order-effects`, `combat-resolver`, etc.) operan
+  sobre el `PieceState` RICO de `src/domain/geometry/piece.ts`:
+  `{ id, side, hexId, orientation, morale, cover, visibility, status }`.
+
+Consecuencia: **el `GameState` que se persiste en IndexedDB no puede representar
+una partida real** (no tiene dónde guardar posición/bando/orientación de las
+fichas ni el mapa). Este es el motivo de fondo, más profundo aún, de por qué el
+juego no es jugable: las piezas no encajan entre sí.
+
+Opciones (pendiente de decisión del usuario):
+- (A) Enriquecer `GameState` con el estado rico + mapa. Coherente pero toca una
+  librería «cerrada», sus invariantes y persistencia. Riesgo alto para los 751
+  tests.
+- (B) El orquestador mantiene el estado rico «al lado» y proyecta un resumen
+  mínimo al Motor. No toca el Motor pero crea dos fuentes de verdad; frágil,
+  riesgo de desincronización y de no persistir lo importante.
+- (C) RECOMENDADA: definir un `BattleState` propio del juego (piezas ricas de
+  `geometry` + mapa + turno/fase/objetivos), persistirlo entero, y que el
+  adaptador de catálogo y el orquestador operen sobre él. El «GameState mínimo»
+  del Motor queda como envoltura de identidad/turno; el detalle de batalla vive
+  en un campo estructurado. Es lo que menos toca las librerías cerradas.
+
+DECISIÓN DEL USUARIO: **opción C**. Se define un `BattleState` propio del juego.
+
+Plan de la opción C (para la tarea 16 y siguientes):
+- Nuevo modelo `BattleState` en la capa de juego (probablemente
+  `src/application/play/` o un nuevo `src/game/`): contiene el mapa
+  (`HexMapDefinition`), las piezas RICAS (`PieceState` de geometry, por id),
+  turno, fase, activación, objetivos y desenlace.
+- El `GameState` mínimo del Motor queda como ENVOLTURA de identidad/turno; el
+  `BattleState` se transporta serializado dentro de un campo estructurado del
+  estado que se persiste (a decidir: dentro de `effects`/campo dedicado sin
+  romper invariantes/persistencia). Objetivo: NO tocar el comportamiento de las
+  librerías cerradas; persistir el BattleState entero.
+- El adaptador de catálogo ejecutable y el orquestador operan sobre BattleState.
+- Los `apply` de las reglas: llaman a las políticas de `domain/rules` (que ya
+  usan PieceState rico) y reconstruyen el BattleState.
+- Verificación: prueba que juega la misión demo por el bucle real hasta victoria.
+
+RIESGO A VIGILAR: cómo persistir BattleState sin romper el contrato de
+`GameSnapshot`/invariantes/IndexedDB. Investigar en tarea 16/17 antes de fijar
+la forma. Posible: serializar BattleState y validar su integridad aparte.
+
+ESTADO al pausar: tarea 16 NO empezada en código. Decisión C tomada. Próximo
+paso concreto: diseñar la forma de `BattleState` y cómo se persiste dentro del
+snapshot sin alterar las librerías, luego implementar comandos + adaptador.
+
 ### Nota de proceso
 
 Hook `PostTaskExec` creado (`.kiro/hooks/actualizar-estado-juego.json`) que

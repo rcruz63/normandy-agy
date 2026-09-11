@@ -142,10 +142,45 @@ coloca las fichas británicas y alemanas fijas y las incógnitas en sus hexágon
 Solo se activa cuando la misión tiene mapa transcrito; si no, la misión queda no
 jugable (fail-closed intacto). No se toca la librería: se envuelve.
 
+## Modelo de estado de batalla (decisión C)
+
+**Hallazgo:** el `GameState` del Motor modela las piezas como `{ pieceId }`
+(mínimo, opaco), mientras que las reglas de `domain/rules` operan sobre el
+`PieceState` rico de `geometry` (`side`, `hexId`, `orientation`, `morale`,
+`cover`, `visibility`, `status`). No hay puente: el estado que se persiste no
+puede representar una partida real.
+
+**Decisión (C):** se define un `BattleState` propio del juego que contiene lo
+que una partida real necesita:
+
+```ts
+type BattleState = {
+  map: HexMapDefinition;                 // geometría de la misión
+  pieces: Record<PieceId, PieceState>;   // piezas RICAS de geometry
+  turn: number;
+  phase: "british" | "german";
+  activation: { activePieceId?: PieceId };
+  objectives: ObjectiveState;            // según ObjectiveDefinition
+  outcome: GameOutcome;
+};
+```
+
+- El `BattleState` es la **fuente de verdad de la partida**. El adaptador de
+  catálogo y el orquestador operan sobre él.
+- Las librerías cerradas **no se modifican**. El `GameState` del Motor sigue
+  siendo la envoltura de identidad/turno; el `BattleState` se transporta y
+  persiste dentro de la instantánea sin alterar el contrato de `GameSnapshot`
+  (forma exacta a fijar en la tarea 16/17, validando su integridad).
+- Los `apply` de las reglas llaman a las políticas de `domain/rules` (que ya
+  usan `PieceState` rico) y reconstruyen el `BattleState`.
+
+Riesgo a vigilar: la persistencia del `BattleState` dentro del snapshot sin
+romper invariantes ni IndexedDB. Se investiga antes de fijar la forma.
+
 ## Orquestador del bucle
 
 Nueva pieza en `application/`: `PlaySession` (o extensión de `GameSession`) que
-implementa el bucle del reglamento:
+implementa el bucle del reglamento sobre el `BattleState`:
 
 ```
 prepararMisión(setup) → colocar piezas
