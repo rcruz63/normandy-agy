@@ -344,7 +344,7 @@ Las 26 propiedades de corrección del diseño se implementan cada una con exacta
     - Contract tests tacto=ratón mismo `GameCommand`; E2E de todas las acciones con un puntero táctil y solo ratón; verificar ausencia de contenido del PDF en el paquete
     - _Requirements: 24.1, 24.2, 24.11, 30.12, 40.12_
 
-- [ ] 28. Checkpoint final - Ensure all tests pass
+- [x] 28. Checkpoint final - Ensure all tests pass
   - Ensure all tests pass, ask the user if questions arise.
 
 - [ ] 29. Refactor de conformidad con las normas de desarrollo
