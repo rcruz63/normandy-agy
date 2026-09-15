@@ -1,22 +1,10 @@
 /**
  * Service Worker para Fields of Normandy PWA.
- * Permite juego offline completo sin conexión.
+ * Estrategia Network-First con fallback a cache para soporte offline.
  */
-const CACHE_NAME = "fon-pwa-v1";
+const CACHE_NAME = "fon-pwa-v2";
 
-self.addEventListener("install", (event) => {
-  event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll([
-        "./",
-        "./index.html",
-        "./manifest.webmanifest",
-        "./icon-192.png",
-        "./icon-512.png",
-        "./icon.svg",
-      ]);
-    })
-  );
+self.addEventListener("install", (_event) => {
   self.skipWaiting();
 });
 
@@ -39,20 +27,16 @@ self.addEventListener("fetch", (event) => {
   if (event.request.method !== "GET") return;
 
   event.respondWith(
-    caches.match(event.request).then((cached) => {
-      const networked = fetch(event.request)
-        .then((response) => {
-          if (response && response.status === 200) {
-            const copy = response.clone();
-            caches.open(CACHE_NAME).then((cache) => {
-              cache.put(event.request, copy);
-            });
-          }
-          return response;
-        })
-        .catch(() => cached);
-
-      return cached || networked;
-    })
+    fetch(event.request)
+      .then((response) => {
+        if (response && response.status === 200) {
+          const copy = response.clone();
+          caches.open(CACHE_NAME).then((cache) => {
+            cache.put(event.request, copy);
+          });
+        }
+        return response;
+      })
+      .catch(() => caches.match(event.request))
   );
 });
