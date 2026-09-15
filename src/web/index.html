@@ -59,6 +59,7 @@
       <main class="main-content">
         <!-- Tablero hexagonal -->
         <section class="board-section">
+          <div id="combat-floating-effect" class="combat-floating-effect hidden" aria-live="polite"></div>
           <div id="map-container" class="map-container" role="region" aria-label="Mapa hexagonal de combate">
             <!-- El SVG se renderiza dinámicamente -->
           </div>
@@ -135,6 +136,8 @@
           <div class="die" id="display-die-2">?</div>
         </div>
 
+        <div id="combat-result-panel" class="combat-result-panel hidden"></div>
+
         <div id="activation-selection-panel" class="activation-selection hidden">
           <p id="activation-choice-prompt" class="choice-prompt">Elige qué dado deseas utilizar (el otro dado se descarta):</p>
           <div id="activation-choices-container" class="activation-choices-grid"></div>
@@ -142,6 +145,7 @@
 
         <div class="modal-actions">
           <button id="btn-confirm-roll" class="btn btn-primary">Tirar / Confirmar</button>
+          <button id="btn-combat-continue" class="btn btn-primary hidden">Continuar combate</button>
           <button id="btn-cancel-roll" class="btn btn-secondary">Cancelar</button>
         </div>
       </div>

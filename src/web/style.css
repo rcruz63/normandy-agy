@@ -134,6 +134,7 @@ body {
 }
 
 .board-section {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -268,6 +269,61 @@ body {
   stroke: #ffffff;
   stroke-width: 4px;
   filter: drop-shadow(0 0 10px #ffffff);
+}
+
+/* Anillo de cobertura defensiva (+1) */
+.piece-cover-ring {
+  fill: none;
+  stroke: #38bdf8;
+  stroke-width: 3px;
+  stroke-dasharray: 4, 3;
+  filter: drop-shadow(0 0 6px rgba(56, 189, 248, 0.85));
+  animation: pulse-cover 2.2s infinite ease-in-out;
+  pointer-events: none;
+}
+
+@keyframes pulse-cover {
+  0%, 100% {
+    stroke-opacity: 0.7;
+    filter: drop-shadow(0 0 4px #38bdf8);
+  }
+  50% {
+    stroke-opacity: 1;
+    filter: drop-shadow(0 0 10px #7dd3fc);
+  }
+}
+
+/* Ficha con moral baja (herida / desmoralizada) */
+.piece.morale-low {
+  stroke: #ef4444 !important;
+  stroke-width: 3.5px !important;
+  animation: pulse-morale-low 1.2s infinite ease-in-out;
+}
+
+@keyframes pulse-morale-low {
+  0%, 100% {
+    filter: drop-shadow(0 0 4px #ef4444);
+  }
+  50% {
+    filter: drop-shadow(0 0 14px #f87171);
+  }
+}
+
+/* Insignia visual con signo de admiración sobre la ficha */
+.piece-morale-badge .morale-badge-bg {
+  fill: #ef4444;
+  stroke: #ffffff;
+  stroke-width: 1.5px;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.8));
+}
+
+.piece-morale-badge .morale-badge-text {
+  fill: #ffffff;
+  font-size: 8.5px;
+  font-weight: 900;
+  font-family: var(--font-family);
+  user-select: none;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.9);
 }
 
 .hex-label {
@@ -685,4 +741,283 @@ body {
   background: #1e3549;
   box-shadow: 0 4px 12px rgba(56, 189, 248, 0.25);
 }
+
+/* --- Panel de resultados de combate en el modal de tirada --- */
+.combat-result-panel {
+  margin-top: 14px;
+  padding: 4px 0;
+}
+
+.combat-result-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 16px;
+  border-radius: 8px;
+  text-align: center;
+  animation: result-pop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes result-pop {
+  0% {
+    transform: scale(0.9);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.combat-result-box.hit {
+  background: linear-gradient(135deg, rgba(20, 83, 45, 0.85), rgba(15, 23, 42, 0.95));
+  border: 2px solid #22c55e;
+  box-shadow: 0 0 24px rgba(34, 197, 94, 0.35);
+}
+
+.combat-result-box.hit .combat-result-icon {
+  font-size: 2.6rem;
+  line-height: 1;
+  animation: bounce-icon 0.6s ease;
+}
+
+.combat-result-box.hit .combat-result-title {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: #4ade80;
+  text-shadow: 0 0 10px rgba(74, 222, 128, 0.6);
+  letter-spacing: 0.5px;
+}
+
+.combat-result-box.miss {
+  background: linear-gradient(135deg, rgba(120, 53, 15, 0.8), rgba(30, 41, 59, 0.95));
+  border: 2px solid #f59e0b;
+  box-shadow: 0 0 20px rgba(245, 158, 11, 0.25);
+}
+
+.combat-result-box.miss .combat-result-icon {
+  font-size: 2.3rem;
+  line-height: 1;
+}
+
+.combat-result-box.miss .combat-result-title {
+  font-size: 1.2rem;
+  font-weight: 800;
+  color: #fbbf24;
+  letter-spacing: 0.5px;
+}
+
+.combat-result-dice {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #f1f5f9;
+  background: rgba(0, 0, 0, 0.4);
+  padding: 5px 14px;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.combat-result-desc {
+  font-size: 0.92rem;
+  color: #cbd5e1;
+  line-height: 1.4;
+}
+
+@keyframes bounce-icon {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.3); }
+}
+
+/* --- Banner flotante sobre el mapa --- */
+.combat-floating-effect {
+  position: absolute;
+  top: 12%;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 12px 24px;
+  border-radius: 10px;
+  font-family: var(--font-family);
+  font-size: 1.15rem;
+  font-weight: 800;
+  text-align: center;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.85);
+  pointer-events: none;
+  animation: combat-float-pop 2.5s ease-out forwards;
+}
+
+.combat-floating-effect.hit {
+  background: linear-gradient(135deg, rgba(20, 83, 45, 0.95), rgba(15, 23, 42, 0.95));
+  border: 2px solid #22c55e;
+  color: #86efac;
+  text-shadow: 0 0 10px rgba(74, 222, 128, 0.7);
+}
+
+.combat-floating-effect.miss {
+  background: linear-gradient(135deg, rgba(120, 53, 15, 0.95), rgba(30, 41, 59, 0.95));
+  border: 2px solid #f59e0b;
+  color: #fde68a;
+  text-shadow: 0 0 8px rgba(245, 158, 11, 0.6);
+}
+
+.combat-floating-effect.grenade-hit {
+  background: linear-gradient(135deg, rgba(153, 27, 27, 0.95), rgba(30, 41, 59, 0.95));
+  border: 2px solid #ef4444;
+  color: #fef08a;
+  text-shadow: 0 0 12px rgba(239, 68, 68, 0.8);
+}
+
+.combat-floating-effect.german-hit {
+  background: linear-gradient(135deg, rgba(185, 28, 28, 0.95), rgba(15, 23, 42, 0.95));
+  border: 2px solid #f87171;
+  color: #fee2e2;
+  text-shadow: 0 0 12px rgba(239, 68, 68, 0.85);
+}
+
+.combat-floating-effect.info {
+  background: linear-gradient(135deg, rgba(14, 116, 144, 0.95), rgba(15, 23, 42, 0.95));
+  border: 2px solid #38bdf8;
+  color: #e0f2fe;
+  text-shadow: 0 0 8px rgba(56, 189, 248, 0.6);
+}
+
+@keyframes combat-float-pop {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, 15px) scale(0.85);
+  }
+  15% {
+    opacity: 1;
+    transform: translate(-50%, -4px) scale(1.04);
+  }
+  25% {
+    transform: translate(-50%, 0) scale(1);
+  }
+  75% {
+    opacity: 1;
+    transform: translate(-50%, -2px) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -20px) scale(0.95);
+  }
+}
+
+/* --- Estilos para la resolución de la Fase Alemana --- */
+.german-attack-card {
+  border-radius: 8px;
+  padding: 12px 14px;
+  margin-bottom: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  text-align: left;
+}
+
+.german-attack-card.hit {
+  background: linear-gradient(135deg, rgba(153, 27, 27, 0.35), rgba(30, 41, 59, 0.7));
+  border: 1.5px solid #ef4444;
+}
+
+.german-attack-card.hit .german-card-header {
+  color: #f87171;
+  font-weight: 800;
+  font-size: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.german-attack-card.miss {
+  background: linear-gradient(135deg, rgba(30, 58, 138, 0.35), rgba(30, 41, 59, 0.7));
+  border: 1.5px solid #38bdf8;
+}
+
+.german-attack-card.miss .german-card-header {
+  color: #7dd3fc;
+  font-weight: 800;
+  font-size: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.german-attack-card.quiet {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--border-color);
+}
+
+.german-attack-card.quiet .german-card-header {
+  color: var(--accent-gold);
+  font-weight: 700;
+  font-size: 0.95rem;
+}
+
+.german-card-body {
+  font-size: 0.9rem;
+  color: #cbd5e1;
+  line-height: 1.45;
+}
+
+.german-card-badge {
+  display: inline-block;
+  font-size: 0.8rem;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 12px;
+  margin-top: 4px;
+}
+
+.german-card-badge.badge-danger {
+  background: #7f1d1d;
+  color: #fecaca;
+  border: 1px solid #ef4444;
+}
+
+.german-card-badge.badge-safe {
+  background: #064e3b;
+  color: #a7f3d0;
+  border: 1px solid #10b981;
+}
+
+/* --- Badges de estado en Información de Selección --- */
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 6px;
+}
+
+.status-badge.badge-morale-normal {
+  background: rgba(34, 197, 94, 0.15);
+  color: #4ade80;
+  border: 1px solid rgba(74, 222, 128, 0.4);
+}
+
+.status-badge.badge-morale-low {
+  background: rgba(239, 68, 68, 0.2);
+  color: #f87171;
+  border: 1px solid #ef4444;
+  animation: pulse-badge 1.5s infinite ease-in-out;
+}
+
+@keyframes pulse-badge {
+  0%, 100% { box-shadow: 0 0 2px #ef4444; }
+  50% { box-shadow: 0 0 8px rgba(239, 68, 68, 0.6); }
+}
+
+.status-badge.badge-cover {
+  background: rgba(56, 189, 248, 0.15);
+  color: #38bdf8;
+  border: 1px solid rgba(56, 189, 248, 0.4);
+}
+
 

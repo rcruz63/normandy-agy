@@ -102,6 +102,8 @@ export type PieceMarker = Readonly<{
   status: PieceState["status"];
   visibility: PieceState["visibility"];
   orientation?: string | undefined;
+  morale?: PieceState["morale"] | undefined;
+  cover?: number | undefined;
   classes: readonly string[];
   selected: boolean;
 }>;
@@ -288,6 +290,8 @@ export function projectMapToSvg(
       `side-${piece.side}`,
       `status-${piece.status}`,
       `visibility-${piece.visibility}`,
+      ...(piece.morale !== undefined ? [`morale-${piece.morale}`] : []),
+      ...(piece.cover !== undefined && piece.cover > 0 ? ["has-cover"] : []),
       ...(piece.orientation !== undefined ? [`orientation-${String(piece.orientation)}`] : []),
       ...(selected ? ["selected"] : []),
     ];
@@ -300,6 +304,8 @@ export function projectMapToSvg(
       status: PieceState["status"];
       visibility: PieceState["visibility"];
       orientation?: string | undefined;
+      morale?: PieceState["morale"] | undefined;
+      cover?: number | undefined;
       classes: readonly string[];
       selected: boolean;
     } = {
@@ -310,10 +316,12 @@ export function projectMapToSvg(
       side: piece.side,
       status: piece.status,
       visibility: piece.visibility,
+      orientation: piece.orientation !== undefined ? String(piece.orientation) : undefined,
+      morale: piece.morale,
+      cover: piece.cover,
       classes: Object.freeze(classes),
       selected,
     };
-    if (piece.orientation !== undefined) base.orientation = String(piece.orientation);
     return Object.freeze(base);
   });
 
@@ -498,9 +506,28 @@ export function renderSvgMarkup(scene: SvgScene, view: ViewState): string {
       } else if (piece.pieceId.startsWith("DE-")) {
         label = piece.definitionId && piece.definitionId !== "UNKNOWN" ? piece.definitionId : "ALEM";
       }
+      // Anillo de cobertura defensiva (+1)
+      const coverMarkup =
+        piece.cover !== undefined && piece.cover > 0
+          ? `<circle class="piece-cover-ring" cx="${piece.center.x}" cy="${piece.center.y}" r="${round(radius + 4)}" pointer-events="none" />`
+          : "";
+
+      // Insignia de Moral Baja (Wounded / Suppressed)
+      const moraleBadge =
+        piece.morale === "low"
+          ? `<g class="piece-morale-badge" transform="translate(${round(piece.center.x + radius * 0.7)}, ${round(piece.center.y - radius * 0.7)})" pointer-events="none">` +
+            `<circle r="5.5" class="morale-badge-bg" />` +
+            `<text y="3" text-anchor="middle" class="morale-badge-text">!</text>` +
+            `</g>`
+          : "";
+
       return (
+        `<g class="piece-container" data-piece-id="${escapeAttr(piece.pieceId)}">` +
+        coverMarkup +
         `<circle class="${escapeAttr(piece.classes.join(" "))}" data-piece-id="${escapeAttr(piece.pieceId)}" cx="${piece.center.x}" cy="${piece.center.y}" r="${radius}" />` +
-        `<text class="piece-label" x="${piece.center.x}" y="${round(piece.center.y + 3.5)}" text-anchor="middle">${escapeAttr(label)}</text>`
+        `<text class="piece-label" x="${piece.center.x}" y="${round(piece.center.y + 3.5)}" text-anchor="middle">${escapeAttr(label)}</text>` +
+        moraleBadge +
+        `</g>`
       );
     })
     .join("");

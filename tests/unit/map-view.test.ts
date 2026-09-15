@@ -188,4 +188,26 @@ describe("renderSvgMarkup", () => {
     const view = viewState({ viewport: { width: 800, height: 600 } });
     expect(renderSvgMarkup(scene, view)).toBe(renderSvgMarkup(scene, view));
   });
+
+  it("renderiza anillo de cobertura e insignia de moral baja si la pieza los tiene", () => {
+    const { map, geometry } = buildMap();
+    const woundedCoveredPiece = pieceState({
+      id: pieceId("p-brit"),
+      definitionId: catalogId("rifles"),
+      side: "british",
+      hexId: hexId("a"),
+      visibility: "revealed",
+      status: "active",
+      morale: "low",
+      cover: 1,
+    });
+    const scene = projectMapToSvg(map, geometry, [woundedCoveredPiece], {});
+    const view = viewState({ viewport: { width: 800, height: 600 } });
+    const svg = renderSvgMarkup(scene, view);
+    expect(svg).toContain('class="piece-cover-ring"');
+    expect(svg).toContain('class="piece-morale-badge"');
+    expect(svg).toContain('morale-low');
+    expect(svg).toContain('has-cover');
+  });
 });
+

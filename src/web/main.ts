@@ -161,9 +161,38 @@ const displayDie1 = document.getElementById("display-die-1") as HTMLDivElement;
 const displayDie2 = document.getElementById("display-die-2") as HTMLDivElement;
 const btnConfirmRoll = document.getElementById("btn-confirm-roll") as HTMLButtonElement;
 const btnCancelRoll = document.getElementById("btn-cancel-roll") as HTMLButtonElement;
+const combatResultPanel = document.getElementById("combat-result-panel") as HTMLDivElement;
+const btnCombatContinue = document.getElementById("btn-combat-continue") as HTMLButtonElement;
+const combatFloatingEffect = document.getElementById("combat-floating-effect") as HTMLDivElement;
 const activationSelectionPanel = document.getElementById("activation-selection-panel") as HTMLDivElement;
 const activationChoicePrompt = document.getElementById("activation-choice-prompt") as HTMLParagraphElement;
 const activationChoicesContainer = document.getElementById("activation-choices-container") as HTMLDivElement;
+
+let floatingEffectTimeout: ReturnType<typeof setTimeout> | null = null;
+
+function showCombatFloatingEffect(
+  text: string,
+  type: "hit" | "miss" | "grenade-hit" | "german-hit" | "info" = "info",
+): void {
+  if (!combatFloatingEffect) return;
+
+  if (floatingEffectTimeout) {
+    clearTimeout(floatingEffectTimeout);
+    floatingEffectTimeout = null;
+  }
+
+  combatFloatingEffect.className = `combat-floating-effect ${type}`;
+  combatFloatingEffect.innerHTML = text;
+  combatFloatingEffect.classList.remove("hidden");
+
+  // Reflujo para reiniciar animación CSS
+  void combatFloatingEffect.offsetWidth;
+
+  floatingEffectTimeout = setTimeout(() => {
+    combatFloatingEffect.classList.add("hidden");
+    floatingEffectTimeout = null;
+  }, 2600);
+}
 
 const gameOverModal = document.getElementById("game-over-modal") as HTMLDialogElement;
 const gameOverTitle = document.getElementById("game-over-title") as HTMLHeadingElement;
@@ -489,8 +518,17 @@ function renderSelectionInfo(): void {
     html += `<strong>Estado:</strong> ${piece.status === "active" ? "En combate" : "Eliminada"}<br/>`;
     html += `<strong>Visibilidad:</strong> ${piece.visibility === "revealed" ? "Revelada" : "Oculta (?)"}<br/>`;
     if (isBritish) {
-      html += `<strong>Moral:</strong> ${piece.morale === "normal" ? "Normal" : "Baja"}<br/>`;
-      html += `<strong>Cobertura:</strong> +${piece.cover ?? 0}<br/>`;
+      const isLowMorale = piece.morale === "low";
+      const moraleHtml = isLowMorale
+        ? `<span class="status-badge badge-morale-low">⚠️ Baja (Herida / Desmoralizada)</span>`
+        : `<span class="status-badge badge-morale-normal">🟢 Normal</span>`;
+      const coverHtml =
+        (piece.cover ?? 0) > 0
+          ? `<span class="status-badge badge-cover">🛡️ +${piece.cover} (Atrincherada)</span>`
+          : `0 (Sin cobertura)`;
+
+      html += `<strong>Moral:</strong> ${moraleHtml}<br/>`;
+      html += `<strong>Cobertura:</strong> +${piece.cover ?? 0} ${coverHtml !== "0 (Sin cobertura)" ? coverHtml : ""}<br/>`;
       let currentTurnText = "";
       if (isCurrentlyActive) {
         const remaining = getRemainingOrders(state, piece.id);
@@ -505,6 +543,11 @@ function renderSelectionInfo(): void {
         currentTurnText = "<span style='color: #4ade80;'>Lista para activar</span>";
       }
       html += `<strong>Turno actual:</strong> ${currentTurnText}<br/>`;
+    } else if (piece.visibility === "revealed") {
+      const def = piece.definitionId && piece.definitionId !== "UNKNOWN" ? piece.definitionId : "Fuerza Alemana";
+      const isForest = hexDef?.terrain.some((t) => String(t) === "bosque") ?? false;
+      html += `<strong>Identificación:</strong> ${def}<br/>`;
+      html += `<strong>Defensa requerida:</strong> ${isForest ? "🌲 Bosque (+1) → Tirada 9+ para eliminar" : "Terreno abierto → Tirada 8+ para eliminar"}<br/>`;
     }
     html += `</div>`;
   }
@@ -1006,6 +1049,7 @@ btnCover.addEventListener("click", async () => {
 
   if (outcome.kind === "committed") {
     currentSnapshot = await repository.loadLatest(GAME_ID);
+    showCombatFloatingEffect(`🛡️ +1 Cobertura defensiva para ${activePieceId}`, "info");
     renderAll();
   }
 });
@@ -1019,6 +1063,7 @@ btnRally.addEventListener("click", async () => {
 
   if (outcome.kind === "committed") {
     currentSnapshot = await repository.loadLatest(GAME_ID);
+    showCombatFloatingEffect(`🎖️ ¡Moral de ${activePieceId} restaurada a Normal!`, "info");
     renderAll();
   }
 });
@@ -1056,6 +1101,11 @@ btnConclude.addEventListener("click", async () => {
     renderAll();
   }
 });
+
+let pendingGermanPhaseEffect: {
+  text: string;
+  type: "hit" | "miss" | "grenade-hit" | "german-hit" | "info";
+} | null = null;
 
 // 8. Terminar fase británica (Fase Alemana)
 btnGermanPhase.addEventListener("click", async () => {
@@ -1099,7 +1149,60 @@ btnGermanPhase.addEventListener("click", async () => {
 
       germanPhaseTitle.textContent = "Resolución: Fase Alemana";
       germanPhaseDesc.textContent = `Turno ${currentSnapshot.state.turn - 1} completado.`;
-      germanPhaseDetails.innerHTML = `<strong>Acción de las fuerzas del Eje:</strong><br/>${detailText}`;
+
+      // Formatear visualmente las acciones del Eje
+      if (detailText.includes("Sin fuego enemigo")) {
+        germanPhaseDetails.innerHTML = `
+          <div class="german-attack-card quiet">
+            <div class="german-card-header">🌲 Posiciones aseguradas</div>
+            <div class="german-card-body">${detailText}</div>
+            <div><span class="german-card-badge badge-safe">Sin bajas aliadas</span></div>
+          </div>
+        `;
+        pendingGermanPhaseEffect = null;
+      } else {
+        const sentences = detailText.split(/(?<=\.)\s+/).filter(Boolean);
+        let cardsHtml = "";
+        let hasHit = false;
+        let hitTarget = "";
+        for (const s of sentences) {
+          const isHit = s.includes("¡Impacto!") || s.includes("¡IMPACTO!");
+          if (isHit) {
+            hasHit = true;
+            const match = s.match(/contra\s+(GB-[AB])/i);
+            if (match && match[1]) hitTarget = match[1];
+            const isEliminated = s.includes("eliminada");
+            cardsHtml += `
+              <div class="german-attack-card hit">
+                <div class="german-card-header">🚨💥 ¡Fuego enemigo recibido!</div>
+                <div class="german-card-body">${s}</div>
+                <div><span class="german-card-badge badge-danger">${isEliminated ? "☠️ ¡Unidad Británica Eliminada!" : "⚠️ ¡Moral Reducida a BAJA (Herida)!"}</span></div>
+              </div>
+            `;
+          } else {
+            cardsHtml += `
+              <div class="german-attack-card miss">
+                <div class="german-card-header">🛡️ ¡Fuego enemigo repelido!</div>
+                <div class="german-card-body">${s}</div>
+                <div><span class="german-card-badge badge-safe">✅ El fuego no causó bajas</span></div>
+              </div>
+            `;
+          }
+        }
+        germanPhaseDetails.innerHTML = cardsHtml;
+        if (hasHit) {
+          pendingGermanPhaseEffect = {
+            text: `🚨 ¡${hitTarget || "Escuadra británica"} bajo fuego! Moral: BAJA`,
+            type: "german-hit",
+          };
+        } else {
+          pendingGermanPhaseEffect = {
+            text: "🛡️ ¡Fuego enemigo repelido sin bajas!",
+            type: "info",
+          };
+        }
+      }
+
       btnGermanPhaseOk.textContent = `Comenzar Turno ${currentSnapshot.state.turn}`;
       germanPhaseModal.showModal();
     }
@@ -1125,12 +1228,25 @@ function openDiceModal(request: DiceRollRequest, title: string, desc: string): v
   displayDie1.textContent = "?";
   displayDie2.textContent = "?";
 
+  combatResultPanel.classList.add("hidden");
+  combatResultPanel.innerHTML = "";
+  btnCombatContinue.classList.add("hidden");
+
   activationSelectionPanel.classList.add("hidden");
   activationChoicesContainer.innerHTML = "";
   btnConfirmRoll.classList.remove("hidden");
-  btnConfirmRoll.textContent = request.context.label.startsWith("activate-unit:") ? "🎲 Lanzar dados" : "Tirar / Confirmar";
-  btnCancelRoll.classList.remove("hidden");
 
+  if (request.context.label.startsWith("activate-unit:")) {
+    btnConfirmRoll.textContent = "🎲 Lanzar dados";
+  } else if (request.context.label.startsWith("order-fire:")) {
+    btnConfirmRoll.textContent = "🎯 Disparar (Tirar 2d6)";
+  } else if (request.context.label.startsWith("order-grenade:")) {
+    btnConfirmRoll.textContent = "💣 Lanzar Granada (Tirar 2d6)";
+  } else {
+    btnConfirmRoll.textContent = "Tirar / Confirmar";
+  }
+
+  btnCancelRoll.classList.remove("hidden");
   diceModal.showModal();
 }
 
@@ -1273,6 +1389,7 @@ function showActivationChoices(d1: number, d2: number, isManual: boolean): void 
 async function resolveAndCommitRoll(faces: [number, number]): Promise<void> {
   if (!pendingDiceRequest) return;
 
+  const req = pendingDiceRequest;
   const rollInput = {
     source: "manual" as const,
     faces,
@@ -1280,19 +1397,98 @@ async function resolveAndCommitRoll(faces: [number, number]): Promise<void> {
 
   const rollRes = diceCoordinator.resolve(
     currentSnapshot,
-    pendingDiceRequest,
+    req,
     rollInput,
     currentSnapshot.randomState as any,
   );
 
   if (rollRes.kind === "resolved" && rollRes.decision.kind === "accepted") {
-    await dispatcher.confirmDecision(rollRes.decision.proposal);
+    const proposal = rollRes.decision.proposal;
+    await dispatcher.confirmDecision(proposal);
     currentSnapshot = await repository.loadLatest(GAME_ID);
     pendingDiceRequest = null;
-    setTimeout(() => {
-      diceModal.close();
-      renderAll();
-    }, 250);
+
+    const label = req.context.label;
+    const isCombat = label.startsWith("order-fire:") || label.startsWith("order-grenade:");
+
+    if (isCombat) {
+      const logs = proposal.next.simpleLog;
+      const lastLog = logs[logs.length - 1];
+      const resultText = lastLog?.result || "";
+      const isHit = resultText.includes("¡IMPACTO");
+      const rollTotal = faces[0] + faces[1];
+      const parts = label.split(":");
+      const targetHex = parts[2] || "";
+
+      let icon = "";
+      let title = "";
+      let desc = "";
+      const boxClass = isHit ? "hit" : "miss";
+      let floatingText = "";
+      let floatingType: "hit" | "miss" | "grenade-hit" = isHit ? "hit" : "miss";
+
+      if (label.startsWith("order-fire:")) {
+        if (isHit) {
+          icon = "🎯💥";
+          title = "¡IMPACTO DE FUSILERÍA!";
+          desc = `¡Disparo certero! La fuerza enemiga en el hexágono ${targetHex} ha sido neutralizada y eliminada del combate.`;
+          floatingText = `🎯💥 ¡IMPACTO! Enemigo en ${targetHex} eliminado`;
+          floatingType = "hit";
+        } else {
+          icon = "💨❌";
+          title = "DISPARO FALLADO";
+          desc = `El fuego de fusilería no causó bajas al enemigo en ${targetHex}.`;
+          floatingText = `💨❌ Disparo fallado (Tirada: ${rollTotal})`;
+          floatingType = "miss";
+        }
+      } else {
+        // order-grenade
+        if (isHit) {
+          icon = "💣💥";
+          title = "¡IMPACTO DE GRANADA!";
+          desc = `¡Detonación exitosa! La fuerza defensora en ${targetHex} ha sido destruida por la explosión.`;
+          floatingText = `💣💥 ¡GRANADA! Enemigo en ${targetHex} eliminado`;
+          floatingType = "grenade-hit";
+        } else {
+          icon = "💣💨";
+          title = "GRANADA DESVIADA";
+          desc = `La granada detonó fuera de la posición enemiga en ${targetHex} (se requería 6+).`;
+          floatingText = `💣💨 Granada desviada (Tirada: ${rollTotal} vs 6+)`;
+          floatingType = "miss";
+        }
+      }
+
+      btnConfirmRoll.classList.add("hidden");
+      btnCancelRoll.classList.add("hidden");
+      manualDiceInputs.classList.add("hidden");
+      activationSelectionPanel.classList.add("hidden");
+
+      combatResultPanel.innerHTML = `
+        <div class="combat-result-box ${boxClass}">
+          <div class="combat-result-icon">${icon}</div>
+          <div class="combat-result-title">${title}</div>
+          <div class="combat-result-dice">🎲 Tirada obtenida: ${faces[0]} + ${faces[1]} = ${rollTotal}</div>
+          <div class="combat-result-desc">${desc}</div>
+        </div>
+      `;
+      combatResultPanel.classList.remove("hidden");
+
+      btnCombatContinue.classList.remove("hidden");
+      btnCombatContinue.focus();
+
+      btnCombatContinue.onclick = () => {
+        diceModal.close();
+        combatResultPanel.classList.add("hidden");
+        btnCombatContinue.classList.add("hidden");
+        showCombatFloatingEffect(floatingText, floatingType);
+        renderAll();
+      };
+    } else {
+      setTimeout(() => {
+        diceModal.close();
+        renderAll();
+      }, 250);
+    }
   } else {
     alert("La tirada no fue aceptada por las reglas del juego.");
     diceModal.close();
@@ -1305,6 +1501,14 @@ btnConfirmRoll.addEventListener("click", handleRollDice);
 btnCancelRoll.addEventListener("click", () => {
   pendingDiceRequest = null;
   diceModal.close();
+});
+
+diceModal.addEventListener("close", () => {
+  combatResultPanel.classList.add("hidden");
+  btnCombatContinue.classList.add("hidden");
+  btnConfirmRoll.classList.remove("hidden");
+  btnCancelRoll.classList.remove("hidden");
+  renderAll();
 });
 
 // Reiniciar partida
@@ -1324,6 +1528,10 @@ btnCloseTutorial.addEventListener("click", () => {
 
 btnGermanPhaseOk.addEventListener("click", () => {
   germanPhaseModal.close();
+  if (pendingGermanPhaseEffect) {
+    showCombatFloatingEffect(pendingGermanPhaseEffect.text, pendingGermanPhaseEffect.type);
+    pendingGermanPhaseEffect = null;
+  }
 });
 
 // --- Arranque inicial ---

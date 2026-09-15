@@ -186,4 +186,66 @@ test.describe("Fields of Normandy - Jugabilidad E2E Misión 01", () => {
     const btnCopyLog = page.locator("#btn-copy-log");
     await expect(btnCopyLog).toBeVisible();
   });
+
+  test("muestra efectos visuales de combate (panel de resultado y banner flotante) al atacar", async ({
+    page,
+  }) => {
+    await page.goto("./");
+    await page.fill("#lock-pin", "1944");
+    await page.click('#lock-form button[type="submit"]');
+
+    // 1. Activar GB-A con Fila 6 (ADV + FIRE)
+    await page.click("#btn-activate");
+    await page.click("input[name='dice-mode'][value='manual']");
+    await page.fill("#die-1", "6");
+    await page.fill("#die-2", "2");
+    await page.click("#btn-confirm-roll");
+    await page.click(".choice-card:has-text('Fila 6')");
+    await expect(page.locator("#dice-modal")).toBeHidden();
+    await expect(page.locator("#order-banner")).toBeVisible();
+
+    // 2. Mover GB-A a H07 (revela al enemigo en H04)
+    const hex7 = page.locator('polygon[data-hex-id="M01-H07"]');
+    await expect(hex7).toHaveClass(/movable-target/);
+    await hex7.click({ force: true });
+    await expect(page.locator("#log-content")).toContainText("revelado");
+
+    // 3. Ejecutar Fuego (2ª orden de Fila 6) contra el enemigo en H04
+    const btnFire = page.locator("#btn-fire");
+    await expect(btnFire).toBeEnabled();
+    await btnFire.click();
+
+    // 4. Diálogo de dados de combate abierto
+    const diceModal = page.locator("#dice-modal");
+    await expect(diceModal).toBeVisible();
+    await expect(page.locator("#btn-confirm-roll")).toContainText("Disparar");
+
+    // 5. Tirar dados de combate con resultado de impacto (5 + 5 = 10 frente a dificultad 9)
+    await page.click("input[name='dice-mode'][value='manual']");
+    await page.fill("#die-1", "5");
+    await page.fill("#die-2", "5");
+    await page.click("#btn-confirm-roll");
+
+    // 6. Comprobar que el panel visual de resultado de combate aparece en el modal
+    const combatPanel = page.locator("#combat-result-panel");
+    await expect(combatPanel).toBeVisible();
+    await expect(page.locator(".combat-result-box.hit")).toBeVisible();
+    await expect(combatPanel).toContainText("IMPACTO");
+
+    // 7. Continuar combate y verificar banner flotante en el mapa
+    const btnContinue = page.locator("#btn-combat-continue");
+    await expect(btnContinue).toBeVisible();
+    await btnContinue.click();
+    await expect(diceModal).toBeHidden();
+
+    const floatingEffect = page.locator("#combat-floating-effect");
+    await expect(floatingEffect).toBeVisible();
+    await expect(floatingEffect).toContainText("IMPACTO");
+
+    // 8. Como el único enemigo fue eliminado, verificar desenlace de Victoria
+    const gameOverModal = page.locator("#game-over-modal");
+    await expect(gameOverModal).toBeVisible();
+    await expect(page.locator("#game-over-title")).toContainText("VICTORIA");
+  });
 });
+
