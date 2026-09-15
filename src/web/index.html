@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <meta name="theme-color" content="#2c3e2d" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <title>Fields of Normandy</title>
+    <link rel="manifest" href="./manifest.webmanifest" />
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body>
+    <!-- Pantalla de control de acceso privado -->
+    <div id="lock-screen" class="modal-overlay">
+      <div class="lock-card">
+        <h2>Acceso Privado</h2>
+        <p>Introduce tu código de acceso para desbloquear el juego:</p>
+        <form id="lock-form">
+          <input
+            type="password"
+            id="lock-pin"
+            placeholder="Introduce PIN o clave..."
+            autocomplete="current-password"
+            required
+          />
+          <button type="submit" class="btn btn-primary">Entrar</button>
+        </form>
+        <p id="lock-error" class="error-text hidden">Clave incorrecta.</p>
+      </div>
+    </div>
+
+    <!-- Interfaz principal del juego -->
+    <div id="app" class="app-layout hidden">
+      <!-- Barra superior de estado -->
+      <header class="top-header">
+        <div class="mission-info">
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <h1 id="mission-title">Misión 01: Control del bosque I</h1>
+            <button id="btn-open-tutorial" class="btn-tutorial" type="button">¿Cómo jugar?</button>
+          </div>
+          <span id="mission-objective" class="objective-badge">Objetivo: Eliminar todas las fuerzas alemanas en el mapa</span>
+        </div>
+        <div class="game-status">
+          <div class="turn-tracker">
+            <span class="label">Turno:</span>
+            <div id="turn-pips" class="pips-container">
+              <span class="pip active" data-turn="1">1</span>
+              <span class="pip" data-turn="2">2</span>
+              <span class="pip" data-turn="3">3</span>
+              <span class="pip" data-turn="4">4</span>
+            </div>
+          </div>
+          <span id="phase-badge" class="phase-badge phase-british">Fase Británica</span>
+        </div>
+      </header>
+
+      <!-- Contenedor central: Mapa y panel lateral -->
+      <main class="main-content">
+        <!-- Tablero hexagonal -->
+        <section class="board-section">
+          <div id="map-container" class="map-container" role="region" aria-label="Mapa hexagonal de combate">
+            <!-- El SVG se renderiza dinámicamente -->
+          </div>
+        </section>
+
+        <!-- Panel lateral derecho: Acciones e Información -->
+        <aside class="sidebar-section">
+          <!-- Información de la ficha o hexágono seleccionado -->
+          <div class="card info-card">
+            <h3>Selección</h3>
+            <div id="selection-details">
+              <p class="muted">Toca una unidad o hexágono para seleccionarlo.</p>
+            </div>
+          </div>
+
+          <!-- Acciones de mando disponibles -->
+          <div class="card actions-card">
+            <h3>Órdenes disponibles</h3>
+            <div id="order-banner" class="order-banner hidden"></div>
+            <div id="action-buttons" class="actions-grid">
+              <button id="btn-activate" class="btn btn-action" disabled>1. Activar Unidad</button>
+              <button id="btn-advance" class="btn btn-action" disabled>2. Avanzar</button>
+              <button id="btn-fire" class="btn btn-action" disabled>3. Fuego (8+)</button>
+              <button id="btn-grenade" class="btn btn-action" disabled>4. Granada (6+)</button>
+              <button id="btn-cover" class="btn btn-action" disabled>5. Cobertura (+1)</button>
+              <button id="btn-rally" class="btn btn-action" disabled>6. Reagrupar</button>
+              <button id="btn-conclude" class="btn btn-conclude" disabled>Finalizar activación / Descartar</button>
+              <button id="btn-german-phase" class="btn btn-warning">Terminar fase británica</button>
+            </div>
+          </div>
+
+          <!-- Registro de batalla -->
+          <div class="card log-card">
+            <div class="log-tabs">
+              <button id="tab-simple" class="tab-btn active">Registro</button>
+              <button id="tab-detailed" class="tab-btn">Detallado</button>
+              <button id="btn-copy-log" class="tab-btn" type="button" title="Copiar registro al portapapeles" style="margin-left: auto; font-size: 0.8rem; padding: 2px 8px; border: 1px solid var(--border-color); border-radius: 4px; background: rgba(255,255,255,0.05);">📋 Copiar registro</button>
+            </div>
+            <div id="log-content" class="log-entries">
+              <p class="log-entry">Preparación completada. Comienza el turno 1.</p>
+            </div>
+          </div>
+        </aside>
+      </main>
+    </div>
+
+    <!-- Diálogo modal de tirada de dados -->
+    <dialog id="dice-modal" class="modal-dialog">
+      <div class="modal-body">
+        <h3 id="dice-modal-title">Tirada de dados</h3>
+        <p id="dice-modal-desc">Resolviendo acción...</p>
+
+        <div class="dice-mode-toggle">
+          <label>
+            <input type="radio" name="dice-mode" value="automatic" checked />
+            Automático (aplicación)
+          </label>
+          <label>
+            <input type="radio" name="dice-mode" value="manual" />
+            Manual (dados físicos)
+          </label>
+        </div>
+
+        <div id="manual-dice-inputs" class="manual-inputs hidden">
+          <p>Introduce los dados físicos obtenidos:</p>
+          <div class="dice-row">
+            <label>Dado 1: <input type="number" id="die-1" min="1" max="6" value="4" /></label>
+            <label>Dado 2: <input type="number" id="die-2" min="1" max="6" value="4" /></label>
+          </div>
+        </div>
+
+        <div id="dice-animation-display" class="dice-display">
+          <div class="die" id="display-die-1">?</div>
+          <div class="die" id="display-die-2">?</div>
+        </div>
+
+        <div id="activation-selection-panel" class="activation-selection hidden">
+          <p id="activation-choice-prompt" class="choice-prompt">Elige qué dado deseas utilizar (el otro dado se descarta):</p>
+          <div id="activation-choices-container" class="activation-choices-grid"></div>
+        </div>
+
+        <div class="modal-actions">
+          <button id="btn-confirm-roll" class="btn btn-primary">Tirar / Confirmar</button>
+          <button id="btn-cancel-roll" class="btn btn-secondary">Cancelar</button>
+        </div>
+      </div>
+    </dialog>
+
+    <!-- Diálogo de desenlace (Victoria / Derrota) -->
+    <dialog id="game-over-modal" class="modal-dialog">
+      <div class="modal-body">
+        <h2 id="game-over-title">¡VICTORIA!</h2>
+        <p id="game-over-desc">Has cumplido el objetivo de la misión.</p>
+        <div class="modal-actions">
+          <button id="btn-restart-game" class="btn btn-primary">Volver a Jugar</button>
+        </div>
+      </div>
+    </dialog>
+
+    <!-- Diálogo modal de tutorial / guía de juego -->
+    <dialog id="tutorial-modal" class="modal-dialog" style="max-width: 520px;">
+      <div class="modal-body tutorial-body">
+        <h3>Guía de Combate: Misión 01</h3>
+        <p><strong>Objetivo:</strong> Descubrir y eliminar a la fuerza enemiga alemana oculta en el bosque antes del final del <strong>Turno 4</strong>.</p>
+        
+        <h4>1. Terreno del Mapa</h4>
+        <ul>
+          <li><strong>Bosque (Hexágonos con árboles verdes 1, 2, 3, 4, 5 y 9):</strong> Dificulta el movimiento y aporta cobertura defensiva contra el fuego (+1 a la defensa).</li>
+          <li><strong>Despejado (Hexágonos 6, 7, 8 y 10):</strong> Terreno abierto sin bonificador defensivo. Tus escuadras A y B comienzan en el hexágono 10.</li>
+        </ul>
+
+        <h4>2. Secuencia de Juego (Fase Británica)</h4>
+        <ol>
+          <li><strong>Selecciona una escuadra</strong> (A o B) y pulsa <strong>"1. Activar Unidad"</strong>.</li>
+          <li><strong>Lanza 2d6 y elige 1 dado</strong> (regla oficial de Mike Lambo). El dado elegido activará la Fila completa de tu <em>Tabla de Órdenes</em> (con Moral normal podrás ejecutar la 1ª y la 2ª orden en secuencia). Si sacas dobles, puedes aceptar la fila o relanzar ambos dados.</li>
+          <li><strong>Ejecuta las órdenes disponibles:</strong>
+            <ul>
+              <li><strong>Avanzar:</strong> Pulsa Avanzar y toca un hexágono vecino adyacente (resaltado en azul). Al moverte junto a una unidad oculta (?), se revelará automáticamente.</li>
+              <li><strong>Fuego (8+):</strong> Dispara contra un enemigo revelado adyacente (distancia 1). Tira 2d6: con 8 o más (más la cobertura enemiga), ¡impactas!</li>
+              <li><strong>Granada (6+):</strong> Lanza granada contra un enemigo adyacente. Con 6 o más en 2d6, ¡impactas!</li>
+              <li><strong>Cobertura (+1):</strong> Añade +1 de cobertura defensiva a tu escuadra.</li>
+            </ul>
+          </li>
+          <li><strong>Consumo de órdenes:</strong> Cada acción que ejecutas consume una orden de la fila seleccionada. Si no tienes enemigos al alcance de Fuego o no deseas realizar más acciones, pulsa <strong>"Finalizar activación / Descartar"</strong>.</li>
+          <li>Pulsa <strong>"Finalizar activación / Descartar"</strong> para concluir el turno de esa escuadra y poder activar a la siguiente.</li>
+          <li>Cuando ambas escuadras hayan actuado, pulsa <strong>"Terminar fase británica"</strong> para ver el contraataque alemán.</li>
+        </ol>
+
+        <h4>3. Fase Alemana</h4>
+        <p>Los alemanes revelados abrirán fuego automático contra cualquier unidad aliada adyacente. El contador de turnos avanzará al siguiente turno.</p>
+
+        <div class="modal-actions" style="margin-top: 16px;">
+          <button id="btn-close-tutorial" class="btn btn-primary" type="button">¡Entendido, al combate!</button>
+        </div>
+      </div>
+    </dialog>
+
+    <!-- Diálogo modal de resolución de la fase alemana -->
+    <dialog id="german-phase-modal" class="modal-dialog">
+      <div class="modal-body">
+        <h3 id="german-phase-title">Resolución: Fase Alemana</h3>
+        <p id="german-phase-desc">Las fuerzas del Eje ejecutan su turno.</p>
+        <div id="german-phase-details" style="background: rgba(0,0,0,0.35); border: 1px solid var(--border-color); padding: 14px; border-radius: 6px; margin: 14px 0; font-size: 0.95rem; line-height: 1.5;"></div>
+        <div class="modal-actions">
+          <button id="btn-german-phase-ok" class="btn btn-primary">Continuar al siguiente turno</button>
+        </div>
+      </div>
+    </dialog>
+
+    <script type="module" src="./main.ts"></script>
+  </body>
+</html>

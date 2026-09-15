@@ -221,9 +221,15 @@ export function createRulesEngine(): RulesEngineView {
       return rejected(mismatchedResolutionMessage());
     }
 
-    const rule = catalog.rules.find(
-      (candidate) => candidate.roll !== undefined,
-    );
+    const rule =
+      catalog.rules.find(
+        (candidate) =>
+          candidate.roll !== undefined &&
+          request.context.label.startsWith(candidate.commandType),
+      ) ??
+      catalog.rules.find(
+        (candidate) => candidate.roll !== undefined,
+      );
     if (rule === undefined || rule.roll === undefined) {
       return rejected(noRollRuleMessage(request.context.label));
     }

@@ -1,0 +1,21 @@
+{
+  "name": "Fields of Normandy",
+  "short_name": "Normandy",
+  "description": "The Fields of Normandy: Solitaire Wargame PWA",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#1c211d",
+  "theme_color": "#2c3e2d",
+  "icons": [
+    {
+      "src": "./icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "./icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

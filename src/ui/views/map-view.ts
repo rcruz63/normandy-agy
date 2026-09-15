@@ -95,12 +95,13 @@ export type EdgeSegment = Readonly<{
 /** Marcador de Ficha proyectado sobre su Hexágono. */
 export type PieceMarker = Readonly<{
   pieceId: string;
+  definitionId?: string | undefined;
   hexId: HexId;
   center: Point;
   side: PieceState["side"];
   status: PieceState["status"];
   visibility: PieceState["visibility"];
-  orientation?: string;
+  orientation?: string | undefined;
   classes: readonly string[];
   selected: boolean;
 }>;
@@ -248,50 +249,73 @@ export function projectMapToSvg(
     });
   });
 
-  const pieceMarkers: PieceMarker[] = [...pieces]
+  const piecesWithHex = [...pieces]
     .filter((piece) => piece.hexId !== undefined)
-    .sort((a, b) => String(a.id).localeCompare(String(b.id)))
-    .map((piece) => {
-      const hexId = piece.hexId as HexId;
-      const center = centers.get(hexId);
-      if (center === undefined) {
-        throw new InvalidMapProjectionError(
-          `la Ficha «${String(piece.id)}» ocupa el Hexágono «${String(hexId)}» ausente del mapa`,
-        );
-      }
-      const selected =
-        selection.pieceId !== undefined && String(selection.pieceId) === String(piece.id);
-      const classes = [
-        "piece",
-        `side-${piece.side}`,
-        `status-${piece.status}`,
-        `visibility-${piece.visibility}`,
-        ...(piece.orientation !== undefined ? [`orientation-${String(piece.orientation)}`] : []),
-        ...(selected ? ["selected"] : []),
-      ];
-      const base: {
-        pieceId: string;
-        hexId: HexId;
-        center: Point;
-        side: PieceState["side"];
-        status: PieceState["status"];
-        visibility: PieceState["visibility"];
-        orientation?: string;
-        classes: readonly string[];
-        selected: boolean;
-      } = {
-        pieceId: String(piece.id),
-        hexId,
-        center,
-        side: piece.side,
-        status: piece.status,
-        visibility: piece.visibility,
-        classes: Object.freeze(classes),
-        selected,
+    .sort((a, b) => String(a.id).localeCompare(String(b.id)));
+
+  const hexPieceGroups = new Map<HexId, PieceState[]>();
+  for (const p of piecesWithHex) {
+    const hid = p.hexId as HexId;
+    const group = hexPieceGroups.get(hid) ?? [];
+    group.push(p);
+    hexPieceGroups.set(hid, group);
+  }
+
+  const pieceMarkers: PieceMarker[] = piecesWithHex.map((piece) => {
+    const hexId = piece.hexId as HexId;
+    const center = centers.get(hexId);
+    if (center === undefined) {
+      throw new InvalidMapProjectionError(
+        `la Ficha «${String(piece.id)}» ocupa el Hexágono «${String(hexId)}» ausente del mapa`,
+      );
+    }
+    const group = hexPieceGroups.get(hexId) ?? [];
+    let pieceCenter = center;
+    if (group.length > 1) {
+      const idx = group.findIndex((p) => String(p.id) === String(piece.id));
+      const offsetStep = metrics.size * 0.55;
+      const totalSpan = (group.length - 1) * offsetStep;
+      const startX = center.x - totalSpan / 2;
+      pieceCenter = {
+        x: round(startX + idx * offsetStep),
+        y: round(center.y + 4),
       };
-      if (piece.orientation !== undefined) base.orientation = String(piece.orientation);
-      return Object.freeze(base);
-    });
+    }
+    const selected =
+      selection.pieceId !== undefined && String(selection.pieceId) === String(piece.id);
+    const classes = [
+      "piece",
+      `side-${piece.side}`,
+      `status-${piece.status}`,
+      `visibility-${piece.visibility}`,
+      ...(piece.orientation !== undefined ? [`orientation-${String(piece.orientation)}`] : []),
+      ...(selected ? ["selected"] : []),
+    ];
+    const base: {
+      pieceId: string;
+      definitionId?: string | undefined;
+      hexId: HexId;
+      center: Point;
+      side: PieceState["side"];
+      status: PieceState["status"];
+      visibility: PieceState["visibility"];
+      orientation?: string | undefined;
+      classes: readonly string[];
+      selected: boolean;
+    } = {
+      pieceId: String(piece.id),
+      definitionId: piece.definitionId ? String(piece.definitionId) : undefined,
+      hexId,
+      center: pieceCenter,
+      side: piece.side,
+      status: piece.status,
+      visibility: piece.visibility,
+      classes: Object.freeze(classes),
+      selected,
+    };
+    if (piece.orientation !== undefined) base.orientation = String(piece.orientation);
+    return Object.freeze(base);
+  });
 
   const viewBox = computeViewBox(hexes, metrics);
 
@@ -443,18 +467,42 @@ export function renderSvgMarkup(scene: SvgScene, view: ViewState): string {
     .join("");
 
   const hexEls = scene.hexes
-    .map(
-      (hex) =>
-        `<polygon class="${escapeAttr(hex.classes.join(" "))}" data-hex-id="${escapeAttr(String(hex.hexId))}" data-label="${escapeAttr(hex.label)}" points="${escapeAttr(pointsAttr(hex.vertices))}" />`,
-    )
+    .map((hex) => {
+      const isWoods =
+        hex.terrain.includes("bosque") ||
+        hex.classes.some((c) => c.includes("woods") || c.includes("bosque"));
+      const woodsMarkup = isWoods
+        ? `<g class="woods-trees" pointer-events="none">` +
+          `<circle cx="${round(hex.center.x - 8)}" cy="${round(hex.center.y - 2)}" r="5.5" fill="#1b4d24" opacity="0.85"/>` +
+          `<circle cx="${round(hex.center.x + 8)}" cy="${round(hex.center.y - 2)}" r="5.5" fill="#1b4d24" opacity="0.85"/>` +
+          `<circle cx="${round(hex.center.x)}" cy="${round(hex.center.y + 4)}" r="6.5" fill="#143b1c" opacity="0.95"/>` +
+          `<circle cx="${round(hex.center.x)}" cy="${round(hex.center.y - 6)}" r="5" fill="#245a2d" opacity="0.8"/>` +
+          `</g>`
+        : "";
+      return (
+        `<polygon class="${escapeAttr(hex.classes.join(" "))}" data-hex-id="${escapeAttr(String(hex.hexId))}" data-label="${escapeAttr(hex.label)}" points="${escapeAttr(pointsAttr(hex.vertices))}" />` +
+        woodsMarkup +
+        `<text class="hex-label" x="${hex.center.x}" y="${round(hex.center.y - 14)}" text-anchor="middle">${escapeAttr(hex.label)}</text>`
+      );
+    })
     .join("");
 
   const radius = round(pieceRadius(scene));
   const pieceEls = scene.pieces
-    .map(
-      (piece) =>
-        `<circle class="${escapeAttr(piece.classes.join(" "))}" data-piece-id="${escapeAttr(piece.pieceId)}" cx="${piece.center.x}" cy="${piece.center.y}" r="${radius}" />`,
-    )
+    .map((piece) => {
+      let label = piece.pieceId;
+      if (piece.visibility === "hidden") {
+        label = "?";
+      } else if (piece.pieceId.startsWith("GB-")) {
+        label = piece.pieceId.slice(3);
+      } else if (piece.pieceId.startsWith("DE-")) {
+        label = piece.definitionId && piece.definitionId !== "UNKNOWN" ? piece.definitionId : "ALEM";
+      }
+      return (
+        `<circle class="${escapeAttr(piece.classes.join(" "))}" data-piece-id="${escapeAttr(piece.pieceId)}" cx="${piece.center.x}" cy="${piece.center.y}" r="${radius}" />` +
+        `<text class="piece-label" x="${piece.center.x}" y="${round(piece.center.y + 3.5)}" text-anchor="middle">${escapeAttr(label)}</text>`
+      );
+    })
     .join("");
 
   return (

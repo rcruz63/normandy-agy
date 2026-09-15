@@ -12,6 +12,12 @@ export default defineConfig({
     locale: "es-ES",
     timezoneId: "Europe/Madrid",
     trace: "on-first-retry",
+    baseURL: "http://localhost:4173",
+  },
+  webServer: {
+    command: "npm run preview -- --port 4173",
+    port: 4173,
+    reuseExistingServer: true,
   },
   projects: [
     {

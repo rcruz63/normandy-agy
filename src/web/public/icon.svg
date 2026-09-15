@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <radialGradient id="bg" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#3d4f3e"/>
+      <stop offset="100%" stop-color="#1b241c"/>
+    </radialGradient>
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="8" stdDeviation="12" flood-color="#000" flood-opacity="0.6"/>
+    </filter>
+  </defs>
+  <rect width="512" height="512" rx="100" fill="url(#bg)"/>
+  <!-- Hexagon border -->
+  <polygon points="256,60 430,160 430,360 256,460 82,360 82,160" fill="#243326" stroke="#d4af37" stroke-width="12" filter="url(#shadow)"/>
+  <!-- Star insignia -->
+  <path d="M256,150 L278,218 L350,218 L292,260 L314,328 L256,286 L198,328 L220,260 L162,218 L234,218 Z" fill="#d4af37"/>
+  <!-- Crossed swords / accents -->
+  <text x="256" y="390" text-anchor="middle" fill="#f0f3f0" font-family="-apple-system, sans-serif" font-size="34" font-weight="900" letter-spacing="4">NORMANDY</text>
+  <text x="256" y="420" text-anchor="middle" fill="#a3b0a5" font-family="-apple-system, sans-serif" font-size="18" font-weight="600" letter-spacing="2">1944</text>
+</svg>
