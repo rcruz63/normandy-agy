@@ -40,10 +40,10 @@ import type {
 } from "../domain/ports/index.js";
 import { computeIntegrity } from "../domain/persistence/index.js";
 import {
-  MISSION_01_ID,
-  MISSION_01_MAP,
-  MISSION_01_SETUP,
-} from "../catalog/FON-ML-2022/mission-01.js";
+  MISSION_CONFIGS,
+  getMissionConfigByNumber,
+  type MissionConfig,
+} from "../catalog/FON-ML-2022/mission-registry.js";
 import { buildExecutableCatalog } from "../application/catalog/executable-catalog.js";
 import {
   createActivateUnitCommand,
@@ -70,6 +70,7 @@ import {
 import { simpleLogEntry } from "../domain/logging/index.js";
 import type { DiceRollRequest } from "../domain/engine/dice-roll.js";
 import { orderCodeNameEs } from "../catalog/FON-ML-2022/orders-combat-counters.js";
+import { soundFx } from "./audio.js";
 
 // --- Repositorio en memoria con persistencia en sesión ---
 
@@ -135,7 +136,6 @@ const mapContainer = document.getElementById("map-container") as HTMLDivElement;
 const selectionDetails = document.getElementById("selection-details") as HTMLDivElement;
 const orderBanner = document.getElementById("order-banner") as HTMLDivElement;
 const phaseBadge = document.getElementById("phase-badge") as HTMLSpanElement;
-const turnPips = document.querySelectorAll("#turn-pips .pip");
 const logContent = document.getElementById("log-content") as HTMLDivElement;
 const tabSimple = document.getElementById("tab-simple") as HTMLButtonElement;
 const tabDetailed = document.getElementById("tab-detailed") as HTMLButtonElement;
@@ -194,6 +194,93 @@ function showCombatFloatingEffect(
   }, 2600);
 }
 
+// --- Botón de alternancia de sonido táctico ---
+const btnSoundToggle = document.getElementById("btn-sound-toggle") as HTMLButtonElement | null;
+
+function updateSoundButton(): void {
+  if (!btnSoundToggle) return;
+  if (soundFx.isEnabled()) {
+    btnSoundToggle.textContent = "🔊 Sonido: ON";
+    btnSoundToggle.classList.remove("muted");
+  } else {
+    btnSoundToggle.textContent = "🔇 Sonido: OFF";
+    btnSoundToggle.classList.add("muted");
+  }
+}
+
+if (btnSoundToggle) {
+  updateSoundButton();
+  btnSoundToggle.addEventListener("click", () => {
+    soundFx.toggle();
+    updateSoundButton();
+  });
+}
+
+function triggerScreenShake(): void {
+  const board = document.querySelector(".board-section");
+  if (!board) return;
+  board.classList.remove("screen-shake");
+  void (board as HTMLElement).offsetWidth;
+  board.classList.add("screen-shake");
+  setTimeout(() => board.classList.remove("screen-shake"), 400);
+}
+
+let currentMissionConfig: MissionConfig = MISSION_CONFIGS[0]!;
+
+function formatUnitName(pieceIdStr: string): string {
+  if (pieceIdStr === "GB-A") return "1.ª Escuadra 'Able' (GB-A)";
+  if (pieceIdStr === "GB-B") return "2.ª Escuadra 'Baker' (GB-B)";
+  if (pieceIdStr === "GB-C") return "3.ª Escuadra 'Charlie' (GB-C)";
+  if (pieceIdStr === "GB-MG") return "Equipo de Ametralladora (GB-MG)";
+  if (pieceIdStr.startsWith("DE-")) return "Guarnición Alemana (Eje)";
+  return pieceIdStr;
+}
+
+function formatHexName(hexIdStr: string): string {
+  const hexDef = currentMissionConfig.map.hexes[hexIdStr as HexId];
+  if (!hexDef) return hexIdStr;
+  const label = hexDef.coordinate.label;
+  const terrains: string[] = [];
+  if (hexDef.terrain.some((t) => String(t) === "edificio")) terrains.push("🏠 Edificio");
+  if (hexDef.terrain.some((t) => String(t) === "colina")) terrains.push("⛰️ Colina");
+  if (hexDef.terrain.some((t) => String(t) === "bosque")) terrains.push("🌲 Bosque");
+  if (terrains.length === 0) terrains.push("Campo Abierto");
+  return `Hexágono ${label} (${terrains.join(" / ")})`;
+}
+
+const TACTICAL_DOCTRINES: Record<number, { title: string; subtitle: string; quote: string }> = {
+  1: {
+    title: "Reagrupamiento y Asalto con Granadas",
+    subtitle: "RAL + GRE",
+    quote: "«¡Sargento, reorganice a los hombres y preparen las granadas de fragmentación!»",
+  },
+  2: {
+    title: "Avance de Reconocimiento Táctico",
+    subtitle: "ADV + SCO",
+    quote: "«¡Avanzad agachados por los setos y explorad las posiciones del bosque!»",
+  },
+  3: {
+    title: "Avance Táctico y Cobertura Defensiva",
+    subtitle: "ADV + COV",
+    quote: "«¡Avanzad hacia el objetivo y buscad cobertura de inmediato!»",
+  },
+  4: {
+    title: "Fuego Concentrado y Posición Defensiva",
+    subtitle: "FIRE + COV",
+    quote: "«¡Abrid fuego con los Lee-Enfield y atrincheraos en la posición!»",
+  },
+  5: {
+    title: "Fuego de Supresión y Maniobra",
+    subtitle: "FIRE + ADV",
+    quote: "«¡Fuego de contención para fijar al enemigo y avanzad a la siguiente línea!»",
+  },
+  6: {
+    title: "Asalto Frontal y Fuego a Quemarropa",
+    subtitle: "ADV + FIRE",
+    quote: "«¡Avanzad a tiro de combate y disparad a quemarropa antes de que reaccionen!»",
+  },
+};
+
 const gameOverModal = document.getElementById("game-over-modal") as HTMLDialogElement;
 const gameOverTitle = document.getElementById("game-over-title") as HTMLHeadingElement;
 const gameOverDesc = document.getElementById("game-over-desc") as HTMLParagraphElement;
@@ -202,6 +289,11 @@ const btnRestartGame = document.getElementById("btn-restart-game") as HTMLButton
 const tutorialModal = document.getElementById("tutorial-modal") as HTMLDialogElement;
 const btnOpenTutorial = document.getElementById("btn-open-tutorial") as HTMLButtonElement;
 const btnCloseTutorial = document.getElementById("btn-close-tutorial") as HTMLButtonElement;
+
+const missionModal = document.getElementById("mission-modal") as HTMLDialogElement | null;
+const btnSelectMission = document.getElementById("btn-select-mission") as HTMLButtonElement | null;
+const btnCloseMissionModal = document.getElementById("btn-close-mission-modal") as HTMLButtonElement | null;
+const missionListContainer = document.getElementById("mission-list-container") as HTMLDivElement | null;
 
 const germanPhaseModal = document.getElementById("german-phase-modal") as HTMLDialogElement;
 const germanPhaseTitle = document.getElementById("german-phase-title") as HTMLHeadingElement;
@@ -241,15 +333,40 @@ lockForm.addEventListener("submit", (e) => {
 
 // --- Inicialización del juego ---
 
-function initGame(): void {
-  geometry = buildHexGeometry(MISSION_01_MAP);
+function initGame(missionNumber: number = 1): void {
+  currentMissionConfig = getMissionConfigByNumber(missionNumber) ?? MISSION_CONFIGS[0]!;
+
+  // Actualizar títulos de cabecera
+  const missionTitle = document.getElementById("mission-title") as HTMLHeadingElement | null;
+  if (missionTitle) {
+    missionTitle.textContent = `Misión ${String(currentMissionConfig.number).padStart(2, "0")}: ${currentMissionConfig.name}`;
+  }
+  const missionObjective = document.getElementById("mission-objective") as HTMLSpanElement | null;
+  if (missionObjective) {
+    missionObjective.textContent = `Objetivo: ${currentMissionConfig.objectiveText}`;
+  }
+
+  // Generar pips de turno dinámicamente
+  const pipsContainer = document.getElementById("turn-pips");
+  if (pipsContainer) {
+    pipsContainer.innerHTML = "";
+    for (let t = 1; t <= currentMissionConfig.baseTurns; t++) {
+      const pip = document.createElement("span");
+      pip.className = `pip ${t === 1 ? "active" : ""}`;
+      pip.setAttribute("data-turn", String(t));
+      pip.textContent = String(t);
+      pipsContainer.appendChild(pip);
+    }
+  }
+
+  geometry = buildHexGeometry(currentMissionConfig.map);
 
   const catalog = buildExecutableCatalog({
-    catalogId: "FON-ML-2022-M01-cat",
-    map: MISSION_01_MAP,
-    setup: MISSION_01_SETUP,
-    objective: { kind: "eliminate-all-germans" },
-    maxTurns: 4,
+    catalogId: `FON-ML-2022-${currentMissionConfig.missionKey}-cat`,
+    map: currentMissionConfig.map,
+    setup: currentMissionConfig.setup,
+    objective: currentMissionConfig.objective,
+    maxTurns: currentMissionConfig.baseTurns,
   });
 
   const engine = createRulesEngine();
@@ -275,61 +392,26 @@ function initGame(): void {
     random: pureVersionedRandom,
   });
 
-  // Fichas iniciales de la Misión 01
-  const initialPieces: Record<string, PieceState> = {
-    "GB-A": {
-      id: "GB-A" as any,
-      pieceId: "GB-A",
-      definitionId: "rifle-squad-A" as any,
-      side: "british",
-      hexId: "M01-H10" as any,
-      orientation: "N" as any,
-      morale: "normal",
-      cover: 0,
-      visibility: "revealed",
-      status: "active",
-    } as any,
-    "GB-B": {
-      id: "GB-B" as any,
-      pieceId: "GB-B",
-      definitionId: "rifle-squad-B" as any,
-      side: "british",
-      hexId: "M01-H10" as any,
-      orientation: "N" as any,
-      morale: "normal",
-      cover: 0,
-      visibility: "revealed",
-      status: "active",
-    } as any,
-    "DE-UNK-1": {
-      id: "DE-UNK-1" as any,
-      pieceId: "DE-UNK-1",
-      definitionId: "unknown" as any,
-      side: "german",
-      hexId: "M01-H04" as any,
-      cover: 0,
-      visibility: "hidden",
-      status: "active",
-    } as any,
-  };
+  const initialPieces = { ...currentMissionConfig.initialPieces };
+  const initialUnknowns = { ...currentMissionConfig.initialUnknowns };
 
-  const initialUnknowns = {
-    "DE-UNK-1": { hidden: true },
-  };
+  const firstBrit = Object.values(initialPieces).find((p) => p.side === "british");
+  const firstBritId = firstBrit?.id ?? "GB-A";
+  const firstBritHex = firstBrit?.hexId;
 
   const initialState: GameState = gameState({
     gameId: GAME_ID,
-    missionId: MISSION_01_ID,
+    missionId: currentMissionConfig.id,
     rulesVersion: RV,
     saveVersion: SV,
     difficulty: { id: "normal" },
-    duration: { turns: 4 },
+    duration: { turns: currentMissionConfig.baseTurns },
     turn: 1,
     phase: "british",
     activation: {},
     pieces: initialPieces as any,
     unknowns: initialUnknowns,
-    objectives: { "eliminate-all-germans": { met: false } },
+    objectives: { [currentMissionConfig.objective.kind]: { met: false } },
     effects: [],
     outcome: "in-progress",
   });
@@ -348,7 +430,7 @@ function initGame(): void {
         phase: "british",
         actor: "Mando Aliado",
         action: "Comienzo de Misión",
-        result: "Escuadras A y B desplegadas en Hexágono 10. Fuerza enemiga oculta al norte en el bosque.",
+        result: currentMissionConfig.briefing,
         messageKey: "log.simple.setup",
         params: {},
       }),
@@ -356,7 +438,7 @@ function initGame(): void {
     detailedLog: [],
     integrity: computeIntegrity({
       gameId: GAME_ID,
-      missionId: MISSION_01_ID,
+      missionId: currentMissionConfig.id,
       seed: "fon-seed",
       turn: 1,
     }),
@@ -369,10 +451,10 @@ function initGame(): void {
       width: Math.max(window.innerWidth || 800, 320),
       height: Math.max(window.innerHeight || 600, 400),
     },
-    selection: { pieceId: "GB-A" as any, hexId: "M01-H10" as any },
+    selection: { pieceId: firstBritId as any, hexId: firstBritHex as any },
   });
 
-  selectedPieceId = "GB-A";
+  selectedPieceId = String(firstBritId);
   selectedTargetHex = undefined;
 
   renderAll();
@@ -418,7 +500,7 @@ function renderAll(): void {
 function renderMap(): void {
   const pieces = Object.values(currentSnapshot.state.pieces) as unknown as PieceState[];
   const scene = projectMapToSvg(
-    MISSION_01_MAP,
+    currentMissionConfig.map,
     geometry,
     pieces,
     currentViewState.selection,
@@ -476,14 +558,31 @@ function applyDynamicHighlights(): void {
 function renderTopBar(): void {
   const currentTurn = currentSnapshot.state.turn;
   const maxTurns = currentSnapshot.state.duration.turns;
-  turnPips.forEach((pip) => {
-    const turnNum = Number(pip.getAttribute("data-turn"));
-    if (turnNum === currentTurn) {
-      pip.classList.add("active");
-    } else {
-      pip.classList.remove("active");
+
+  // Asegurar que los pips coinciden con maxTurns
+  const currentPips = document.querySelectorAll("#turn-pips .pip");
+  if (currentPips.length !== maxTurns) {
+    const pipsContainer = document.getElementById("turn-pips");
+    if (pipsContainer) {
+      pipsContainer.innerHTML = "";
+      for (let t = 1; t <= maxTurns; t++) {
+        const pip = document.createElement("span");
+        pip.className = `pip ${t === currentTurn ? "active" : ""}`;
+        pip.setAttribute("data-turn", String(t));
+        pip.textContent = String(t);
+        pipsContainer.appendChild(pip);
+      }
     }
-  });
+  } else {
+    currentPips.forEach((pip) => {
+      const turnNum = Number(pip.getAttribute("data-turn"));
+      if (turnNum === currentTurn) {
+        pip.classList.add("active");
+      } else {
+        pip.classList.remove("active");
+      }
+    });
+  }
 
   const phase = currentSnapshot.state.phase;
   const remainingTurns = Math.max(0, maxTurns - currentTurn);
@@ -506,7 +605,7 @@ function renderSelectionInfo(): void {
     const piece = pieces[selectedPieceId]!;
     const isBritish = piece.side === "british";
     const sideName = isBritish ? "Británica (Aliada)" : "Alemana (Enemiga)";
-    const hexDef = MISSION_01_MAP.hexes[piece.hexId as HexId];
+    const hexDef = currentMissionConfig.map.hexes[piece.hexId as HexId];
     const hexLabel = hexDef ? hexDef.coordinate.label : piece.hexId;
     const isActivated = hasUnitActivatedThisTurn(state, piece.id);
     const isCurrentlyActive = state.activation.activePieceId === piece.id;
@@ -546,18 +645,24 @@ function renderSelectionInfo(): void {
     } else if (piece.visibility === "revealed") {
       const def = piece.definitionId && piece.definitionId !== "UNKNOWN" ? piece.definitionId : "Fuerza Alemana";
       const isForest = hexDef?.terrain.some((t) => String(t) === "bosque") ?? false;
+      const isBuilding = hexDef?.terrain.some((t) => String(t) === "edificio") ?? false;
+      const terrainDesc = isBuilding ? "🏠 Edificio (+2) → Tirada 10+ para eliminar" : isForest ? "🌲 Bosque (+1) → Tirada 9+ para eliminar" : "Terreno abierto → Tirada 8+ para eliminar";
       html += `<strong>Identificación:</strong> ${def}<br/>`;
-      html += `<strong>Defensa requerida:</strong> ${isForest ? "🌲 Bosque (+1) → Tirada 9+ para eliminar" : "Terreno abierto → Tirada 8+ para eliminar"}<br/>`;
+      html += `<strong>Defensa requerida:</strong> ${terrainDesc}<br/>`;
     }
     html += `</div>`;
   }
 
   if (selectedTargetHex) {
-    const hexDef = MISSION_01_MAP.hexes[selectedTargetHex as HexId];
+    const hexDef = currentMissionConfig.map.hexes[selectedTargetHex as HexId];
     if (hexDef) {
       html += `<div class="info-group" style="margin-top: 8px; padding-top: 8px; border-top: 1px dashed var(--border-color);">`;
       html += `<strong>Hexágono Objetivo:</strong> ${hexDef.coordinate.label} (${hexDef.id})<br/>`;
-      html += `<strong>Terreno:</strong> ${hexDef.terrain.join(", ") === "bosque" ? "🌲 Bosque (+1 defensa)" : "Despejado"}<br/>`;
+      const isBldg = hexDef.terrain.includes("edificio" as any);
+      const isFor = hexDef.terrain.includes("bosque" as any);
+      const isHil = hexDef.terrain.includes("colina" as any);
+      const tLabel = isBldg ? "🏠 Edificio (+2 defensa)" : isFor ? "🌲 Bosque (+1 defensa)" : isHil ? "⛰️ Colina" : "Despejado";
+      html += `<strong>Terreno:</strong> ${tLabel}<br/>`;
       const piecesHere = (Object.values(pieces) as PieceState[]).filter(
         (p) => p.hexId === hexDef.id && p.status === "active",
       );
@@ -916,10 +1021,11 @@ btnActivate.addEventListener("click", async () => {
   const outcome = await dispatcher.execute(cmd);
 
   if (outcome.kind === "awaiting-roll") {
+    const unitTitle = formatUnitName(selectedPieceId);
     openDiceModal(
       outcome.request,
-      `Tirada de activación: ${selectedPieceId}`,
-      `Lanza 2d6. El 1º dado da la orden de la Columna 1 y el 2º dado la orden de la Columna 2.`,
+      `🎲 Tirada de activación: ${unitTitle}`,
+      `Lanza 2d6 para determinar las directivas tácticas de la escuadra. Podrás elegir qué dado utilizar para activar su fila correspondiente en la Tabla de Órdenes.`,
     );
   } else if (outcome.kind === "committed") {
     currentSnapshot = await repository.loadLatest(GAME_ID);
@@ -940,6 +1046,7 @@ async function executeAdvance(pieceId: string, toHex: string): Promise<void> {
       currentViewState = select(currentViewState, { pieceId: pieceId as any, hexId: activeP.hexId });
     }
 
+    soundFx.playOrderConfirm();
     renderAll();
   }
 }
@@ -993,10 +1100,27 @@ btnFire.addEventListener("click", async () => {
   const outcome = await dispatcher.execute(cmd);
 
   if (outcome.kind === "awaiting-roll") {
+    const unitTitle = formatUnitName(activePieceId);
+    const hexName = formatHexName(targetHex);
+    const targetHexDef = currentMissionConfig.map.hexes[targetHex as HexId];
+    const isForest = targetHexDef?.terrain.some((t) => String(t) === "bosque") ?? false;
+    const isBuilding = targetHexDef?.terrain.some((t) => String(t) === "edificio") ?? false;
+    const isMg = activePiece.definitionId === "mg-team";
+    const baseHit = isMg ? 6 : 8;
+    const terrainMod = isBuilding ? 2 : isForest ? 1 : 0;
+    const req = baseHit + terrainMod;
+
+    const weaponName = isMg ? "Ametralladora (6+)" : "fusilería (8+)";
+    const descText = isBuilding
+      ? `🏠 El enemigo se atrinchera en un edificio (+2 defensa). Necesitas ${req} o más en 2d6.`
+      : isForest
+        ? `🌲 La espesura del bosque otorga cobertura (+1 defensa). Necesitas ${req} o más en 2d6.`
+        : `Terreno despejado. Necesitas ${req} o más en 2d6 para batir al enemigo.`;
+
     openDiceModal(
       outcome.request,
-      `Fuego de fusilería (8+): ${activePieceId}`,
-      `Disparando a ${targetHex}. Necesitas 8 o más en 2d6 (modificado por la cobertura enemiga).`,
+      `🎯 Fuego de ${weaponName}: ${unitTitle}`,
+      `Apertura de fuego contra las posiciones del Eje en ${hexName}.\n${descText}`,
     );
   }
 });
@@ -1032,10 +1156,14 @@ btnGrenade.addEventListener("click", async () => {
   const outcome = await dispatcher.execute(cmd);
 
   if (outcome.kind === "awaiting-roll") {
+    const unitTitle = formatUnitName(activePieceId);
+    const hexName = formatHexName(targetHex);
+
     openDiceModal(
       outcome.request,
-      `Lanzamiento de granada (6+): ${activePieceId}`,
-      `Lanzando granada contra ${targetHex}. Necesitas 6 o más en 2d6.`,
+      `💣 Lanzamiento de granada (6+): ${unitTitle}`,
+      `¡Asalto cercano! La escuadra lanza una granada Mills Bomb Nº 36 al parapeto enemigo en ${hexName}.\n` +
+      `Una tirada de 6 o más en 2d6 detonará en el objetivo y eliminará a la fuerza enemiga.`,
     );
   }
 });
@@ -1049,7 +1177,8 @@ btnCover.addEventListener("click", async () => {
 
   if (outcome.kind === "committed") {
     currentSnapshot = await repository.loadLatest(GAME_ID);
-    showCombatFloatingEffect(`🛡️ +1 Cobertura defensiva para ${activePieceId}`, "info");
+    soundFx.playOrderConfirm();
+    showCombatFloatingEffect(`🛡️ +1 Cobertura defensiva para ${formatUnitName(activePieceId)}`, "info");
     renderAll();
   }
 });
@@ -1063,7 +1192,8 @@ btnRally.addEventListener("click", async () => {
 
   if (outcome.kind === "committed") {
     currentSnapshot = await repository.loadLatest(GAME_ID);
-    showCombatFloatingEffect(`🎖️ ¡Moral de ${activePieceId} restaurada a Normal!`, "info");
+    soundFx.playOrderConfirm();
+    showCombatFloatingEffect(`🎖️ ¡Moral de ${formatUnitName(activePieceId)} restaurada a Normal!`, "info");
     renderAll();
   }
 });
@@ -1156,46 +1286,62 @@ btnGermanPhase.addEventListener("click", async () => {
           <div class="german-attack-card quiet">
             <div class="german-card-header">🌲 Posiciones aseguradas</div>
             <div class="german-card-body">${detailText}</div>
-            <div><span class="german-card-badge badge-safe">Sin bajas aliadas</span></div>
+            <div><span class="german-card-badge badge-safe">Sin bajas aliadas en este turno</span></div>
           </div>
         `;
         pendingGermanPhaseEffect = null;
       } else {
-        const sentences = detailText.split(/(?<=\.)\s+/).filter(Boolean);
+        // Separar cada ataque enemigo individual (cada uno comienza por "Fuego enemigo de")
+        const attacks = detailText
+          .split(/(?=Fuego enemigo de\b)/g)
+          .map((a) => a.trim())
+          .filter(Boolean);
+
         let cardsHtml = "";
         let hasHit = false;
         let hitTarget = "";
-        for (const s of sentences) {
-          const isHit = s.includes("¡Impacto!") || s.includes("¡IMPACTO!");
+
+        for (const attack of attacks) {
+          const isHit = attack.includes("¡Impacto!") || attack.includes("¡IMPACTO!");
+          const match = attack.match(/contra\s+(GB-[A-Z0-9]+)/i);
+          const targetId = match ? match[1]! : "GB-A";
+          const unitName = formatUnitName(targetId);
+          const isEliminated = attack.includes("eliminada");
+
           if (isHit) {
             hasHit = true;
-            const match = s.match(/contra\s+(GB-[AB])/i);
-            if (match && match[1]) hitTarget = match[1];
-            const isEliminated = s.includes("eliminada");
+            hitTarget = targetId;
             cardsHtml += `
               <div class="german-attack-card hit">
-                <div class="german-card-header">🚨💥 ¡Fuego enemigo recibido!</div>
-                <div class="german-card-body">${s}</div>
-                <div><span class="german-card-badge badge-danger">${isEliminated ? "☠️ ¡Unidad Británica Eliminada!" : "⚠️ ¡Moral Reducida a BAJA (Herida)!"}</span></div>
+                <div class="german-card-header">🚨💥 ¡Ráfaga enemiga! Fuego de MG 42 / Fusilería del Eje</div>
+                <div class="german-card-body">${attack}</div>
+                <div><span class="german-card-badge badge-danger">${isEliminated ? `☠️ ¡${unitName} Eliminada!` : `⚠️ ¡Moral de ${unitName} reducida a BAJA (Herida)!`}</span></div>
               </div>
             `;
           } else {
             cardsHtml += `
               <div class="german-attack-card miss">
-                <div class="german-card-header">🛡️ ¡Fuego enemigo repelido!</div>
-                <div class="german-card-body">${s}</div>
-                <div><span class="german-card-badge badge-safe">✅ El fuego no causó bajas</span></div>
+                <div class="german-card-header">🛡️ ¡Fuego enemigo repelido sobre ${unitName}!</div>
+                <div class="german-card-body">${attack}</div>
+                <div><span class="german-card-badge badge-safe">✅ El fuego no causó bajas (Posición a salvo)</span></div>
               </div>
             `;
           }
         }
         germanPhaseDetails.innerHTML = cardsHtml;
+
         if (hasHit) {
+          soundFx.playMachineGun();
+          setTimeout(() => {
+            soundFx.playHitAlert();
+            triggerScreenShake();
+          }, 140);
           pendingGermanPhaseEffect = {
-            text: `🚨 ¡${hitTarget || "Escuadra británica"} bajo fuego! Moral: BAJA`,
+            text: `🚨 ¡${formatUnitName(hitTarget)} bajo fuego! Moral: BAJA`,
             type: "german-hit",
           };
         } else {
+          soundFx.playMachineGun();
           pendingGermanPhaseEffect = {
             text: "🛡️ ¡Fuego enemigo repelido sin bajas!",
             type: "info",
@@ -1320,11 +1466,17 @@ function showActivationChoices(d1: number, d2: number, isManual: boolean): void 
       : `• 1ª orden: <strong>${n1}</strong> (${row.first})<br/>• 2ª orden: <strong>${n2}</strong> (${row.second})`;
 
     // Tarjeta 1: Aceptar Fila
+    const acceptDoctrine = TACTICAL_DOCTRINES[d1];
+    const acceptDoctrineHtml = acceptDoctrine
+      ? `<div style="font-size: 0.8rem; color: #ca8a04; font-weight: bold; margin-bottom: 2px;">${acceptDoctrine.title}</div><div style="font-size: 0.76rem; color: #94a3b8; font-style: italic; margin-bottom: 4px;">${acceptDoctrine.quote}</div>`
+      : "";
+
     const acceptCard = document.createElement("button");
     acceptCard.className = "choice-card";
     acceptCard.type = "button";
     acceptCard.innerHTML = `
       <div class="choice-card-header">✅ Aceptar Fila ${d1}</div>
+      ${acceptDoctrineHtml}
       <div class="choice-card-orders">${desc}</div>
     `;
     acceptCard.addEventListener("click", async () => {
@@ -1368,11 +1520,17 @@ function showActivationChoices(d1: number, d2: number, isManual: boolean): void 
         ? `• 1ª orden: <strong>${n1}</strong> (Moral baja: solo 1ª orden)`
         : `• 1ª orden: <strong>${n1}</strong> (${row.first})<br/>• 2ª orden: <strong>${n2}</strong> (${row.second})`;
 
+      const doctrine = TACTICAL_DOCTRINES[chosen];
+      const doctrineHtml = doctrine
+        ? `<div style="font-size: 0.8rem; color: #ca8a04; font-weight: bold; margin-bottom: 2px;">${doctrine.title}</div><div style="font-size: 0.76rem; color: #94a3b8; font-style: italic; margin-bottom: 4px;">${doctrine.quote}</div>`
+        : "";
+
       const card = document.createElement("button");
       card.className = "choice-card";
       card.type = "button";
       card.innerHTML = `
         <div class="choice-card-header">🎲 Elegir Fila ${chosen} (Dado ${chosen})</div>
+        ${doctrineHtml}
         <div class="choice-card-orders">${desc}</div>
       `;
       card.addEventListener("click", async () => {
@@ -1511,11 +1669,68 @@ diceModal.addEventListener("close", () => {
   renderAll();
 });
 
-// Reiniciar partida
+// Reiniciar partida (conservando la misión actual)
 btnRestartGame.addEventListener("click", () => {
   gameOverModal.close();
-  initGame();
+  initGame(currentMissionConfig.number);
 });
+
+// Selector de Misiones
+function openMissionModal(): void {
+  if (!missionModal || !missionListContainer) return;
+
+  missionListContainer.innerHTML = MISSION_CONFIGS.map((m) => {
+    const isActive = m.number === currentMissionConfig.number;
+    const activeClass = isActive ? "active-mission" : "";
+    const activeBadge = isActive ? `<span class="mission-badge badge-active">En juego</span>` : "";
+
+    const britishUnits = Object.values(m.initialPieces).filter((p) => p.side === "british");
+    const unitsSummary = britishUnits
+      .map((u) => (u.definitionId === "mg-team" ? "Equipo MG" : u.id))
+      .join(", ");
+
+    return `
+      <div class="mission-card ${activeClass}" data-mission="${m.number}" data-mission-num="${m.number}">
+        <div class="mission-card-header">
+          <div class="mission-card-title">Misión ${String(m.number).padStart(2, "0")}: ${m.name}</div>
+          <div class="mission-card-badges">
+            ${activeBadge}
+            <span class="mission-badge badge-turns">⏱️ ${m.baseTurns} turnos</span>
+            <span class="mission-badge badge-units">🇬🇧 ${unitsSummary}</span>
+          </div>
+        </div>
+        <div style="font-size: 0.8rem; color: #94a3b8; font-style: italic;">${m.originalTitle} (Mike Lambo, 2022)</div>
+        <div class="mission-card-desc">${m.briefing}</div>
+        <div class="mission-card-footer">
+          <span style="font-size: 0.82rem; color: #ca8a04;">🎯 <strong>Objetivo:</strong> ${m.objectiveText}</span>
+          <button class="btn btn-primary btn-play-mission" data-mission-num="${m.number}" style="padding: 4px 12px; font-size: 0.85rem;">
+            ${isActive ? "Reiniciar esta misión" : "Jugar esta Misión"}
+          </button>
+        </div>
+      </div>
+    `;
+  }).join("");
+
+  missionListContainer.querySelectorAll(".btn-play-mission, .mission-card").forEach((el) => {
+    el.addEventListener("click", (e) => {
+      e.stopPropagation();
+      const num = Number(el.getAttribute("data-mission-num"));
+      if (num) {
+        missionModal.close();
+        initGame(num);
+      }
+    });
+  });
+
+  missionModal.showModal();
+}
+
+if (btnSelectMission) {
+  btnSelectMission.addEventListener("click", openMissionModal);
+}
+if (btnCloseMissionModal) {
+  btnCloseMissionModal.addEventListener("click", () => missionModal?.close());
+}
 
 // Tutorial modal
 btnOpenTutorial.addEventListener("click", () => {

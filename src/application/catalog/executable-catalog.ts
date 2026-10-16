@@ -26,6 +26,10 @@ import type {
   RulesCatalogView,
 } from "../../domain/engine/rules-engine.js";
 import {
+  REVEAL_TABLE_BY_MISSION,
+  type D6,
+} from "../../catalog/FON-ML-2022/forces-reveal.js";
+import {
   buildHexGeometry,
   type HexGeometry,
   type HexId,
@@ -260,9 +264,9 @@ export function buildExecutableCatalog(options: ExecutableCatalogOptions): Rules
         const piece = snapshot.state.pieces[pieceId] as unknown as PieceState;
         const currentMorale = (piece.morale ?? "normal") as MoraleState;
 
-        // Tabla de órdenes de Rifle Squad (Reglas oficiales Mike Lambo 2022, pág. 6)
-        // El dado elegido selecciona la Fila completa de la tabla.
-        const tableDef = britishOrderTables["rifle-squad"];
+        // Tabla de órdenes de la unidad (Fusileros o Equipo MG según el tipo)
+        const unitKind = piece?.definitionId === "mg-team" ? "mg-team" : "rifle-squad";
+        const tableDef = britishOrderTables[unitKind];
         const selectedRow = tableDef.rows.find((r) => r.input === chosenDie) ?? tableDef.rows[0]!;
         const order1 = selectedRow.output.first;
         const order2 = selectedRow.output.second;
@@ -380,12 +384,25 @@ export function buildExecutableCatalog(options: ExecutableCatalogOptions): Rules
 
       // Revelar incógnitas adyacentes al destino
       const revealedMessages: string[] = [];
+      let currentRandomState = snapshot.randomState;
+      const missionKey = String(snapshot.state.missionId).replace("FON-ML-2022-", "");
+      const revealTable = REVEAL_TABLE_BY_MISSION[missionKey] ?? REVEAL_TABLE_BY_MISSION["M01"];
+
       for (const [key, p] of Object.entries(newPieces)) {
         const other = p as unknown as PieceState;
         if (other.side === "german" && other.visibility === "hidden" && other.hexId) {
           if (geometry.areAdjacent(toHex, other.hexId)) {
-            // Revelado: unidad LMG (3-6) o HMG (1-2)
-            const revealedKind = "LMG";
+            // Tirada d6 de revelado según la tabla de la misión
+            const step = pureVersionedRandom.next(currentRandomState as any, {
+              gameId: snapshot.gameId,
+              domain: { kind: "dice", count: 1, sides: 6 },
+              context: { label: `reveal:${other.id}` },
+            });
+            currentRandomState = step.state;
+            const rollD6 = (((step.consumption.rawResult[0] ?? 0) % 6) + 1) as D6;
+            const tableRow = revealTable?.rows.find((r) => r.input === rollD6);
+            const revealedKind = (tableRow?.output as string) ?? "LMG";
+
             const revealedPiece: PieceState = {
               ...other,
               definitionId: catalogId(revealedKind),
@@ -395,7 +412,8 @@ export function buildExecutableCatalog(options: ExecutableCatalogOptions): Rules
             if (newUnknowns[key]) {
               newUnknowns[key] = { hidden: false };
             }
-            revealedMessages.push(`¡Enemigo revelado en ${other.hexId}: ${revealedKind}!`);
+            const unitLabel = revealedKind === "HMG" ? "HMG (5+)" : revealedKind === "german-rifles" ? "Fusileros (8+)" : "LMG (6+)";
+            revealedMessages.push(`¡Enemigo revelado en ${other.hexId}: ${unitLabel} (d6: ${rollD6})!`);
           }
         }
       }
@@ -439,13 +457,13 @@ export function buildExecutableCatalog(options: ExecutableCatalogOptions): Rules
           gameId: snapshot.gameId,
           confirmedAt: new Date().toISOString(),
           state: nextState,
-          randomState: snapshot.randomState,
+          randomState: currentRandomState,
           simpleLog: nextSimpleLog,
           detailedLog: snapshot.detailedLog,
           integrity: computeIntegrity({
             gameId: snapshot.gameId,
             missionId: snapshot.state.missionId,
-            seed: snapshot.randomState.seed,
+            seed: currentRandomState.seed,
             turn: snapshot.state.turn,
           }),
         }),
@@ -514,26 +532,50 @@ export function buildExecutableCatalog(options: ExecutableCatalogOptions): Rules
         const faces = resolution.effectiveFaces;
         const rollTotal = (faces[0] ?? 0) + (faces[1] ?? 0);
 
-        // Modificador de terreno: si el hexágono defensor tiene bosque -> +1 al umbral
+        const attacker = snapshot.state.pieces[pieceId] as unknown as PieceState;
+        const isMg = attacker?.definitionId === "mg-team";
+        const baseThreshold = isMg ? 6 : 8;
+
+        const attackerHexDef = attacker?.hexId ? map.hexes[attacker.hexId as HexId] : undefined;
+        const attackerOnHill = attackerHexDef?.terrain.some((t) => String(t) === "colina") ?? false;
+
+        // Modificador de terreno defensor
         const targetHexDef = map.hexes[targetHex as HexId];
-        const isForest = targetHexDef?.terrain.some((t) => String(t) === "bosque") ?? false;
+        let defenderTerrain: "forest" | "building" | "clear" = "clear";
+        if (targetHexDef?.terrain.some((t) => String(t) === "edificio")) {
+          defenderTerrain = "building";
+        } else if (targetHexDef?.terrain.some((t) => String(t) === "bosque")) {
+          defenderTerrain = "forest";
+        }
+
+        // Apoyo: otras unidades británicas adyacentes al objetivo alemán
+        const otherSupporting = Object.values(snapshot.state.pieces).filter((p) => {
+          const brit = p as unknown as PieceState;
+          return (
+            brit.side === "british" &&
+            brit.status === "active" &&
+            brit.id !== pieceId &&
+            brit.hexId &&
+            geometry.areAdjacent(brit.hexId, targetHex as HexId)
+          );
+        }).length;
 
         const modifierContext: CombatModifierContext = {
-          defenderTerrain: isForest ? "forest" : "clear",
-          attackerOnHill: false,
+          defenderTerrain,
+          attackerOnHill,
           flanking: false,
-          supportingUnits: 0,
+          supportingUnits: otherSupporting,
           mortar: "none",
         };
 
         const combatResult = resolveCombat({
           kind: "fire",
-          base: { threshold: 8, fixed: false },
+          base: { threshold: baseThreshold, fixed: false },
           modifiers: modifierContext,
         });
 
         const effectiveThreshold =
-          combatResult.kind === "resolved" ? combatResult.resolution.effectiveThreshold : 8;
+          combatResult.kind === "resolved" ? combatResult.resolution.effectiveThreshold : baseThreshold;
 
         const isHit = rollTotal >= effectiveThreshold;
         const newPieces = { ...snapshot.state.pieces };
@@ -936,9 +978,23 @@ export function buildExecutableCatalog(options: ExecutableCatalogOptions): Rules
 
         if (adjacentBritish.length > 0) {
           const target = adjacentBritish[0]!;
-          const isHmg = String(german.definitionId).includes("HMG");
-          const baseThreshold = isHmg ? 5 : 6;
-          const targetThreshold = baseThreshold + (target.cover ?? 0);
+          const defId = String(german.definitionId);
+          let baseThreshold = 6; // LMG default
+          if (defId.includes("HMG")) {
+            baseThreshold = 5;
+          } else if (defId.includes("rifles") || defId.includes("Rifle")) {
+            baseThreshold = 8;
+          }
+
+          const targetHexDef = target.hexId ? map.hexes[target.hexId as HexId] : undefined;
+          let terrainDefBonus = 0;
+          if (targetHexDef?.terrain.some((t) => String(t) === "edificio")) {
+            terrainDefBonus = 2;
+          } else if (targetHexDef?.terrain.some((t) => String(t) === "bosque")) {
+            terrainDefBonus = 1;
+          }
+
+          const targetThreshold = baseThreshold + (target.cover ?? 0) + terrainDefBonus;
 
           const step = pureVersionedRandom.next(currentRandomState as any, {
             gameId: snapshot.gameId,

@@ -93,8 +93,8 @@ test.describe("Fields of Normandy - Jugabilidad E2E Misión 01", () => {
 
     // Verificar que la unidad alemana en H04 ha sido revelada automáticamente por proximidad
     await expect(page.locator('circle[data-piece-id="DE-UNK-1"]')).toHaveClass(/visibility-revealed/);
-    // Y verificar que la etiqueta muestra LMG en lugar del antiguo DE
-    await expect(page.locator('text.piece-label:has-text("LMG")')).toBeVisible();
+    // Y verificar que la etiqueta muestra la unidad enemiga revelada (LMG o HMG) en lugar del antiguo ?
+    await expect(page.locator('text.piece-label').filter({ hasText: /^(LMG|HMG)$/ })).toBeVisible();
     await expect(page.locator("#log-content")).toContainText("revelado");
 
     // 9. Ejecutar orden de Cobertura
@@ -247,5 +247,40 @@ test.describe("Fields of Normandy - Jugabilidad E2E Misión 01", () => {
     await expect(gameOverModal).toBeVisible();
     await expect(page.locator("#game-over-title")).toContainText("VICTORIA");
   });
+
+  test("permite seleccionar y cargar una misión diferente desde el selector de misiones", async ({
+    page,
+  }) => {
+    await page.goto("./");
+    await page.fill("#lock-pin", "1944");
+    await page.click('#lock-form button[type="submit"]');
+
+    // 1. Abrir selector de misiones
+    const btnSelectMission = page.locator("#btn-select-mission");
+    await expect(btnSelectMission).toBeVisible();
+    await btnSelectMission.click();
+
+    // 2. Comprobar que el modal se abre con las 6 misiones
+    const missionModal = page.locator("#mission-modal");
+    await expect(missionModal).toBeVisible();
+    await expect(page.locator(".mission-card")).toHaveCount(6);
+
+    // 3. Seleccionar Misión 03 (Control del edificio)
+    const mission3Card = page.locator(".mission-card[data-mission='3']");
+    await expect(mission3Card).toBeVisible();
+    await mission3Card.click();
+
+    // 4. Modal cerrado y nuevo título y pips de turno (6 turnos para M03)
+    await expect(missionModal).toBeHidden();
+    await expect(page.locator("#mission-title")).toContainText("Misión 03");
+    await expect(page.locator("#mission-title")).toContainText("Control del edificio");
+    await expect(page.locator(".pip")).toHaveCount(6);
+
+    // 5. Verificar que las 3 unidades británicas (A, B, C) están presentes en el mapa
+    await expect(page.locator('circle[data-piece-id="GB-A"]')).toBeVisible();
+    await expect(page.locator('circle[data-piece-id="GB-B"]')).toBeVisible();
+    await expect(page.locator('circle[data-piece-id="GB-C"]')).toBeVisible();
+  });
 });
+
 

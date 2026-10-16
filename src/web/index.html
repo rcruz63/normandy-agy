@@ -35,9 +35,11 @@
       <!-- Barra superior de estado -->
       <header class="top-header">
         <div class="mission-info">
-          <div style="display: flex; align-items: center; gap: 10px;">
+          <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
             <h1 id="mission-title">Misión 01: Control del bosque I</h1>
+            <button id="btn-select-mission" class="btn-tutorial" type="button" style="background: rgba(212, 175, 55, 0.15); border-color: var(--accent-gold); color: #fde047;">🗺️ Misión</button>
             <button id="btn-open-tutorial" class="btn-tutorial" type="button">¿Cómo jugar?</button>
+            <button id="btn-sound-toggle" class="btn-sound" type="button" title="Activar / Desactivar efectos de sonido">🔊 Sonido: ON</button>
           </div>
           <span id="mission-objective" class="objective-badge">Objetivo: Eliminar todas las fuerzas alemanas en el mapa</span>
         </div>
@@ -196,6 +198,18 @@
 
         <div class="modal-actions" style="margin-top: 16px;">
           <button id="btn-close-tutorial" class="btn btn-primary" type="button">¡Entendido, al combate!</button>
+        </div>
+      </div>
+    </dialog>
+
+    <!-- Diálogo modal de Selección de Misiones -->
+    <dialog id="mission-modal" class="modal-dialog">
+      <div class="modal-body" style="max-width: 680px;">
+        <h3 id="mission-modal-title">🗺️ Seleccionar Misión de Combate</h3>
+        <p class="muted">Elige una misión de <em>Fields of Normandy</em> (Mike Lambo, 2022) para desplegar a tus tropas.</p>
+        <div id="mission-list-container" class="mission-list-grid" style="display: grid; gap: 12px; margin: 16px 0; max-height: 60vh; overflow-y: auto; padding-right: 6px;"></div>
+        <div class="modal-actions">
+          <button id="btn-close-mission-modal" class="btn btn-secondary" type="button">Cerrar</button>
         </div>
       </div>
     </dialog>

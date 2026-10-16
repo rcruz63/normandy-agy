@@ -198,6 +198,30 @@ body {
   stroke: #667c5b;
 }
 
+.hex.terrain-edificio,
+.hex.terrain-building {
+  fill: #2c2f38;
+  stroke: #4f5869;
+}
+
+.hex.terrain-edificio:hover,
+.hex.terrain-building:hover {
+  fill: #373b45;
+  stroke: #6b778c;
+}
+
+.hex.terrain-colina,
+.hex.terrain-hill {
+  fill: #3d3b24;
+  stroke: #736d3f;
+}
+
+.hex.terrain-colina:hover,
+.hex.terrain-hill:hover {
+  fill: #4c4a2d;
+  stroke: #8f884e;
+}
+
 .hex.selected {
   stroke: #d4af37;
   stroke-width: 3.5px;
@@ -653,6 +677,41 @@ body {
   color: #000;
 }
 
+.btn-sound {
+  background: rgba(255, 255, 255, 0.05);
+  color: #38bdf8;
+  border: 1px solid #38bdf8;
+  font-size: 0.82rem;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 14px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-sound:hover {
+  background: #38bdf8;
+  color: #0f172a;
+}
+
+.btn-sound.muted {
+  color: var(--text-muted);
+  border-color: var(--border-color);
+  background: transparent;
+}
+
+@keyframes screen-shake {
+  0%, 100% { transform: translate(0, 0); }
+  20% { transform: translate(-3px, 2px); }
+  40% { transform: translate(3px, -2px); }
+  60% { transform: translate(-2px, -1px); }
+  80% { transform: translate(2px, 1px); }
+}
+
+.screen-shake {
+  animation: screen-shake 0.35s ease-in-out;
+}
+
 .tutorial-body {
   max-height: 75vh;
   overflow-y: auto;
@@ -729,6 +788,26 @@ body {
 .choice-card-orders {
   font-size: 0.9rem;
   color: #cbd5e1;
+  width: 100%;
+}
+
+.choice-card-quote {
+  font-size: 0.82rem;
+  font-style: italic;
+  color: #a3b899;
+  line-height: 1.35;
+  margin-bottom: 4px;
+}
+
+.choice-card-doctrine {
+  font-size: 0.88rem;
+  color: #e2e8f0;
+  font-weight: 600;
+  background: rgba(0, 0, 0, 0.35);
+  padding: 5px 10px;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  width: 100%;
 }
 
 .choice-card.doubles-reroll {
@@ -1019,5 +1098,90 @@ body {
   color: #38bdf8;
   border: 1px solid rgba(56, 189, 248, 0.4);
 }
+
+/* --- Selector de Misiones --- */
+.mission-card {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  text-align: left;
+}
+
+.mission-card:hover {
+  background: rgba(212, 175, 55, 0.08);
+  border-color: var(--accent-gold);
+  transform: translateY(-1px);
+}
+
+.mission-card.active-mission {
+  border-color: #38bdf8;
+  background: rgba(56, 189, 248, 0.08);
+  box-shadow: 0 0 10px rgba(56, 189, 248, 0.2);
+}
+
+.mission-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.mission-card-title {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--text-color);
+}
+
+.mission-card-badges {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.mission-badge {
+  font-size: 0.75rem;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-weight: 600;
+}
+
+.badge-turns {
+  background: rgba(56, 189, 248, 0.15);
+  color: #38bdf8;
+  border: 1px solid rgba(56, 189, 248, 0.3);
+}
+
+.badge-units {
+  background: rgba(74, 222, 128, 0.15);
+  color: #4ade80;
+  border: 1px solid rgba(74, 222, 128, 0.3);
+}
+
+.badge-active {
+  background: rgba(212, 175, 55, 0.2);
+  color: #fde047;
+  border: 1px solid var(--accent-gold);
+}
+
+.mission-card-desc {
+  font-size: 0.88rem;
+  color: #cbd5e1;
+  line-height: 1.4;
+}
+
+.mission-card-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 4px;
+}
+
 
 

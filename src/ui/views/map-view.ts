@@ -479,6 +479,13 @@ export function renderSvgMarkup(scene: SvgScene, view: ViewState): string {
       const isWoods =
         hex.terrain.includes("bosque") ||
         hex.classes.some((c) => c.includes("woods") || c.includes("bosque"));
+      const isBuilding =
+        hex.terrain.includes("edificio") ||
+        hex.classes.some((c) => c.includes("edificio") || c.includes("building"));
+      const isHill =
+        hex.terrain.includes("colina") ||
+        hex.classes.some((c) => c.includes("colina") || c.includes("hill"));
+
       const woodsMarkup = isWoods
         ? `<g class="woods-trees" pointer-events="none">` +
           `<circle cx="${round(hex.center.x - 8)}" cy="${round(hex.center.y - 2)}" r="5.5" fill="#1b4d24" opacity="0.85"/>` +
@@ -487,9 +494,26 @@ export function renderSvgMarkup(scene: SvgScene, view: ViewState): string {
           `<circle cx="${round(hex.center.x)}" cy="${round(hex.center.y - 6)}" r="5" fill="#245a2d" opacity="0.8"/>` +
           `</g>`
         : "";
+
+      const buildingMarkup = isBuilding
+        ? `<g class="building-icon" pointer-events="none">` +
+          `<polygon points="${round(hex.center.x - 10)},${round(hex.center.y - 3)} ${round(hex.center.x)},${round(hex.center.y - 11)} ${round(hex.center.x + 10)},${round(hex.center.y - 3)}" fill="#475569" stroke="#1e293b" stroke-width="1"/>` +
+          `<rect x="${round(hex.center.x - 8)}" y="${round(hex.center.y - 3)}" width="16" height="10" rx="1" fill="#64748b" stroke="#1e293b" stroke-width="1" opacity="0.9"/>` +
+          `</g>`
+        : "";
+
+      const hillMarkup = isHill
+        ? `<g class="hill-contour" pointer-events="none">` +
+          `<circle cx="${round(hex.center.x)}" cy="${round(hex.center.y)}" r="15" fill="none" stroke="#ca8a04" stroke-width="1.2" stroke-dasharray="3,2" opacity="0.7"/>` +
+          `<circle cx="${round(hex.center.x)}" cy="${round(hex.center.y)}" r="9" fill="none" stroke="#ca8a04" stroke-width="1" stroke-dasharray="2,2" opacity="0.5"/>` +
+          `</g>`
+        : "";
+
       return (
         `<polygon class="${escapeAttr(hex.classes.join(" "))}" data-hex-id="${escapeAttr(String(hex.hexId))}" data-label="${escapeAttr(hex.label)}" points="${escapeAttr(pointsAttr(hex.vertices))}" />` +
+        hillMarkup +
         woodsMarkup +
+        buildingMarkup +
         `<text class="hex-label" x="${hex.center.x}" y="${round(hex.center.y - 14)}" text-anchor="middle">${escapeAttr(hex.label)}</text>`
       );
     })
